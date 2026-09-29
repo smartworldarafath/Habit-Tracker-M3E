@@ -30,14 +30,6 @@ Check off a habit with a single tap, hold your rhythm, and follow your streaks a
   <img alt="No ads, no tracking" src="https://img.shields.io/badge/No%20ads%20%C2%B7%20No%20tracking-22C55E?style=flat&logo=shield&logoColor=white" />
 </p>
 
-> [!NOTE]
-> **Habit Tracker M3E is a fork of [Streak](https://github.com/InlitX/streak) by
-> [InlitX](https://github.com/InlitX).** The application itself is the original
-> author's work, redistributed under the GNU GPLv3 together with the attribution
-> term of its section 7(b). This repository carries the rename, a rewritten
-> README and the removal of the third-party store listings — nothing more.
-> See [ADDITIONAL_TERMS.md](ADDITIONAL_TERMS.md).
-
 <br/>
 
 <a href="https://github.com/smartworldarafath/Habit-Tracker-M3E/releases"><img alt="Get it on GitHub" src="assets/badges/get-it-on-github.png" height="60" /></a>
