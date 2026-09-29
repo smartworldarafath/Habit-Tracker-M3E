@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Habit Tracker M3E</string>
+    <string name="widget_description">Track your habits and build streaks</string>
+    <string name="widget_heatmap_label">Habit Tracker M3E heatmap</string>
+    <string name="widget_habit_label">Habit Tracker M3E habits</string>
+    <string name="widget_today_label">Habit Tracker M3E today</string>
+    <string name="widget_stats_label">Habit Tracker M3E summary</string>
+    <string name="widget_todos_label">Habit Tracker M3E to-do</string>
+    <string name="widget_todos_description">See what is left to do today</string>
+</resources>

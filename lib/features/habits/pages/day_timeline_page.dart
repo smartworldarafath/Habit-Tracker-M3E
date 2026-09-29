@@ -1,0 +1,442 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
+import 'package:habit_tracker_m3e/app/theme/app_tokens.dart';
+import 'package:habit_tracker_m3e/core/express/express_button.dart';
+import 'package:habit_tracker_m3e/core/express/express_surface.dart';
+import 'package:habit_tracker_m3e/features/settings/widgets/minimal_settings_widgets.dart';
+import 'package:habit_tracker_m3e/core/extensions/date_extensions.dart';
+import 'package:habit_tracker_m3e/core/extensions/inset_extensions.dart';
+import 'package:habit_tracker_m3e/core/i18n/l10n.dart';
+import 'package:habit_tracker_m3e/core/icons/habit_glyph.dart';
+import 'package:habit_tracker_m3e/core/routing/app_navigator.dart';
+import 'package:habit_tracker_m3e/core/widgets/app_empty_state.dart';
+import 'package:habit_tracker_m3e/core/widgets/celebration_overlay.dart';
+import 'package:habit_tracker_m3e/core/widgets/entrance.dart';
+import 'package:habit_tracker_m3e/core/widgets/section_label.dart';
+import 'package:habit_tracker_m3e/features/habits/data/day_plan.dart';
+import 'package:habit_tracker_m3e/features/habits/data/habit.dart';
+import 'package:habit_tracker_m3e/features/habits/pages/habit_details_page.dart';
+import 'package:habit_tracker_m3e/features/habits/pages/note_editor_page.dart';
+import 'package:habit_tracker_m3e/features/habits/state/habits_controller.dart';
+import 'package:habit_tracker_m3e/features/habits/widgets/day_timeline_parts.dart';
+import 'package:habit_tracker_m3e/features/habits/widgets/timeline_week_strip.dart';
+import 'package:habit_tracker_m3e/features/habits/widgets/focus_only_dialog.dart';
+import 'package:habit_tracker_m3e/features/habits/widgets/unscheduled_day_dialog.dart';
+import 'package:habit_tracker_m3e/features/settings/state/settings_controller.dart';
+import 'package:habit_tracker_m3e/features/todos/data/todo.dart';
+import 'package:habit_tracker_m3e/features/todos/pages/todo_editor_page.dart';
+import 'package:habit_tracker_m3e/features/todos/state/todos_controller.dart';
+import 'package:habit_tracker_m3e/features/todos/widgets/todo_paper.dart';
+import 'package:habit_tracker_m3e/features/todos/widgets/todo_trash.dart';
+
+const _entrance = Duration(milliseconds: 60);
+
+class DayTimelinePage extends StatefulWidget {
+  const DayTimelinePage({super.key});
+
+  @override
+  State<DayTimelinePage> createState() => _DayTimelinePageState();
+}
+
+class _DayTimelinePageState extends State<DayTimelinePage> {
+  late DateTime _day = AppClock.today();
+  final _celebration = ValueNotifier(0);
+  final _completing = <String>{};
+  int _direction = 0;
+  Widget? _page;
+
+  @override
+  void dispose() {
+    _celebration.dispose();
+    super.dispose();
+  }
+
+  bool get _isToday => _day.isSameDay(AppClock.today());
+
+  void _select(DateTime day) => setState(() {
+        _direction = day.atMidnight.compareTo(_day).sign;
+        _day = day.atMidnight;
+      });
+
+  void _shiftWeek(int weeks) => _select(_day.addDays(weeks * 7));
+
+  Future<void> _toggleTodo(Todo todo) async {
+    final todos = context.read<TodosController>();
+    if (todo.done) return todos.toggle(todo.id);
+    if (!_completing.add(todo.id)) return;
+    setState(() {});
+    await Future<void>.delayed(const Duration(milliseconds: 380));
+    if (!mounted) return;
+    await todos.toggle(todo.id);
+    if (mounted) setState(() => _completing.remove(todo.id));
+  }
+
+  Future<void> _openTodo(Todo todo) async {
+    final deleted = await openTodoEditor(context, todo: todo);
+    if (deleted == true && mounted) discardTodo(context, todo);
+  }
+
+  void _addNote(Habit habit) => AppNavigator.push(
+        NoteEditorPage(
+          habitId: habit.id,
+          dayKey: _day.dayKey,
+          accent: habit.color,
+        ),
+      );
+
+  Future<void> _check(Habit habit) async {
+    final controller = context.read<HabitsController>();
+    if (!await allowManualCheck(context, habit: habit, date: _day)) return;
+    if (!mounted) return;
+    if (!await confirmUnscheduledDay(context, habit: habit, date: _day)) return;
+
+    final wasDone = habit.isCompletedOn(_day);
+    if (habit.kind == HabitKind.quantitative) {
+      await controller.addProgress(habit.id, _day, habit.incrementAmount);
+    } else {
+      await controller.toggle(habit.id, _day);
+    }
+    if (!mounted) return;
+
+    final updated = controller.byId(habit.id);
+    if (_isToday && !wasDone && (updated?.isCompletedOn(_day) ?? false)) {
+      _celebration.value++;
+    }
+  }
+
+  Color _neighbourColor(DayPlan plan, int from, int step) {
+    for (var i = from; i >= 0 && i < plan.slots.length; i += step) {
+      final habit = plan.slots[i].habit;
+      if (habit != null) return habit.color;
+    }
+    return context.colors.primary;
+  }
+
+  List<Todo> _todosOf(BuildContext context) {
+    final settings = context.watch<SettingsController>();
+    if (!settings.todosEnabled || !settings.planTodos) return const [];
+    return context.select<TodosController, List<Todo>>(
+      (todos) => todos.dueOn(_day),
+    ).toList()
+      ..sort((a, b) => a.done != b.done
+          ? (a.done ? 1 : -1)
+          : (a.minutes ?? Habit.dayMinutes).compareTo(
+              b.minutes ?? Habit.dayMinutes,
+            ));
+  }
+
+  Widget _todos(List<Todo> todos, int from) => PaperLanes(
+        notes: [
+          for (final (i, todo) in todos.indexed)
+            (
+              todo: todo,
+              build: () => Entrance(
+                key: ValueKey(todo.id),
+                index: from + i,
+                delay: _entrance,
+                child: TodoPaper(
+                  todo: todo,
+                  overdue: false,
+                  checking: _completing.contains(todo.id),
+                  onToggle: () => _toggleTodo(todo),
+                  onEdit: () => _openTodo(todo),
+                ),
+              ),
+            ),
+        ],
+      );
+
+  List<Widget Function()> _rows(BuildContext context, DayPlan plan) {
+    final rows = <Widget Function()>[];
+    var index = 0;
+    for (var i = 0; i < plan.slots.length; i++) {
+      final slot = plan.slots[i];
+      final habit = slot.habit;
+      final at = index;
+      rows.add(
+        () => Entrance(
+          index: at,
+          delay: _entrance,
+          child: habit == null
+              ? TimelineGap(
+                  minutes: slot.minutes,
+                  from: _neighbourColor(plan, i - 1, -1),
+                  to: _neighbourColor(plan, i + 1, 1),
+                )
+              : Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: TimelineBlock(
+                    habit: habit,
+                    date: _day,
+                    done: habit.isCompletedOn(_day),
+                    onOpen: () => AppNavigator.push(
+                      HabitDetailsPage(habitId: habit.id),
+                      fade: true,
+                    ),
+                    onCheck: () => _check(habit),
+                    onAddNote: () => _addNote(habit),
+                  ),
+                ),
+        ),
+      );
+      index++;
+    }
+
+    if (plan.anytime.isNotEmpty) {
+      rows.add(() => const SizedBox(height: 22));
+      rows.add(() => SectionLabel(context.l10n.day_timeline_anytime));
+      for (final habit in plan.anytime) {
+        final at = index;
+        rows.add(
+          () => Entrance(
+            index: at,
+            delay: _entrance,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _AnytimeRow(
+                habit: habit,
+                date: _day,
+                done: habit.isCompletedOn(_day),
+                onOpen: () => AppNavigator.push(
+                  HabitDetailsPage(habitId: habit.id),
+                  fade: true,
+                ),
+                onCheck: () => _check(habit),
+                onAddNote: () => _addNote(habit),
+              ),
+            ),
+          ),
+        );
+        index++;
+      }
+    }
+    return rows;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final page = _page;
+    if (page != null && !TickerMode.valuesOf(context).enabled) return page;
+    final habits = context.watch<HabitsController>().habits;
+    final weekStart = context.watch<SettingsController>().weekStart;
+    final plan = DayPlan.of(habits, _day);
+    final rows = _rows(context, plan);
+    final todos = _todosOf(context);
+    final locale = Localizations.localeOf(context).toString();
+    final first = _day.startOfWeek(weekStart);
+
+    final style = context.watch<SettingsController>();
+    final express = style.isExpressStyle;
+    final minimal = style.isMinimalStyle;
+    final pushed = ModalRoute.of(context)?.canPop ?? false;
+
+    return _page = Scaffold(
+      appBar: AppBar(
+        toolbarHeight: express ? 60 : null,
+        leadingWidth: express && pushed ? 68 : null,
+        leading: !pushed
+            ? null
+            : express
+            ? Padding(
+                padding: const EdgeInsets.only(left: 16),
+                child: Center(child: ExpressIconButton(
+                  icon: LucideIcons.chevronLeft,
+                  onPressed: () => AppNavigator.pop(),
+                )),
+              )
+            : IconButton(
+                icon: const Icon(LucideIcons.chevronLeft),
+                onPressed: () => AppNavigator.pop(),
+              ),
+        title: express || minimal
+            ? null
+            : Text(DateFormat.yMMMM(locale).format(_day)),
+        actions: [
+          if (!_isToday)
+            express
+                ? Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: Center(child: ExpressIconButton(
+                      icon: LucideIcons.calendarCheck,
+                      tooltip: context.l10n.today,
+                      onPressed: () => _select(AppClock.now()),
+                    )),
+                  )
+                : IconButton(
+                    tooltip: context.l10n.today,
+                    icon: const Icon(LucideIcons.calendarCheck),
+                    onPressed: () => _select(AppClock.now()),
+                  ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (express)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
+                  child: ExpressHeadline(
+                    title: DateFormat.yMMMM(locale).format(_day),
+                  ),
+                ),
+              if (minimal)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                  child: MinimalTitle(
+                    title: DateFormat.yMMMM(locale).format(_day),
+                  ),
+                ),
+              TimelineWeekStrip(
+                first: first,
+                selected: _day,
+                habits: habits,
+                style: style.appStyle,
+                direction: _direction,
+                onSelected: _select,
+                onShift: _shiftWeek,
+              ),
+              Expanded(
+                child: plan.isEmpty && todos.isEmpty
+                    ? AppEmptyState(
+                        icon: LucideIcons.calendarClock,
+                        title: context.l10n.day_timeline_empty,
+                        message: context.l10n.day_timeline_empty_sub,
+                      )
+                    : CustomScrollView(
+                        key: ValueKey(_day.epochDay),
+                        slivers: [
+                          SliverPadding(
+                            padding: context.pagePadding(
+                              16,
+                              8,
+                              16,
+                              pushed ? 28 : 148,
+                            ),
+                            sliver: SliverMainAxisGroup(
+                              slivers: [
+                                SliverList.builder(
+                                  itemCount: rows.length,
+                                  itemBuilder: (context, i) => rows[i](),
+                                ),
+                                if (todos.isNotEmpty) ...[
+                                  SliverToBoxAdapter(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(
+                                        top: plan.isEmpty ? 0 : 22,
+                                      ),
+                                      child: SectionLabel(context.l10n.todos),
+                                    ),
+                                  ),
+                                  _todos(todos, rows.length),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ],
+          ),
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: ValueListenableBuilder<int>(
+                valueListenable: _celebration,
+                builder: (context, trigger, _) =>
+                    CelebrationOverlay(trigger: trigger),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AnytimeRow extends StatelessWidget {
+  const _AnytimeRow({
+    required this.habit,
+    required this.date,
+    required this.done,
+    required this.onOpen,
+    required this.onCheck,
+    required this.onAddNote,
+  });
+
+  final Habit habit;
+  final DateTime date;
+  final bool done;
+  final VoidCallback onOpen;
+  final VoidCallback onCheck;
+  final VoidCallback onAddNote;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        onTap: onOpen,
+        onLongPress: onAddNote,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest.withValues(
+              alpha: done ? 0.35 : 0.6,
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: habit.color.withValues(alpha: done ? 0.5 : 0.18),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: HabitGlyph(
+                  glyph: habit.icon,
+                  color: done ? scheme.surface : habit.color,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  habit.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: done ? context.tokens.muted : scheme.onSurface,
+                    decoration: done ? TextDecoration.lineThrough : null,
+                    decorationColor: context.tokens.muted,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              TimelineCheck(
+                habit: habit,
+                date: date,
+                done: done,
+                onTap: onCheck,
+              ),
+            ],
+          ),
+          TimelineNotes(habit: habit, date: date),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

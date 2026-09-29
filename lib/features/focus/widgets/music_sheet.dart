@@ -1,0 +1,600 @@
+import 'package:file_picker/file_picker.dart';
+import 'package:habit_tracker_m3e/features/settings/widgets/minimal_settings_widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
+import 'package:habit_tracker_m3e/app/theme/app_tokens.dart';
+import 'package:habit_tracker_m3e/core/i18n/l10n.dart';
+import 'package:habit_tracker_m3e/core/widgets/sheet_type.dart';
+import 'package:habit_tracker_m3e/core/utils/responsive.dart';
+import 'package:habit_tracker_m3e/core/widgets/delete_sheet.dart';
+import 'package:habit_tracker_m3e/core/utils/app_snackbar.dart';
+import 'package:habit_tracker_m3e/core/utils/cover_storage.dart';
+import 'package:habit_tracker_m3e/features/focus/state/focus_audio.dart';
+import 'package:habit_tracker_m3e/features/settings/state/settings_controller.dart';
+
+List<FocusTrack> focusTracksOf(BuildContext context, SettingsController s) => [
+      for (final entry in builtInTracks.entries)
+        if (!s.isTrackHidden(entry.key))
+          FocusTrack(
+            id: entry.key,
+            name: switch (entry.key) {
+              'rain.mp3' => context.l10n.focus_track_rain,
+              'brown_noise.mp3' => context.l10n.focus_track_brown,
+              'fire.mp3' => context.l10n.focus_track_fire,
+              _ => entry.value,
+            },
+            asset: true,
+          ),
+      for (final raw in s.focusTracks)
+        if (FocusTrack.decode(raw) != null) FocusTrack.decode(raw)!,
+    ];
+
+Future<void> showMusicSheet(BuildContext context) async {
+  await context.read<SettingsController>().pruneFocusTracks();
+  if (!context.mounted) return;
+  return showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    constraints: BoxConstraints(
+      maxWidth: phoneWidth,
+      maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+    ),
+    builder: (_) => const _MusicSheet(),
+  );
+}
+
+class _MusicSheet extends StatelessWidget {
+  const _MusicSheet();
+
+  Future<void> _import(BuildContext context) async {
+    final settings = context.read<SettingsController>();
+    if (settings.focusTracks.length >= FocusAudio.maxTracks) {
+      AppSnackbar.warning(context, context.l10n.focus_track_limit);
+      return;
+    }
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: FocusAudio.trackExtensions,
+    );
+    final file = result?.files.single;
+    if (file?.path == null) return;
+
+    final minutes = await FocusAudio.durationOf(file!.path!);
+    if (!context.mounted) return;
+    if (minutes != null && minutes >= FocusAudio.maxTrackMinutes) {
+      AppSnackbar.warning(context, context.l10n.focus_track_too_long);
+      return;
+    }
+    final kept = await FocusTrack.store(file.path!);
+    await CoverStorage.clearPickerCache();
+    await settings.addFocusTrack('$kept|${file.name}');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsController>();
+    final tracks = focusTracksOf(context, settings);
+    final userCount = settings.focusTracks.length;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 2, 20, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    context.l10n.focus_sound,
+                    style: sheetTitleStyle(context),
+                  ),
+                ),
+                _ModeToggle(
+                  mode: settings.focusShuffle
+                      ? 2
+                      : settings.focusRepeatOne
+                          ? 1
+                          : 0,
+                  onChanged: (mode) async {
+                    await settings.setFocusMode(
+                      shuffle: mode == 2,
+                      repeatOne: mode == 1,
+                    );
+                    await FocusAudio.setMode(
+                      shuffle: mode == 2,
+                      repeatOne: mode == 1,
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            _NowPlaying(tracks: tracks),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final track in tracks)
+                    _TrackRow(
+                      track: track,
+                      tracks: tracks,
+                      shuffle: settings.focusShuffle,
+                      repeatOne: settings.focusRepeatOne,
+                      onDelete: track.asset
+                          ? () => settings.hideTrack(track.id)
+                          : () => settings.removeFocusTrack(
+                                '${track.id}|${track.name}',
+                              ),
+                    ),
+                ],
+              ),
+            ),
+            if (settings.hiddenTracks.isNotEmpty)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: settings.restoreTracks,
+                  child: Text(context.l10n.restore),
+                ),
+              ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                onPressed: userCount >= FocusAudio.maxTracks
+                    ? null
+                    : () => _import(context),
+                icon: const Icon(LucideIcons.plus, size: 17),
+                label: Text(
+                  '${context.l10n.focus_add_track}  '
+                  '($userCount/${FocusAudio.maxTracks})',
+                  style: sheetActionStyle(context, size: 14.5),
+                ),
+                style: FilledButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+            const Divider(height: 28),
+            _AlertRow(settings: settings),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AlertRow extends StatelessWidget {
+  const _AlertRow({required this.settings});
+
+  final SettingsController settings;
+
+  String _label(BuildContext context) {
+    final alert = settings.focusAlert;
+    if (alert == FocusAudio.silentAlert) return context.l10n.focus_alert_none;
+    if (alert.isEmpty) return context.l10n.focus_alert_chime;
+    return alert.split(RegExp(r'[\\/]')).last;
+  }
+
+  Future<void> _pick(BuildContext context) async {
+    final alert = settings.focusAlert;
+    await showOptionSheet(
+      context,
+      title: context.l10n.focus_alert,
+      options: [
+        context.l10n.focus_alert_chime,
+        context.l10n.focus_alert_custom,
+        context.l10n.focus_alert_none,
+      ],
+      index: alert.isEmpty
+          ? 0
+          : alert == FocusAudio.silentAlert
+              ? 2
+              : 1,
+      onSelected: (index) async {
+        if (index == 0) return settings.setFocusAlert('');
+        if (index == 2) return settings.setFocusAlert(FocusAudio.silentAlert);
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: FocusAudio.trackExtensions,
+        );
+        final path = result?.files.single.path;
+        if (path == null) return;
+        final kept = await FocusTrack.store(path, folder: 'alerts');
+        await CoverStorage.clearPickerCache();
+        await settings.setFocusAlert(kept);
+        await FocusAudio.alert(kept);
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(LucideIcons.bellRing, color: context.colors.onSurface),
+          title: Text(context.l10n.focus_alert, style: sheetOptionStyle(context)),
+          subtitle: Text(
+            _label(context),
+            style: TextStyle(fontSize: 12.5, color: context.tokens.muted),
+          ),
+          onTap: () => _pick(context),
+        ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          value: settings.focusHold,
+          onChanged: settings.setFocusHold,
+          title: Text(context.l10n.focus_hold, style: sheetOptionStyle(context)),
+          subtitle: Text(
+            context.l10n.focus_hold_sub,
+            style: TextStyle(fontSize: 12.5, color: context.tokens.muted),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ModeToggle extends StatelessWidget {
+  const _ModeToggle({required this.mode, required this.onChanged});
+
+  final int mode;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, label) = switch (mode) {
+      1 => (LucideIcons.repeat1, context.l10n.focus_repeat_one),
+      2 => (LucideIcons.shuffle, context.l10n.focus_shuffle),
+      _ => (LucideIcons.repeat, context.l10n.focus_loop),
+    };
+
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        onTap: () => onChanged((mode + 1) % 3),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: context.colors.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 15, color: context.colors.primary),
+              const SizedBox(width: 7),
+              Text(
+                label,
+                style: sheetLabelStyle(
+                  context,
+                  size: 12.5,
+                  color: context.colors.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TrackRow extends StatelessWidget {
+  const _TrackRow({
+    required this.track,
+    required this.tracks,
+    required this.shuffle,
+    required this.repeatOne,
+    required this.onDelete,
+  });
+
+  final FocusTrack track;
+  final List<FocusTrack> tracks;
+  final bool shuffle;
+  final bool repeatOne;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<String>(
+      valueListenable: FocusAudio.current,
+      builder: (context, currentId, _) {
+        final active = currentId == track.id;
+        return ValueListenableBuilder<bool>(
+          valueListenable: FocusAudio.playing,
+          builder: (context, playing, __) {
+            final isPlaying = active && playing;
+            return Semantics(
+              button: true,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onLongPress: onDelete == null
+                    ? null
+                    : () async {
+                        if (await showDeleteSheet(context)) onDelete!();
+                      },
+                onTap: () async {
+                  final settings = context.read<SettingsController>();
+                  if (isPlaying) {
+                    await FocusAudio.pause();
+                    await settings.setFocusTrack('');
+                  } else if (active) {
+                    await FocusAudio.resume();
+                    await settings.setFocusTrack(track.id);
+                  } else {
+                    await FocusAudio.playQueue(
+                      tracks,
+                      shuffle: shuffle,
+                      repeatOne: repeatOne,
+                      from: track,
+                    );
+                    await settings.setFocusTrack(track.id);
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: active
+                              ? context.colors.primary.withValues(alpha: 0.16)
+                              : context.colors.surfaceContainerHighest,
+                        ),
+                        child: Icon(
+                          isPlaying ? LucideIcons.pause : LucideIcons.play,
+                          size: 15,
+                          color: active
+                              ? context.colors.primary
+                              : context.tokens.muted,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          track.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: sheetOptionStyle(
+                            context,
+                            size: 15,
+                            selected: active,
+                            color: active ? context.colors.primary : null,
+                          ),
+                        ),
+                      ),
+                      if (track.asset)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Text(
+                            context.l10n.focus_built_in,
+                            style: sheetLabelStyle(context, size: 11),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _NowPlaying extends StatelessWidget {
+  const _NowPlaying({required this.tracks});
+
+  final List<FocusTrack> tracks;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<String>(
+      valueListenable: FocusAudio.current,
+      builder: (context, currentId, _) {
+        final track = tracks.where((t) => t.id == currentId).firstOrNull;
+        return AnimatedSize(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: track == null
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: _PlayerCard(track: track),
+                ),
+        );
+      },
+    );
+  }
+}
+
+class _PlayerCard extends StatelessWidget {
+  const _PlayerCard({required this.track});
+
+  final FocusTrack track;
+
+  Future<void> _toggle(BuildContext context, bool playing) async {
+    final settings = context.read<SettingsController>();
+    if (playing) {
+      await FocusAudio.pause();
+      await settings.setFocusTrack('');
+    } else {
+      await FocusAudio.resume();
+      await settings.setFocusTrack(track.id);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 10),
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(LucideIcons.music, size: 20, color: scheme.primary),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      track.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: sheetOptionStyle(context, selected: true),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      track.asset
+                          ? context.l10n.focus_built_in
+                          : context.l10n.focus_sound,
+                      style: sheetLabelStyle(context, size: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const _Scrubber(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                onPressed: () => FocusAudio.skip(-1),
+                icon: const Icon(LucideIcons.skipBack, size: 22),
+              ),
+              const SizedBox(width: 14),
+              ValueListenableBuilder<bool>(
+                valueListenable: FocusAudio.playing,
+                builder: (context, playing, _) => IconButton.filled(
+                  iconSize: 26,
+                  style: IconButton.styleFrom(
+                    fixedSize: const Size(58, 58),
+                    backgroundColor: scheme.primary,
+                    foregroundColor: scheme.onPrimary,
+                  ),
+                  onPressed: () => _toggle(context, playing),
+                  icon: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    transitionBuilder: (child, animation) =>
+                        ScaleTransition(scale: animation, child: child),
+                    child: Icon(
+                      playing ? LucideIcons.pause : LucideIcons.play,
+                      key: ValueKey(playing),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              IconButton(
+                onPressed: () => FocusAudio.skip(1),
+                icon: const Icon(LucideIcons.skipForward, size: 22),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Scrubber extends StatefulWidget {
+  const _Scrubber();
+
+  @override
+  State<_Scrubber> createState() => _ScrubberState();
+}
+
+class _ScrubberState extends State<_Scrubber> {
+  double? _dragging;
+
+  static String _clock(Duration at) {
+    final seconds = (at.inSeconds % 60).toString().padLeft(2, '0');
+    return '${at.inMinutes}:$seconds';
+  }
+
+  Future<void> _seek(double value, int total) async {
+    await FocusAudio.seek(Duration(milliseconds: (value * total).round()));
+    if (mounted) setState(() => _dragging = null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    final label = sheetLabelStyle(context, size: 11.5);
+    return ValueListenableBuilder<Duration>(
+      valueListenable: FocusAudio.length,
+      builder: (context, length, _) => ValueListenableBuilder<Duration>(
+        valueListenable: FocusAudio.position,
+        builder: (context, position, _) {
+          final total = length.inMilliseconds;
+          final shown = _dragging ??
+              (total <= 0 ? 0.0 : position.inMilliseconds / total);
+          return Column(
+            children: [
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 4,
+                  activeTrackColor: scheme.primary,
+                  inactiveTrackColor: scheme.primary.withValues(alpha: 0.18),
+                  thumbColor: scheme.primary,
+                  overlayShape: SliderComponentShape.noOverlay,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                ),
+                child: Slider(
+                  value: shown.clamp(0.0, 1.0),
+                  onChanged: total <= 0
+                      ? null
+                      : (value) => setState(() => _dragging = value),
+                  onChangeEnd: (value) => _seek(value, total),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _clock(Duration(milliseconds: (shown * total).round())),
+                    style: label,
+                  ),
+                  Text(_clock(length), style: label),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
