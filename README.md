@@ -83,7 +83,7 @@ Habit Tracker M3E is an open source habit tracker for Android, Windows and Linux
 Start as many habits as you like, tick them off in one tap, then follow the
 activity grid, the streak counters and the statistics as they fill in.
 
-Everything stays on your device. No account, no ads, nothing to sync.
+Your data never travels anywhere. No sign-in, no advertising, no cloud sync.
 
 ---
 
@@ -93,92 +93,94 @@ Everything stays on your device. No account, no ads, nothing to sync.
 <tr>
 <td width="50%" valign="top">
 
-### Tracking
+### Recording habits
 
-- One-tap logging from the home screen, a widget or the notification
-- Three kinds of habit: **normal**, **avoid** (with relapses) and **amount**,
-  with your unit and daily goal
-- **Checklists** split a habit into steps, done when all are checked
-- **Flexible schedules**: daily, X times a week or month, chosen weekdays, or
-  every N days
-- **Fill in the past**: tap any day to add or remove it
-- **Day notes**: long-press a day to write what happened, or attach a photo
-- **Vacation mode** pauses a habit without breaking anything
-
-</td>
-<td width="50%" valign="top">
-
-### Seeing your progress
-
-- GitHub-style **activity grid**, by week, month or the whole year
-- **Month calendar**, with your week starting on Monday, Saturday or Sunday
-- **Completions per month**, so you can see the shape of a whole year
-- **Streak evolution** charted over time, watching the line climb
-- **"When are you most consistent?"** finds the hours you actually show up
-- Totals, best and current streak, completion rate and a per-habit
-  **strength** score
-- A **shareable progress card** in several sizes, exported as a polished image
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### Focus sessions
-
-- A timer for the habits that need one, free or tied to a habit and its goal
-- **Pomodoro rounds** with short breaks, or one long stretch
-- Three clock styles: **Circle**, **Flip** and **Dots**
-- Built-in sounds (rain, brown noise, fire) or your own tracks, in order
-  or shuffled
-- Calm scenes as a background, or a photo of your own
-- Tick off subtasks without leaving the timer, and keep the screen awake
-- A **daily focus goal**, plus a history of every session you finish
+- Mark a habit complete with a single tap, straight from the home screen, a widget
+  or the notification shade
+- Habit **styles**: **regular**, **keep-away** (with slip tracking) and **quantity**,
+  each with its own unit and daily target
+- **Step lists** chop a habit into pieces that only count once every box is ticked
+- **Scheduling you decide**: every day, a set number of days each week or month,
+  specific weekdays, or simply every Nth day
+- **Retroactive entry**: tap any earlier day to add or undo it
+- **Daily journals**: press and hold a day to jot something down, or attach an image
+- **Pause mode** suspends a habit without any penalty to your record
 
 </td>
 <td width="50%" valign="top">
 
-### Making it yours
+### Following your progress
 
-- **Classic, Minimal or Express**: three complete designs, each with its own
-  typography, shapes and motion
-- Minimalist icon pack, or any emoji you like
-- Custom accent color with a full picker
-- Light and dark themes, plus five app backgrounds: solid, gradient, dots,
-  true-black OLED or a photo of your own
-- Cover photos, categories, drag-to-reorder, profile name and photo
-- Three launcher icons, so Habit Tracker M3E matches the rest of your home screen
-- A burst of confetti the day you finish everything
+- A GitHub-inspired **heatmap**, zoomable to a week, a month or the entire year
+- **Calendar view**, with the week beginning on Monday, Saturday or Sunday
+- **Monthly tallies**, giving the whole year a readable shape at a glance
+- **Streak history** plotted over time so you can watch the trend line rise
+- **"What time do you actually keep up?"** pinpoints the hours you turn up most
+- Lifetime totals, longest and ongoing runs, hit rate, plus a per-habit
+  **resilience** rating
+- **Progress cards** ready to share, in a handful of sizes, rendered as a clean image
 
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
 
-### Reminders and widgets
+### Focus timer
 
-- Reminders per habit, on the days you choose or every N days, each with a
-  short encouraging line
-- **Done**, **Snooze** and **Add amount** buttons right in the notification
-- **Four home-screen widgets**: habit, today, stats and activity grid
-- Each widget styled on its own, with color or photo, opacity and border
-- Choose which figures the **stats widget** shows, and how they sit together
-- Tick a day straight from a widget, it saves without opening the app
-- Tap the activity grid to jump into that habit
+- A countdown for habits that benefit from one, either standalone or tied to a
+  habit and its target
+- **Pomodoro cycles** with brief pauses, or a single long block
+- Pick from three timer faces: **Dial**, **Flip** and **Beads**
+- Supplied audio (rain, brown noise, fireplace) or your own files, played in
+  sequence or shuffled
+- A peaceful looping backdrop, or a personal photograph
+- Clear subtasks without abandoning the timer, with the display kept awake
+- Set a **focus target per day**, and review a log of every session completed
 
 </td>
 <td width="50%" valign="top">
 
-### Your data
+### Make it your own
 
-- **Import** from Loop Habit Tracker, HabitKit, Habitica and HabitBull,
-  history and streaks included, or any CSV with a habit and a date
-- Backup and restore with a single file you keep yourself
-- **Automatic backups**, daily or weekly, to a folder of your choosing
-- **App lock** with a PIN or your fingerprint, for phones without one
-- **Archive** habits without losing a day of their history
-- Everything is offline: no account, no server, nothing to sync
-- Seven languages, with more open on Weblate
+- **Classic, Minimal or Express**: three distinct layouts, each carrying its own
+  type, shapes and movement
+- A pared-back icon set, or whichever emoji suits you
+- Your own accent colour, chosen from a full palette
+- Light and dark appearance, alongside five backdrops: a flat fill, a gradient,
+  a dot pattern, OLED black or a photograph
+- Cover images, categories, drag-to-arrange ordering, profile name and picture
+- Three launcher icon options so the app fits in with the rest of your screen
+- Confetti the moment you close out the day
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### Alerts and widgets
+
+- Per-habit alerts, set for chosen days or every Nth day, each paired with a brief
+  encouraging note
+- **Done**, **Snooze** and **Add amount** actions placed inside the notification
+- **Four home-screen widgets**: habit, today, stats and the activity heatmap
+- Every widget styled separately, with a colour or photo, opacity and outline
+- Decide which numbers the **stats widget** presents, and how they are arranged
+- Mark a day complete straight from a widget — it saves without opening the app
+- Tap any square on the heatmap to drop into that habit
+
+</td>
+<td width="50%" valign="top">
+
+### Your information
+
+- **Bring your data in** from Loop Habit Tracker, HabitKit, Habitica or
+  HabitBull, history and runs included, or from any CSV holding a habit and a date
+- One portable file handles both backup and restore
+- **Scheduled backups**, daily or weekly, written wherever you want them stored
+- **App lock** via a PIN or your fingerprint, for handsets lacking one
+- **Retire** a habit while keeping every recorded day
+- Entirely offline: no account, no server, no syncing of any kind
+- Seven languages today, with more available on Weblate
 
 </td>
 </tr>
@@ -186,7 +188,7 @@ Everything stays on your device. No account, no ads, nothing to sync.
 
 ---
 
-## Coming from another app?
+## Moving across from something else?
 
 <details>
 <summary><b>How the import works</b></summary>
@@ -230,15 +232,15 @@ both for 64-bit x86:
 | `HabitTrackerM3E-x86_64.AppImage` | Any distribution: make it executable and run it |
 | `HabitTrackerM3E-linux-x64.tar.gz` | Unpack anywhere and run `habit_tracker_m3e` |
 
-The Linux build has only just landed, so expect some rough edges. Reminders ring
-while the app is open. If something does not work, open an issue.
+Support for Linux only recently landed, so a few rough edges remain. Alerts only
+sound while the app is open. Should anything misbehave, please raise an issue.
 
 </details>
 
 <details>
 <summary><b>Install the APK yourself</b></summary>
 
-Prefer the raw APK? It's on the
+Would you rather grab the APK directly? Head to the
 [**Releases**](https://github.com/smartworldarafath/Habit-Tracker-M3E/releases) page,
 one file per phone type so each download stays small:
 
@@ -248,17 +250,16 @@ one file per phone type so each download stays small:
 | `HabitTrackerM3E-armeabi-v7a.apk` | Older 32-bit devices |
 | `HabitTrackerM3E-x86_64.apk` | Emulators and x86 tablets |
 
-Runs on **Android 9 (Pie) and newer**.
+Requires **Android 9 (Pie) or later**.
 
-If you install the APK yourself, [**Obtainium**](https://github.com/ImranR98/Obtainium)
-keeps it updated: add `https://github.com/smartworldarafath/Habit-Tracker-M3E` and it
-will follow the Releases page, tell you when a new version is out and pick the
-right APK for your phone.
+Managing updates by hand? Point [**Obtainium**](https://github.com/ImranR98/Obtainium)
+at `https://github.com/smartworldarafath/Habit-Tracker-M3E` and it will watch the
+Releases page, flag each new version, and fetch whichever build suits your handset.
 
 > [!NOTE]
->Habit Tracker M3E isn't on the Play Store. Since the APK doesn't come from a
->store, Android may ask you to allow installs from your browser or file manager
->the first time.
+>Habit Tracker M3E is not distributed through the Play Store. Because the APK does
+>not arrive from a store listing, Android may first ask you to permit installs
+>from your browser or file manager.
 
 </details>
 
@@ -277,21 +278,22 @@ right APK for your phone.
 
 ## Translations
 
-Translations are managed on [**Weblate**](https://hosted.weblate.org/engage/streak/):
-no coding needed, just short phrases you translate in your browser. New
-languages are welcome.
+Language work happens on [**Weblate**](https://hosted.weblate.org/engage/streak/):
+no programming required, simply render short phrases in your own language
+directly in the browser. Contributions in further languages are gladly taken.
 
 [![Translation status per language](https://hosted.weblate.org/widget/streak/app-strings/multi-auto.svg)](https://hosted.weblate.org/engage/streak/)
 
-How it works → [**TRANSLATING.md**](TRANSLATING.md)
+Details live in [**TRANSLATING.md**](TRANSLATING.md)
 
 ---
 
 ## Contributing
 
-Bug reports, ideas and pull requests are all welcome, see
-[**CONTRIBUTING.md**](CONTRIBUTING.md). For anything larger than a fix, open an
-issue first so we can agree on the direction.
+Reports, suggestions and pull requests are equally appreciated — see
+[**CONTRIBUTING.md**](CONTRIBUTING.md). Should you be contemplating something
+beyond a small repair, open an issue first so we can agree on the approach
+before the work begins.
 
 ---
 
@@ -302,23 +304,23 @@ issue first so we can agree on the direction.
 
 These are the apps it learned from:
 
-- **[Loop Habit Tracker](https://github.com/iSoron/uhabits)**, for proving a
-  habit tracker can be free, offline and still excellent.
-- **[Grit](https://github.com/shub39/Grit)**, for the small motions that make a
-  list feel alive.
-- **[HabitKit](https://www.habitkit.app/)**, for how good a year of history
-  looks as a coloured grid.
-- **[Habitica](https://github.com/habitRPG/habitica)**, for treating showing up
-  as something worth celebrating.
+- **[Loop Habit Tracker](https://github.com/iSoron/uhabits)**, which demonstrated
+  that a tracker may be free, operate offline and still be genuinely excellent.
+- **[Grit](https://github.com/shub39/Grit)**, whose tiny animations lend a plain
+  list a sense of life.
+- **[HabitKit](https://www.habitkit.app/)**, for its rendering of a full year of
+  history as a coloured grid.
+- **[Habitica](https://github.com/habitRPG/habitica)**, for treating the act of
+  turning up as something worth marking.
 
-The island you build in the gamification tab is drawn with
+The gamification island is rendered using
 **[Mykonos Island Voxels](https://github.com/boona13/mykonos-island-voxels)** by
-boona13, an MIT licensed set of isometric voxel art. Thank you for putting it
-out there for anyone to use.
+boona13, published under the MIT licence as a set of isometric voxel artwork
+freely available for anyone to reuse. Our thanks go to them for sharing it.
 
-The streak flame on the home screen widgets is the fire from
+The flame motif on the home-screen widgets is drawn from the fire emoji in
 **[Fluent Emoji](https://github.com/microsoft/fluentui-emoji)** by Microsoft,
-released under the MIT license.
+offered under the MIT licence.
 
 </details>
 
