@@ -1,4 +1,4 @@
-{
+﻿{
   "widget_cfg_brightness": "Helligkeit",
   "motiv_almost": "Fast da! Nur ein bisschen mehr",
   "about_app": "Über diese App",
@@ -180,7 +180,7 @@
       }
     }
   },
-  "dev_handle": "@InlitX",
+  "dev_handle": "@smartworldarafath",
   "support": "Support",
   "weekdays": "Wochentage",
   "data": "Daten",
@@ -197,7 +197,7 @@
   "frequency": "Frequenz",
   "import_replace": "Alle überschreiben",
   "no_habits_yet": "Noch keine Gewohnheiten",
-  "made_by": "Gemacht mit ❤️ von @InlitX",
+  "made_by": "Gemacht mit ❤️ von @smartworldarafath",
   "reminder_message_hint": "Leer lassen für ein motivierendes Zitat",
   "widget_cfg_hue": "Farbton",
   "delete_habit_body": "Lösche \"{name}\"? Dies kann nicht rückgängig gemacht werden.",
@@ -504,7 +504,7 @@
   "add_note": "Notiz hinzufügen",
   "share_photo": "Bild",
   "note_kind_planned": "Geplant",
-  "default_user": "Inlitx",
+  "default_user": "Arafath",
   "share_saved": "In der Galerie gespeichert",
   "count_days": "{count, plural, =1{1 Tag} other{{count} Tage}}",
   "@count_days": {
@@ -596,7 +596,7 @@
   "widget_cfg_style_card": "Karte",
   "bg_gradient": "Übergang",
   "focus_target_reached": "Ziel erreicht",
-  "share_friends_message": "Ich verfolge meine Serien mit Streak – einem kleinen, kostenlosen, offline Gewohnheits-Tracker ohne Werbung. Bau auch du deine Serien mit Streak: https://inlitx.github.io/streak/",
+  "share_friends_message": "Ich verfolge meine Serien mit Streak – einem kleinen, kostenlosen, offline Gewohnheits-Tracker ohne Werbung. Bau auch du deine Serien mit Streak: https://github.com/smartworldarafath/Habit-Tracker-M3E",
   "note_kind_completed": "Abgeschlossen",
   "focus_break": "Pause",
   "undo": "Rückgängig",
@@ -1404,3 +1404,5 @@
   "onb_blurb": "Kleine tägliche Einträge, die zu Gewohnheiten werden, die du beibehältst.",
   "todo_tag_icon": "Icon"
 }
+
+

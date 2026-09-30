@@ -1,4 +1,4 @@
-{
+﻿{
   "app_tagline": "습관 트래커",
   "today": "오늘",
   "stats": "통계",
@@ -407,7 +407,7 @@
   "share_failed": "사진을 만들 수 없었어요",
   "about_developer": "개발자",
   "about_credits": "크레디트",
-  "dev_handle": "@InlitX",
+  "dev_handle": "@smartworldarafath",
   "dev_role": "인디 제작자 · Streak",
   "about_credits_body": "Flutter로 빌드. Lucide에서 아이콘 제공. fl_chart에서 차트 제공. Figtree & Playfair Display에서 글꼴 제공.",
   "add_note": "노트 추가",
@@ -447,7 +447,7 @@
   "quant_goal_days": "목표 달성",
   "quant_stats_empty": "양을 기록하면 목표 달성에 실패했더라도, 여기에 누적돼요.",
   "ranking": "순위",
-  "made_by": "@InlitX가 ❤️을 담아 만듦",
+  "made_by": "@smartworldarafath가 ❤️을 담아 만듦",
   "not_enough_data": "아직 데이터가 충분하지 않아요",
   "streak_on": "🔥 {n}일 연속 달성했어요. 계속하세요!",
   "@streak_on": {
@@ -722,7 +722,7 @@
   "emojis_tab": "이모지",
   "report_issue": "문제 신고하기",
   "advanced_options": "고급 옵션",
-  "default_user": "Inlitx",
+  "default_user": "Arafath",
   "your_name": "내 이름",
   "edit_name": "이름 편집",
   "change_photo": "사진 변경",
@@ -1050,7 +1050,7 @@
     }
   },
   "about_story": "이 앱은 기존 습관 추적 앱들에 대한 불만으로부터 탄생했어요. 대부분은 만들 수 있는 습관 개수에 제한을 두거나, 기본적인 기능을 유료로 제공하거나, 사용자를 추적하거나, 광고를 쏟아 부어요. 그래서 저는 Streak을 만들기로 했어요. 완전히 무료에 광고도, 결제도, 추적도 없죠. 모든 기능이 로컬에서 돌아가므로 데이터를 스스로 소유할 수 있어요. 오픈 소스이며, 제약은 없어요.",
-  "share_friends_message": "Streak는 가볍고, 무료인, 오프라인 습관 추적 앱으로 로그인과 광고 없이 이용할 수 있어요. 함께 습관을 만들고 유지해 봐요. https://inlitx.github.io/streak/",
+  "share_friends_message": "Streak는 가볍고, 무료인, 오프라인 습관 추적 앱으로 로그인과 광고 없이 이용할 수 있어요. 함께 습관을 만들고 유지해 봐요. https://github.com/smartworldarafath/Habit-Tracker-M3E",
   "about_inline": "Streak는 습관을 추적할 수 있는 오픈 소스 앱이에요. 로그인도, 제한도, 결제도 없어요. 모든 데이터는 폰 안에만 가만히 있어요.\n\n누구나 코드를 보고, 개선하고, 자유롭게 쓸 수 있어요.",
   "about_subtitle": "노력하기로 결심한 나날들을 위하여.",
   "refresh_now": "새로고침",
@@ -1370,3 +1370,5 @@
   },
   "today_progress_option_sub": "일일 목표 고리와 각 습관의 진행 막대"
 }
+
+

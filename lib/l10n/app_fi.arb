@@ -1,4 +1,4 @@
-{
+﻿{
   "motiv_almost": "Melkein valmista! Vielä vähän lisää",
   "share_friends_sub": "Jaa sovellus",
   "currency_hint": "Symboli tai koodi",
@@ -282,7 +282,7 @@
   "daily": "Päivittäin",
   "bg_gradient": "Liukuväri",
   "rate_github_sub": "Tue projektia antamalla tähti",
-  "share_friends_message": "Pidän tavoistani kiinni Streakilla – pieni, ilmainen ja paikallinen tapojen seuranta ilman käyttäjätunnuksia ja mainoksia. Tutustu sinäkin: https://inlitx.github.io/streak/",
+  "share_friends_message": "Pidän tavoistani kiinni Streakilla – pieni, ilmainen ja paikallinen tapojen seuranta ilman käyttäjätunnuksia ja mainoksia. Tutustu sinäkin: https://github.com/smartworldarafath/Habit-Tracker-M3E",
   "no_data_yet": "Ei vielä tietoja",
   "about": "Tietoja",
   "undo": "Kumoa",
@@ -477,3 +477,5 @@
   "active_days": "Aktiivisia päiviä",
   "refresh_nothing": "Kansiossa ei ole mitään uutta"
 }
+
+

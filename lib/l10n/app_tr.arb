@@ -1,4 +1,4 @@
-{
+﻿{
   "today": "Bugün",
   "stats": "İstatistikler",
   "settings": "Ayarlar",
@@ -29,7 +29,7 @@
     }
   },
   "difficulty_option": "Alışkanlık zorluğu",
-  "dev_handle": "@InlitX",
+  "dev_handle": "@smartworldarafath",
   "deleted_forever": "Alışkanlık silindi",
   "close": "Kapat",
   "monthly": "Aylık",
@@ -94,3 +94,5 @@
   "island_t_white": "beyaz",
   "widget_demo_water": "Su"
 }
+
+

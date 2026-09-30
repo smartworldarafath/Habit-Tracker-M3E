@@ -1,4 +1,4 @@
-{
+﻿{
   "app_tagline": "Tracker de obiceiuri",
   "today": "Azi",
   "stats": "Statistici",
@@ -246,7 +246,7 @@
   "archive": "Arhivează",
   "share_friends": "Trimite unui prieten",
   "share_friends_sub": "Trimite-le aplicația",
-  "share_friends_message": "Îmi țin streak-urile în viață cu Streak — un tracker de obiceiuri mic, gratuit și offline, fără conturi și fără reclame. Vino să-ți construiești și tu: https://inlitx.github.io/streak/",
+  "share_friends_message": "Îmi țin streak-urile în viață cu Streak — un tracker de obiceiuri mic, gratuit și offline, fără conturi și fără reclame. Vino să-ți construiești și tu: https://github.com/smartworldarafath/Habit-Tracker-M3E",
   "copy_message": "Copiază mesajul",
   "message_copied": "Mesaj copiat",
   "app_lock": "Blocarea aplicației",
@@ -556,7 +556,7 @@
   "about_inline": "Streak este o aplicație open source pentru urmărirea obiceiurilor. Fără conturi, fără limite, fără plăți. Totul rămâne pe telefonul tău.\n\nOricine poate vedea codul, îl poate îmbunătăți sau îl poate folosi liber.",
   "about_subtitle": "Pentru zilele în care alegi să fii prezent.",
   "about_story": "Această aplicație s-a născut din frustrarea față de tracker-ele de obiceiuri existente. Cele mai multe limitează câte obiceiuri poți crea, ascund funcții de bază în spatele unui paywall, te urmăresc sau te bombardează cu reclame. Așa că am decis să construiesc Streak: complet gratuit, fără reclame, fără plăți, fără urmărire. Totul rulează local — datele tale sunt ale tale. Open source, fără cârlige.",
-  "made_by": "Făcută cu ❤️ de @InlitX",
+  "made_by": "Făcută cu ❤️ de @smartworldarafath",
   "share": "Distribuie",
   "share_progress": "Distribuie progresul",
   "share_failed": "Imaginea nu a putut fi creată",
@@ -572,7 +572,7 @@
   "about_developer": "Dezvoltatorul",
   "about_credits": "Credite",
   "about_credits_body": "Construită cu Flutter. Pictograme de la Lucide. Grafice de la fl_chart. Fonturi: Figtree și Playfair Display.",
-  "dev_handle": "@InlitX",
+  "dev_handle": "@smartworldarafath",
   "dev_role": "Creator indie · Streak",
   "notes": "Notițe",
   "notes_enable_sub": "Atașează notițe oricărei zile a unui obicei",
@@ -884,7 +884,7 @@
   "report_issue": "Raportează o problemă",
   "report_issue_sub": "Spune-mi despre o eroare sau cere o funcție",
   "advanced_options": "Opțiuni avansate",
-  "default_user": "Inlitx",
+  "default_user": "Arafath",
   "your_name": "Numele tău",
   "edit_name": "Editează numele",
   "change_photo": "Schimbă fotografia",
@@ -1404,3 +1404,5 @@
   "todo_add_subtask": "Adaugă subsarcină",
   "pin_paste": "Lipește codul"
 }
+
+

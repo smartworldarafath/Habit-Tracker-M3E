@@ -1,4 +1,4 @@
-{
+﻿{
   "@@locale": "pt",
   "motiv_almost": "Quase lá! Falta só um pouco",
   "about_story": "Este aplicativo nasceu da frustração com os rastreadores de hábitos disponíveis. A maioria limita quantos hábitos você pode criar, esconde recursos básicos atrás de uma assinatura, rastreia sua atividade ou enche a tela de anúncios. Por isso, decidi criar o Streak: totalmente gratuito, sem anúncios, sem pagamentos e sem rastreamento. Tudo funciona localmente, e seus dados pertencem a você. Código aberto, sem pegadinhas.",
@@ -115,7 +115,7 @@
   "appearance": "Aparência",
   "empty_title": "Comece sua primeira sequência",
   "strength": "Força",
-  "default_user": "Inlitx",
+  "default_user": "Arafath",
   "description": "Descrição",
   "sched_days": "Dias",
   "circle": "Círculo",
@@ -162,7 +162,7 @@
       }
     }
   },
-  "dev_handle": "@InlitX",
+  "dev_handle": "@smartworldarafath",
   "support": "Suporte",
   "weekdays": "Dias úteis",
   "data": "Dados",
@@ -179,7 +179,7 @@
   "frequency": "Frequência",
   "import_replace": "Substituir tudo",
   "no_habits_yet": "Nenhum hábito ainda",
-  "made_by": "Feito com ❤️ por @InlitX",
+  "made_by": "Feito com ❤️ por @smartworldarafath",
   "reminder_message_hint": "Deixe em branco para usar uma frase motivacional",
   "delete_habit_body": "Excluir \"{name}\"? Esta ação não pode ser desfeita.",
   "@delete_habit_body": {
@@ -604,7 +604,7 @@
   },
   "journey": "Jornada",
   "focus_target_reached": "Meta alcançada",
-  "share_friends_message": "Estou mantendo meu hábitos frequentes com o Streak — um rastreador de hábitos pequeno, gratuito e offline, sem contas nem anúncios. Venha você também: https://inlitx.github.io/streak/",
+  "share_friends_message": "Estou mantendo meu hábitos frequentes com o Streak — um rastreador de hábitos pequeno, gratuito e offline, sem contas nem anúncios. Venha você também: https://github.com/smartworldarafath/Habit-Tracker-M3E",
   "note_kind_completed": "Concluído",
   "focus_break": "Pausa",
   "undo": "Desfazer",
@@ -1179,3 +1179,5 @@
   "todo_tag_icon": "Ícone",
   "todo_tag_pick": "Selecione as tags"
 }
+
+

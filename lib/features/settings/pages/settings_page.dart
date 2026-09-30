@@ -13,6 +13,7 @@ import 'package:streak/core/widgets/number_keypad_dialog.dart';
 import 'package:streak/core/widgets/section_label.dart';
 import 'package:streak/features/habits/widgets/category_editor_sheet.dart';
 import 'package:streak/features/settings/pages/about_page.dart';
+import 'package:streak/features/settings/pages/app_updates_page.dart';
 import 'package:streak/features/settings/pages/app_style_page.dart';
 import 'package:streak/features/settings/pages/archived_habits_page.dart';
 import 'package:streak/features/settings/pages/express_settings_page.dart';
@@ -122,6 +123,18 @@ class ClassicSettingsPage extends StatelessWidget {
                 title: context.l10n.about_app,
                 subtitle: context.l10n.about_app_sub,
                 onTap: () => AppNavigator.push(const AboutPage()),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Entrance(
+            index: 4,
+            child: Card(
+              child: NavRow(
+                icon: LucideIcons.sparkles,
+                title: 'App Updates',
+                subtitle: 'Check for updates and download',
+                onTap: () => AppNavigator.push(const AppUpdatesPage()),
               ),
             ),
           ),

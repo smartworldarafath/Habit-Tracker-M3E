@@ -19,6 +19,7 @@ import 'package:streak/core/widgets/section_label.dart';
 import 'package:streak/core/widgets/number_keypad_dialog.dart';
 import 'package:streak/features/habits/widgets/category_editor_sheet.dart';
 import 'package:streak/features/settings/pages/about_page.dart';
+import 'package:streak/features/settings/pages/app_updates_page.dart';
 import 'package:streak/features/settings/pages/app_style_page.dart';
 import 'package:streak/features/settings/pages/archived_habits_page.dart';
 import 'package:streak/features/settings/pages/quotes_page.dart';
@@ -111,6 +112,17 @@ class ExpressSettingsPage extends StatelessWidget {
             title: context.l10n.about_app,
             subtitle: context.l10n.about_app_sub,
             onTap: () => AppNavigator.push(const AboutPage()),
+          ),
+        ],
+      ),
+      const SizedBox(height: 14),
+      ExpressGroup(
+        children: [
+          ExpressTile(
+            icon: LucideIcons.sparkles,
+            title: 'App Updates',
+            subtitle: 'Check for updates and download',
+            onTap: () => AppNavigator.push(const AppUpdatesPage()),
           ),
         ],
       ),

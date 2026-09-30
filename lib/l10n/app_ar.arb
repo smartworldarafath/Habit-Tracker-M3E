@@ -1,4 +1,4 @@
-{
+﻿{
   "share_friends_sub": "أرسل التطبيق إليهم",
   "currency_hint": "رمز أو شفرة",
   "island_t_lilac": "ليلكي",
@@ -60,7 +60,7 @@
   "preferences_sub": "اللغة، الأسبوع والترتيب",
   "refresh_now_sub": "احضار ما تركته أجهزتك الأخرى في المجلد",
   "share_photo": "صورة",
-  "default_user": "إنلكس",
+  "default_user": "Arafath",
   "report_issue": "بلغ عن خلل",
   "circle": "دائرة",
   "wipe_data_confirm": "مسح كل شيء",
@@ -104,7 +104,7 @@
   },
   "day_start": "اليوم يبدأ",
   "current_streak": "السلسلة الحالية",
-  "share_friends_message": "حافظ على استمرارية سلسلتي باستخدام Streak - وهو تطبيق صغير ومجاني لتتبع العادات بدون إنترنت، بدون حسابات وبدون إعلانات. تعال وابدأ سلسلتك الخاصة: https://inlitx.github.io/streak/",
+  "share_friends_message": "حافظ على استمرارية سلسلتي باستخدام Streak - وهو تطبيق صغير ومجاني لتتبع العادات بدون إنترنت، بدون حسابات وبدون إعلانات. تعال وابدأ سلسلتك الخاصة: https://github.com/smartworldarafath/Habit-Tracker-M3E",
   "undo": "تراجع",
   "see_more": "عرض المزيد",
   "support_sub": "بلغ عن خطأ أو اطلب ميزة جديدة",
@@ -449,3 +449,5 @@
   "category_order_sub": "اسحبهم الى الترتيب الذي تريده",
   "category_order_empty": "قم بتعيين فئة لعادة ما، وستظهر هنا"
 }
+
+

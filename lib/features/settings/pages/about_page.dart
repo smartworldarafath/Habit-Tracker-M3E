@@ -16,9 +16,9 @@ import 'package:streak/core/express/express_surface.dart';
 import 'package:streak/core/express/express_type.dart';
 import 'package:streak/core/minimal/minimal_type.dart';
 
-const _kGitHubUrl = 'https://github.com/InlitX/streak';
-const _kProfileUrl = 'https://github.com/InlitX';
-const _kCoffeeUrl = 'https://ko-fi.com/inlitx';
+const _kGitHubUrl = 'https://github.com/smartworldarafath/Habit-Tracker-M3E';
+const _kProfileUrl = 'https://github.com/smartworldarafath';
+const _kCoffeeUrl = 'https://www.supportkori.com/arafathrahman';
 const _base = Duration(milliseconds: 340);
 
 class AboutPage extends StatefulWidget {
@@ -29,7 +29,7 @@ class AboutPage extends StatefulWidget {
 }
 
 class _AboutPageState extends State<AboutPage> {
-  String _version = '';
+  String _version = 'v1.0.0';
 
   @override
   void initState() {

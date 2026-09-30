@@ -31,7 +31,7 @@ class HomeWidgetService {
 
   static const _allHabitsIcon = 'activity';
 
-  static const appGroup = 'group.com.streak.app';
+  static const appGroup = 'group.com.habittrackerm3e.app';
 
   static bool _grouped = false;
 

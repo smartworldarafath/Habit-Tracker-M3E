@@ -32,9 +32,9 @@ import 'package:streak/services/import_service.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-const kGitHubUrl = 'https://github.com/InlitX/streak';
-const kIssuesUrl = 'https://github.com/InlitX/streak/issues';
-const kCoffeeUrl = 'https://ko-fi.com/inlitx';
+const kGitHubUrl = 'https://github.com/smartworldarafath/Habit-Tracker-M3E';
+const kIssuesUrl = 'https://github.com/smartworldarafath/Habit-Tracker-M3E/issues';
+const kCoffeeUrl = 'https://www.supportkori.com/arafathrahman';
 
 class SettingsActions {
   const SettingsActions._();
