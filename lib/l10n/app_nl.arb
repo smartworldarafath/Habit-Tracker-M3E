@@ -1,4 +1,4 @@
-{
+﻿{
   "today": "Vandaag",
   "stats": "Statistieken",
   "settings": "Instellingen",
@@ -211,7 +211,7 @@
   "archive": "Archiveer",
   "share_friends": "Deel met een vriend",
   "share_friends_sub": "Stuur hen de app",
-  "share_friends_message": "Ik houd mijn reeksen in stand met Streak — een kleine, gratis, offline gewoontetracker zonder accounts en zonder advertenties. Kom en maak je eigen reeks: https://inlitx.github.io/streak/",
+  "share_friends_message": "Ik houd mijn reeksen in stand met Streak — een kleine, gratis, offline gewoontetracker zonder accounts en zonder advertenties. Kom en maak je eigen reeks: https://github.com/smartworldarafath/Habit-Tracker-M3E",
   "copy_message": "Kopieer bericht",
   "message_copied": "Bericht gekopieerd",
   "app_lock": "Vergrendel app",
@@ -461,7 +461,7 @@
   "about_inline": "Streak is een open-source-app waarmee je je gewoontes kunt bijhouden. Geen accounts, geen beperkingen, geen kosten. Alles blijft op je toestel staan.\n\nIedereen kan de code inzien, verbeteren of vrij gebruiken.",
   "about_subtitle": "Voor de dagen waarop je ervoor kiest om er te zijn.",
   "about_story": "Deze app is ontstaan uit frustratie over de bestaande gewoontetrackers. De meeste stellen een limiet in op het aantal gewoontes dat je kunt aanmaken, verbergen basisfuncties achter een betaalmuur, houden je in de gaten of overspoelen je met advertenties. Daarom besloot ik Streak te ontwikkelen: volledig gratis, geen advertenties, geen betalingen, geen tracking. Alles draait lokaal — jouw gegevens blijven van jou. Open source, zonder addertjes onder het gras.",
-  "made_by": "Gemaakt met ❤️ door @InlitX",
+  "made_by": "Gemaakt met ❤️ door @smartworldarafath",
   "share": "Deel",
   "share_progress": "Deel voortgang",
   "share_failed": "Kon afbeelding niet creëeren",
@@ -477,7 +477,7 @@
   "about_developer": "De ontwikkelaar",
   "about_credits": "Credits",
   "about_credits_body": "Gemaakt met Flutter. Iconen door Lucide. Grafieken door fl_chart. Opgemaakt in Figtree & Playfair Display.",
-  "dev_handle": "@InlitX",
+  "dev_handle": "@smartworldarafath",
   "dev_role": "Indie-ontwikkelaar · Streak",
   "notes": "Notities",
   "notes_enable_sub": "Voeg notities toe aan elke dag van een gewoonte",
@@ -714,7 +714,7 @@
   "preferences_sub": "Taal, week en sortering",
   "habit_duration_none": "Geen duur",
   "celebration_sub": "Wat je ziet als je een gewoonte afvinkt",
-  "default_user": "Inlitx",
+  "default_user": "Arafath",
   "report_issue": "Rapporteer een probleem",
   "readable_copy_sub": "Schrijft ook je gewoonten als markdown bestanden",
   "circle": "Cirkel",
@@ -880,3 +880,5 @@
   "start_view_sub": "Het scherm waar Vandaag in opent",
   "perfect_streak": "Perfecte dagreeks"
 }
+
+

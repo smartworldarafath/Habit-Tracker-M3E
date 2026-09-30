@@ -1,4 +1,4 @@
-{
+﻿{
   "description_hint": "Opcjonalne notatki",
   "onb2_body": "Codzienne, tygodniowe lub miesięczne cele z inteligentnymi przypomnieniami, dzięki którym nic nie umknie Twojej uwadze.",
   "quant_preset_reading": "Czytanie",
@@ -105,3 +105,5 @@
   "color": "Kolor",
   "today": "Dzisiaj"
 }
+
+

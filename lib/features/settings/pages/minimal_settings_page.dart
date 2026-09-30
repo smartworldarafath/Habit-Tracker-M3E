@@ -12,6 +12,7 @@ import 'package:streak/core/utils/app_dirs.dart';
 import 'package:streak/core/widgets/section_label.dart';
 import 'package:streak/features/habits/widgets/category_editor_sheet.dart';
 import 'package:streak/features/settings/pages/about_page.dart';
+import 'package:streak/features/settings/pages/app_updates_page.dart';
 import 'package:streak/features/settings/pages/app_style_page.dart';
 import 'package:streak/features/settings/pages/archived_habits_page.dart';
 import 'package:streak/features/settings/settings_actions.dart';
@@ -89,6 +90,17 @@ class MinimalSettingsPage extends StatelessWidget {
                 title: context.l10n.about_app,
                 subtitle: context.l10n.about_app_sub,
                 onTap: () => AppNavigator.push(const AboutPage()),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SoftCard(
+            children: [
+              SoftRow(
+                icon: LucideIcons.sparkles,
+                title: 'App Updates',
+                subtitle: 'Check for updates and download',
+                onTap: () => AppNavigator.push(const AppUpdatesPage()),
               ),
             ],
           ),

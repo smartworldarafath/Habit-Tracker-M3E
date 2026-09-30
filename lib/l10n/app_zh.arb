@@ -1,4 +1,4 @@
-{
+﻿{
   "app_tagline": "习惯追踪",
   "today": "今天",
   "stats": "统计",
@@ -360,14 +360,14 @@
   "about_inline": "Streak 是一款用于追踪习惯的开源应用。无需注册账号、没有功能限制、无需付费。所有数据仅保存在你的手机本地。\n\n任何人都可以查看源代码、进行优化，或是自由使用。",
   "about_subtitle": "致你全力以赴的每一天。",
   "about_story": "开发这款应用，源于我对市面上各类习惯追踪软件的不满。大多数应用会限制可创建的习惯数量，把基础功能设为付费内容、收集用户数据，或是充斥大量广告。于是我打造了 Streak：完全免费、无广告、无需付费、不追踪用户信息。所有数据本地运行，你的数据全权归你所有。开源软件，无任何隐藏套路。",
-  "made_by": "由 @InlitX 用❤️制作",
+  "made_by": "由 @smartworldarafath 用❤️制作",
   "share": "分享",
   "share_progress": "分享进度",
   "share_failed": "无法生成图片",
   "about_developer": "开发者",
   "about_credits": "致谢",
   "about_credits_body": "基于 Flutter 开发。图标源自 Lucide。图表组件使用 fl_chart。字体采用 Figtree 与 Playfair Display。",
-  "dev_handle": "@InlitX",
+  "dev_handle": "@smartworldarafath",
   "dev_role": "独立开发者・Streak",
   "check_style": "查看样式",
   "square": "方形",
@@ -376,7 +376,7 @@
   "icons_tab": "图标",
   "emojis_tab": "表情符号",
   "advanced_options": "高级选项",
-  "default_user": "Inlitx",
+  "default_user": "Arafath",
   "your_name": "你的名称",
   "edit_name": "编辑名称",
   "change_photo": "更换照片",
@@ -680,7 +680,7 @@
   "widget_cfg_dot_color": "圆点颜色",
   "widget_cfg_style_card": "卡片",
   "focus_target_reached": "目标已达成",
-  "share_friends_message": "我用 Streak 保持习惯连续打卡——一款小巧、免费、无需账号、无广告的离线习惯追踪器。快来创建你的习惯：https://inlitx.github.io/streak/",
+  "share_friends_message": "我用 Streak 保持习惯连续打卡——一款小巧、免费、无需账号、无广告的离线习惯追踪器。快来创建你的习惯：https://github.com/smartworldarafath/Habit-Tracker-M3E",
   "note_kind_completed": "已完成",
   "focus_break": "休息",
   "widget_cfg_choose_image": "选择图片",
@@ -1326,3 +1326,5 @@
   "start_view_sub": "「今天」的默认显示方式",
   "refresh_nothing": "文件夹中没有新内容"
 }
+
+

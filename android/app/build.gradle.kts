@@ -16,9 +16,9 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.streak.app"
+    namespace = "com.habittrackerm3e.app"
     compileSdk = 36
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.3.13750724"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -31,7 +31,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.streak.app"
+        applicationId = "com.habittrackerm3e.app"
         minSdk = 28
         targetSdk = 36
         versionCode = flutter.versionCode

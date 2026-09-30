@@ -1,4 +1,4 @@
-{
+﻿{
   "widget_cfg_brightness": "Luminosité",
   "focus_end_keep": "Conituez",
   "motiv_almost": "Presque ! Percévérez",
@@ -238,7 +238,7 @@
   "appearance": "Apparence",
   "note_kind_planned": "Prévu",
   "strength": "Force",
-  "default_user": "Inlitx",
+  "default_user": "Arafath",
   "description": "Description",
   "share_saved": "Sauvegardé dans votre galerie",
   "count_days": "{count, plural, =1{1 jour} other{{count} jours}}",
@@ -339,7 +339,7 @@
       }
     }
   },
-  "dev_handle": "@InlitX",
+  "dev_handle": "@smartworldarafath",
   "focus_no_sound": "Pas de track choissi",
   "support": "Support",
   "weekdays": "Jours de semaine",
@@ -358,7 +358,7 @@
   "app_style": "Style de l'application",
   "frequency": "Fréquence",
   "import_replace": "Tout remplacer",
-  "made_by": "Réalisé avec ❤️ par @InlitX",
+  "made_by": "Réalisé avec ❤️ par @smartworldarafath",
   "wipe_data_done": "Toutes les données effacées",
   "reminder_message_hint": "Laisser vide pour une citation motivativate",
   "focus_pick_habit": "Quel est votre focus ?",
@@ -433,7 +433,7 @@
   "bg_gradient": "Gradient",
   "rate_github_sub": "Supporter le projet avec une étoile",
   "focus_target_reached": "Objectif atteint",
-  "share_friends_message": "Je garde ma série vivant avec Streak - un petit tracker d'habitude gratuit, hors ligne et sans compte ni pubs. Faites les vôtres sur : https://inlitx.github.io/streak/",
+  "share_friends_message": "Je garde ma série vivant avec Streak - un petit tracker d'habitude gratuit, hors ligne et sans compte ni pubs. Faites les vôtres sur : https://github.com/smartworldarafath/Habit-Tracker-M3E",
   "note_kind_completed": "Complété",
   "focus_break": "Pause",
   "no_data_yet": "Pas encore de données",
@@ -1250,3 +1250,5 @@
   "todo_add_subtask": "Ajouter une sous-tâche",
   "pin_paste": "Coller le code"
 }
+
+

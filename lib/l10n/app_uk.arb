@@ -1,4 +1,4 @@
-{
+﻿{
   "widget_cfg_brightness": "Яскравість",
   "motiv_almost": "Майже на місці! Ще зовсім трохи",
   "about_story": "Цей застосунок з’явився через розчарування в наявних відстежувачах звичок. Більшість із них обмежують кількість звичок, які можна створити, ховають базові функції за платним доступом, стежать за вами або закидають рекламою. Тому я вирішив створити Streak: повністю безоплатний, без реклами, без платежів і без відстеження. Усе працює локально — ваші дані належать тільки вам. Відкритий код, без жодних підступів.",
@@ -187,7 +187,7 @@
   "appearance": "Вигляд",
   "empty_title": "Розпочніть першу серію",
   "strength": "Сила",
-  "default_user": "Inlitx",
+  "default_user": "Arafath",
   "description": "Опис",
   "count_days": "{count, plural, one {{count} день} few {{count} дні} many {{count} днів} other {{count} днів}}",
   "@count_days": {
@@ -257,7 +257,7 @@
       }
     }
   },
-  "dev_handle": "@InlitX",
+  "dev_handle": "@smartworldarafath",
   "support": "Підтримка",
   "weekdays": "Будні",
   "data": "Дані",
@@ -274,7 +274,7 @@
   "frequency": "Частота",
   "import_replace": "Замінити всі",
   "no_habits_yet": "Звички відсутні",
-  "made_by": "Зроблено з ❤️ @InlitX",
+  "made_by": "Зроблено з ❤️ @smartworldarafath",
   "reminder_message_hint": "Залиште порожнім, щоб отримати мотиваційну цитату",
   "widget_cfg_hue": "Відтінок",
   "delete_habit_body": "Видалити «{name}»? Цю дію неможливо скасувати.",
@@ -671,7 +671,7 @@
   },
   "journey": "Подорож",
   "focus_target_reached": "Ціль досягнуто",
-  "share_friends_message": "Підтримую свої серії звичок у Streak — це маленький, безплатний та автономний відстежувач без облікових записів та реклами. Спробуй і ти: https://inlitx.github.io/streak/",
+  "share_friends_message": "Підтримую свої серії звичок у Streak — це маленький, безплатний та автономний відстежувач без облікових записів та реклами. Спробуй і ти: https://github.com/smartworldarafath/Habit-Tracker-M3E",
   "note_kind_completed": "Завершено",
   "focus_break": "Перерва",
   "undo": "Скасувати",
@@ -1404,3 +1404,5 @@
   "todo_add_subtask": "Додати підзадачу",
   "pin_paste": "Вставити код"
 }
+
+
