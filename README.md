@@ -23,26 +23,18 @@ Log a habit in a single tap, keep your momentum, and watch your streaks grow.
 <br/>
 
 <p>
-  <img alt="Flutter" src="https://img.shields.io/badge/Flutter-02569B?style=flat&logo=flutter&logoColor=white" />
-  <img alt="Dart" src="https://img.shields.io/badge/Dart-0175C2?style=flat&logo=dart&logoColor=white" />
-  <img alt="Android" src="https://img.shields.io/badge/Android-3DDC84?style=flat&logo=android&logoColor=white" />
-  <img alt="License GPLv3" src="https://img.shields.io/badge/License-GPLv3-7C3AED?style=flat&logo=gnu&logoColor=white" />
-  <img alt="No ads, no tracking" src="https://img.shields.io/badge/No%20ads%20%C2%B7%20No%20tracking-22C55E?style=flat&logo=shield&logoColor=white" />
-  <img alt="Downloads" src="https://img.shields.io/github/downloads/InlitX/streak/total?style=flat&logo=github&logoColor=white&label=Downloads&color=7C3AED" />
+  <a href="https://flutter.dev"><img alt="Flutter" src="https://img.shields.io/badge/Flutter-02569B?style=flat&logo=flutter&logoColor=white" /></a>
+  <a href="https://dart.dev"><img alt="Dart" src="https://img.shields.io/badge/Dart-0175C2?style=flat&logo=dart&logoColor=white" /></a>
+  <a href="https://github.com/smartworldarafath/Habit-Tracker-M3E/releases"><img alt="Android" src="https://img.shields.io/badge/Android-3DDC84?style=flat&logo=android&logoColor=white" /></a>
+  <a href="LICENSE"><img alt="License GPLv3" src="https://img.shields.io/badge/License-GPLv3-7C3AED?style=flat&logo=gnu&logoColor=white" /></a>
+  <a href="#privacy"><img alt="No ads, no tracking" src="https://img.shields.io/badge/No%20ads%20%C2%B7%20No%20tracking-22C55E?style=flat&logo=shield&logoColor=white" /></a>
+  <img alt="Downloads" src="https://img.shields.io/github/downloads/smartworldarafath/Habit-Tracker-M3E/total?style=flat&logo=github&logoColor=white&label=Downloads&color=7C3AED" />
 </p>
 <a href="https://trendshift.io/repositories/79460?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-79460" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/79460" alt="InlitX%2Fstreak | Trendshift" width="250" height="55"/></a>
 
 <br/>
 
-<a href="https://f-droid.org/packages/com.streak.app/"><img alt="Get it on F-Droid" src="assets/badges/get-it-on-fdroid.png" height="60" /></a>
-&nbsp;
-<a href="https://apt.izzysoft.de/fdroid/index/apk/com.streak.app?repo=main"><img alt="Get it on IzzyOnDroid" src="assets/badges/get-it-on-izzyondroid.png" height="60" /></a>
-&nbsp;
-<a href="https://www.openapk.net/streak/com.streak.app/"><img alt="Get it on OpenAPK" src="assets/badges/get-it-on-openapk.png" height="60" /></a>
-&nbsp;
-<a href="https://github.com/InlitX/streak/releases"><img alt="Get it on GitHub" src="assets/badges/get-it-on-github.png" height="60" /></a>
-&nbsp;
-<a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.streak.app%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FInlitX%2Fstreak%22%2C%22author%22%3A%22InlitX%22%2C%22name%22%3A%22Streak%22%2C%22preferredApkIndex%22%3A0%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Afalse%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22filterReleaseTitlesByRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22filterReleaseNotesByRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22verifyLatestTag%5C%22%3Afalse%2C%5C%22dontSortReleasesList%5C%22%3Afalse%2C%5C%22useLatestAssetDateAsReleaseDate%5C%22%3Afalse%2C%5C%22trackOnly%5C%22%3Afalse%2C%5C%22versionExtractionRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22matchGroupToUse%5C%22%3A%5C%22%5C%22%2C%5C%22versionDetection%5C%22%3Atrue%2C%5C%22releaseDateAsVersion%5C%22%3Afalse%2C%5C%22useVersionCodeAsOSVersion%5C%22%3Afalse%2C%5C%22apkFilterRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22invertAPKFilter%5C%22%3Afalse%2C%5C%22autoApkFilterByArch%5C%22%3Atrue%2C%5C%22appName%5C%22%3A%5C%22%5C%22%2C%5C%22shizukuPretendToBeGooglePlay%5C%22%3Afalse%2C%5C%22allowInsecure%5C%22%3Afalse%2C%5C%22exemptFromBackgroundUpdates%5C%22%3Afalse%2C%5C%22skipUpdateNotifications%5C%22%3Afalse%2C%5C%22about%5C%22%3A%5C%22Streak%20is%20an%20open%20source%20habit%20tracker%20for%20Android.%20Build%20habits%20with%20one%20tap%2C%20watch%20your%20progress%20grow%2C%20and%20keep%20everything%20on%20your%20device.%20No%20accounts%2C%20no%20ads%2C%20no%20tracking.%5C%22%7D%22%2C%22overrideSource%22%3Anull%7D"><img alt="Get it on Obtainium" src="assets/badges/get-it-on-obtainium.png" height="60" /></a>
+<a href="https://github.com/smartworldarafath/Habit-Tracker-M3E/releases"><img alt="Get it on GitHub" src="assets/badges/get-it-on-github.png" height="60" /></a>
 
 <br/>
 
