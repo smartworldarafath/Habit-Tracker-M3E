@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:streak/app/app_background.dart';
 import 'package:streak/core/widgets/page_motion.dart';
 
@@ -73,22 +70,12 @@ class AppNavigator {
     return PageRouteBuilder<T>(
       settings: RouteSettings(name: name),
       fullscreenDialog: fullscreenDialog,
-      transitionDuration: const Duration(milliseconds: 300),
-      reverseTransitionDuration: const Duration(milliseconds: 250),
+      transitionDuration: const Duration(milliseconds: 340),
+      reverseTransitionDuration: const Duration(milliseconds: 300),
       opaque: true,
       pageBuilder: (_, __, ___) => AppBackground(child: page),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         final route = ModalRoute.of(context)! as PageRoute<T>;
-        if (Platform.isIOS && !fade && !fullscreenDialog) {
-          return const CupertinoPageTransitionsBuilder().buildTransitions(
-            route,
-            context,
-            animation,
-            secondaryAnimation,
-            child,
-          );
-        }
-
         if (fullscreenDialog) {
           return SlideTransition(
             position: Tween<Offset>(
@@ -107,7 +94,7 @@ class AppNavigator {
 
         if (fade) return FadeThrough(animation: animation, child: child);
 
-        return const ZoomPageTransitionsBuilder().buildTransitions(
+        return const CupertinoPageTransitionsBuilder().buildTransitions(
           route,
           context,
           animation,

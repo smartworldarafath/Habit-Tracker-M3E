@@ -12,6 +12,7 @@ import 'package:streak/app/theme/app_theme.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/routing/app_navigator.dart';
 import 'package:streak/core/utils/responsive.dart';
+import 'package:streak/core/widgets/splash_video_screen.dart';
 import 'package:streak/features/focus/widgets/focus_island.dart';
 import 'package:streak/features/habits/state/habits_controller.dart';
 import 'package:streak/features/onboarding/pages/onboarding_page.dart';
@@ -26,7 +27,7 @@ class StreakApp extends StatelessWidget {
     final settings = context.watch<SettingsController>();
 
     return MaterialApp(
-      title: 'Streak',
+      title: 'Habit Tracker M3E',
       debugShowCheckedModeBanner: false,
       navigatorKey: AppNavigator.key,
       theme: AppTheme.light(settings.accentColor, settings.appStyle),
@@ -58,9 +59,11 @@ class StreakApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: settings.onboardingDone
-          ? const HomeShell()
-          : const OnboardingPage(),
+      home: SplashVideoScreen(
+        child: settings.onboardingDone
+            ? const HomeShell()
+            : const OnboardingPage(),
+      ),
     );
   }
 }
