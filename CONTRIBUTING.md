@@ -1,6 +1,6 @@
 <div align="center">
 
-# Contributing to Streak
+# Contributing to Habit Tracker M3E
 
 Bug fixes, features or a well-written issue — all of it helps.
 
@@ -20,7 +20,7 @@ Bug fixes, features or a well-written issue — all of it helps.
 | **Feature or behavior change** | Open an issue first, so we agree on the direction before you spend an evening on it. |
 | **Bug** | The [issue templates](.github/ISSUE_TEMPLATE) ask for your app version and device — those two answers save all the guessing. |
 
-Streak is deliberately small and has **zero internet**: the app never connects
+Habit Tracker M3E is deliberately small and has **zero internet**: the app never connects
 to the network, and on Android it does not even request the internet
 permission. Anything that needs a connection, such as sync, cloud backups,
 accounts, analytics or ads, is out of scope, even as an option.
@@ -30,13 +30,13 @@ accounts, analytics or ads, is out of scope, even as an option.
 ## Getting set up
 
 ```bash
-git clone https://github.com/InlitX/streak.git
-cd streak
+git clone https://github.com/smartworldarafath/Habit-Tracker-M3E.git
+cd Habit-Tracker-M3E
 flutter pub get     # also generates the localization code
 flutter run
 ```
 
-You'll need the Flutter SDK (stable), the Android SDK and JDK 17. Streak targets
+You'll need the Flutter SDK (stable), the Android SDK and JDK 17. Habit Tracker M3E targets
 Android 9 (API 28) and up.
 
 Before opening a pull request, keep both of these green:

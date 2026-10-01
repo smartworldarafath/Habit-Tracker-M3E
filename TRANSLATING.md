@@ -1,6 +1,6 @@
 <div align="center">
 
-# Translating Streak
+# Translating Habit Tracker M3E
 
 Translations are managed on [**Weblate**](https://hosted.weblate.org/engage/streak/).
 Create an account and translate through the interface — no coding knowledge
@@ -50,7 +50,7 @@ required, and nothing to download.
 ## Questions
 
 Not sure how a string is used, or where it appears in the app? Ask in an
-[issue](https://github.com/InlitX/streak/issues) — a screenshot of the screen
+[issue](https://github.com/smartworldarafath/Habit-Tracker-M3E/issues) — a screenshot of the screen
 you're unsure about is the fastest way to get an answer.
 
 ---
@@ -58,6 +58,6 @@ you're unsure about is the fastest way to get an answer.
 <div align="center">
 
 Translations ship under the project's [GNU GPLv3](LICENSE).<br/>
-Thank you for making Streak speak your language.
+Thank you for making Habit Tracker M3E speak your language.
 
 </div>
