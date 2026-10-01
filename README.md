@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/banner.png" alt="Streak, a minimal, private, ad-free habit tracker" width="100%" />
+<img src="assets/banner.png" alt="Habit Tracker M3E, a minimal, private, ad-free habit tracker" width="100%" />
 
 </div>
 
@@ -12,9 +12,9 @@
 
 <div align="center">
 
-### Streak
+### Habit Tracker M3E
 
-<img src="assets/icon.svg" width="72" alt="Streak logo" />
+<img src="assets/icon.svg" width="72" alt="Habit Tracker M3E logo" />
 
 ### A minimal, private, ad-free habit tracker
 
@@ -30,7 +30,7 @@ Log a habit in a single tap, keep your momentum, and watch your streaks grow.
   <a href="#privacy"><img alt="No ads, no tracking" src="https://img.shields.io/badge/No%20ads%20%C2%B7%20No%20tracking-22C55E?style=flat&logo=shield&logoColor=white" /></a>
   <img alt="Downloads" src="https://img.shields.io/github/downloads/smartworldarafath/Habit-Tracker-M3E/total?style=flat&logo=github&logoColor=white&label=Downloads&color=7C3AED" />
 </p>
-<a href="https://trendshift.io/repositories/79460?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-79460" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/79460" alt="InlitX%2Fstreak | Trendshift" width="250" height="55"/></a>
+<a href="https://trendshift.io/repositories/79460?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-79460" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/79460" alt="Arafath%2FHabit-Tracker-M3E | Trendshift" width="250" height="55"/></a>
 
 <br/>
 
@@ -71,7 +71,7 @@ Log a habit in a single tap, keep your momentum, and watch your streaks grow.
 
 ## Overview
 
-Streak is an open source habit tracker for Android, Windows and Linux. Make as
+Habit Tracker M3E is an open source habit tracker for Android, Windows and Linux. Make as
 many habits as you want, log them with one tap, and watch the grid, the streak
 counters and the statistics fill up.
 
@@ -139,7 +139,7 @@ Everything stays on your device. No account, no ads, nothing to sync.
 - Light and dark themes, plus five app backgrounds: solid, gradient, dots,
   true-black OLED or a photo of your own
 - Cover photos, categories, drag-to-reorder, profile name and photo
-- Three launcher icons, so Streak matches the rest of your home screen
+- Three launcher icons, so Habit Tracker M3E matches the rest of your home screen
 - A burst of confetti the day you finish everything
 
 </td>
@@ -183,7 +183,7 @@ Everything stays on your device. No account, no ads, nothing to sync.
 <details>
 <summary><b>How the import works</b></summary>
 
-Bring your history with you. Streak reads exports from **Loop Habit Tracker**,
+Bring your history with you. Habit Tracker M3E reads exports from **Loop Habit Tracker**,
 **HabitKit**, **Habitica** and **HabitBull**, so your past days and your streaks
 survive the move. Any other CSV works too, as long as it has a habit and a date.
 
@@ -195,12 +195,9 @@ survive the move. Any other CSV works too, as long as it has a habit and a date.
 
 ## Download
 
-[**F-Droid**](https://f-droid.org/packages/com.streak.app/) is the easiest way:
-it installs Streak and keeps it updated for you. It's also on
-[**IzzyOnDroid**](https://apt.izzysoft.de/fdroid/index/apk/com.streak.app?repo=main)
-and [**OpenAPK**](https://www.openapk.net/streak/com.streak.app/).
+Download Habit Tracker M3E directly from [**GitHub Releases**](https://github.com/smartworldarafath/Habit-Tracker-M3E/releases).
 
-Streak runs on Android, Windows and Linux:
+Habit Tracker M3E runs on Android, Windows and Linux:
 
 | Platform | Status |
 |----------|--------|
@@ -213,16 +210,16 @@ Streak runs on Android, Windows and Linux:
 <details>
 <summary><b>Linux</b></summary>
 
-Two files on the [**Releases**](https://github.com/InlitX/streak/releases) page,
+Two files on the [**Releases**](https://github.com/smartworldarafath/Habit-Tracker-M3E/releases) page,
 both for 64-bit x86:
 
 | File | For |
 |------|-----|
-| `Streak-x86_64.AppImage` | Any distribution: make it executable and run it |
-| `Streak-linux-x64.tar.gz` | Unpack anywhere and run `Streak` |
+| `HabitTrackerM3E-x86_64.AppImage` | Any distribution: make it executable and run it |
+| `HabitTrackerM3E-linux-x64.tar.gz` | Unpack anywhere and run `HabitTrackerM3E` |
 
 The Linux build has only just landed, so expect some rough edges. Reminders ring
-while Streak is open. If something does not work, open an issue and I will fix
+while Habit Tracker M3E is open. If something does not work, open an issue and I will fix
 them as they come.
 
 </details>
@@ -231,24 +228,24 @@ them as they come.
 <summary><b>Install the APK yourself</b></summary>
 
 Prefer the raw APK? It's on the
-[**Releases**](https://github.com/InlitX/streak/releases) page, one file per
+[**Releases**](https://github.com/smartworldarafath/Habit-Tracker-M3E/releases) page, one file per
 phone type so each download stays small:
 
 | APK | For |
 |-----|-----|
-| `Streak-arm64-v8a.apk` | Modern 64-bit phones, **pick this one** |
-| `Streak-armeabi-v7a.apk` | Older 32-bit devices |
-| `Streak-x86_64.apk` | Emulators and x86 tablets |
+| `HabitTracker-arm64-v8a.apk` | Modern 64-bit phones, **pick this one** |
+| `HabitTracker-armeabi-v7a.apk` | Older 32-bit devices |
+| `HabitTracker-x86_64.apk` | Emulators and x86 tablets |
 
 Runs on **Android 9 (Pie) and newer**.
 
 If you install the APK yourself, [**Obtainium**](https://github.com/ImranR98/Obtainium)
-keeps it updated: add `https://github.com/InlitX/streak` and it will follow the
+keeps it updated: add `https://github.com/smartworldarafath/Habit-Tracker-M3E` and it will follow the
 Releases page, tell you when a new version is out and pick the right APK for
 your phone.
 
 > [!NOTE]
->Streak isn't on the Play Store. Since the APK doesn't come from a store,
+>Habit Tracker M3E isn't on the Play Store. Since the APK doesn't come from a store,
 >Android may ask you to allow installs from your browser or file manager the
 >first time.
 
@@ -259,7 +256,7 @@ your phone.
 ## Privacy
 
 > [!IMPORTANT]
->Streak **never connects to the internet**, and that is a core rule, not a
+>Habit Tracker M3E **never connects to the internet**, and that is a core rule, not a
 >setting. On Android it does not even ask for the internet permission. There
 >are no analytics, no ads, no accounts and no servers: your data never leaves
 >your device. If you want a copy somewhere else, such as a cloud drive, you
@@ -290,9 +287,9 @@ issue first so we can agree on the direction.
 ## Inspiration
 
 <details>
-<summary><b>The apps that shaped Streak</b></summary>
+<summary><b>The apps that shaped Habit Tracker M3E</b></summary>
 
-These are the apps Streak learned from:
+These are the apps Habit Tracker M3E learned from:
 
 - **[Loop Habit Tracker](https://github.com/iSoron/uhabits)**, for proving a
   habit tracker can be free, offline and still excellent.
@@ -320,42 +317,23 @@ released under the MIT license.
 
 <div align="center">
 
-Streak is free, open source and free of ads, and it stays that way.
+Habit Tracker M3E is free, open source and free of ads, and it stays that way.
 
 If you want to give something back, a star, a translation or a clear bug report
 help as much as a coffee does.
 
-<a href="https://ko-fi.com/inlitx"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi" height="38" /></a>
+<a href="https://www.supportkori.com/arafathrahman"><img src="https://img.shields.io/badge/Support-Arafath-FD3A73?style=for-the-badge&logo=heart&logoColor=white" alt="Support Arafath" height="38" /></a>
 
-<sub><b>Crypto wallets</b></sub>
 
-<table align="center">
-  <tr>
-    <td align="center" width="130"><img src="assets/crypto/bitcoin.svg" width="22" alt="Bitcoin" /><br/><sub><b>Bitcoin</b></sub></td>
-    <td><code>bc1qm0r4pg8nknnjh3a7n2t63ckafhsz8jdd6qer29</code></td>
-  </tr>
-  <tr>
-    <td align="center" width="130"><img src="assets/crypto/ethereum.svg" width="22" alt="Ethereum" /><br/><sub><b>Ethereum</b></sub></td>
-    <td><code>0x34b7A5552132cBca150Ae29c1E632faA49430e1a</code></td>
-  </tr>
-  <tr>
-    <td align="center" width="130"><img src="assets/crypto/solana.svg" width="22" alt="Solana" /><br/><sub><b>Solana</b></sub></td>
-    <td><code>DC8dNEUNJhWdtBHBZAn4FTheVC3W4PtkGhbazvtk17Jo</code></td>
-  </tr>
-  <tr>
-    <td align="center" width="130"><img src="assets/crypto/monero.svg" width="22" alt="Monero" /><br/><sub><b>Monero</b></sub></td>
-    <td><code>44SECMEf3rfV228kpy3Gs48wLmLXnq231gAMG7ULYoCWBWLYLHdwYV7YFkhMk31DR5P7SRAyRPyhkYaehtgEoajASz7qubq</code></td>
-  </tr>
-</table>
 
 <br/>
 <br/>
 
-<a href="https://www.star-history.com/?repos=InlitX%2Fstreak&type=date&legend=top-left">
+<a href="https://www.star-history.com/#smartworldarafath/Habit-Tracker-M3E&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=InlitX/streak&type=date&theme=dark&legend=top-left&sealed_token=aNqDTOocHK1NkSrMsZrD1iFDpo1AtZvvUo3ZqETCzSujh-eSh0ekwpay4FpVGocizt1wmR5QWrkuMUAl2r9yllwF4v9e3tnsI6c1lv0upumuFVgsXGvAwA" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=InlitX/streak&type=date&legend=top-left&sealed_token=aNqDTOocHK1NkSrMsZrD1iFDpo1AtZvvUo3ZqETCzSujh-eSh0ekwpay4FpVGocizt1wmR5QWrkuMUAl2r9yllwF4v9e3tnsI6c1lv0upumuFVgsXGvAwA" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=InlitX/streak&type=date&legend=top-left&sealed_token=aNqDTOocHK1NkSrMsZrD1iFDpo1AtZvvUo3ZqETCzSujh-eSh0ekwpay4FpVGocizt1wmR5QWrkuMUAl2r9yllwF4v9e3tnsI6c1lv0upumuFVgsXGvAwA" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=smartworldarafath/Habit-Tracker-M3E&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=smartworldarafath/Habit-Tracker-M3E&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=smartworldarafath/Habit-Tracker-M3E&type=Date" />
  </picture>
 </a>
 
