@@ -26,6 +26,8 @@ import 'package:streak/features/settings/pages/quotes_page.dart';
 import 'package:streak/features/settings/settings_actions.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
 import 'package:streak/features/settings/widgets/minimal_settings_widgets.dart';
+import 'package:streak/features/settings/widgets/settings_rows.dart';
+import 'package:streak/core/widgets/verified_badge.dart';
 import 'package:streak/features/settings/widgets/settings_sheets.dart';
 
 class ExpressSettingsPage extends StatelessWidget {
@@ -317,6 +319,18 @@ class _ProfileHero extends StatelessWidget {
                         ),
                       ),
                     ),
+                    Consumer<SettingsController>(
+                      builder: (context, s, _) {
+                        if (s.verifiedBadge <= 0) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 6),
+                          child: VerifiedBadge(
+                            color: VerifiedBadgeType.fromId(s.verifiedBadge).color,
+                            size: 20,
+                          ),
+                        );
+                      },
+                    ),
                     const SizedBox(width: 9),
                     Icon(
                       LucideIcons.pencil,
@@ -373,11 +387,6 @@ List<Widget> _appearanceTiles(BuildContext context) {
     context.l10n.dark,
   ];
   final checks = [context.l10n.square, context.l10n.circle];
-  final icons = [
-    context.l10n.icon_default,
-    context.l10n.icon_neutral,
-    context.l10n.icon_accent,
-  ];
 
   return [
     ExpressGroup(
@@ -407,6 +416,15 @@ List<Widget> _appearanceTiles(BuildContext context) {
           onTap: () => showAccentSheet(context),
         ),
         ExpressTile(
+          icon: LucideIcons.badgeCheck,
+          title: 'Get verified',
+          subtitle: 'Instagram-style badge on profile',
+          trailing: VerifiedBadgeDockSlider(
+            index: settings.verifiedBadge,
+            onChanged: settings.setVerifiedBadge,
+          ),
+        ),
+        ExpressTile(
           icon: LucideIcons.image,
           title: context.l10n.app_background,
           subtitle: context.l10n.app_background_sub,
@@ -434,13 +452,9 @@ List<Widget> _appearanceTiles(BuildContext context) {
             icon: LucideIcons.appWindow,
             title: context.l10n.app_icon,
             subtitle: context.l10n.app_icon_sub,
-            value: icons[settings.appIcon],
-            onTap: () => showOptionSheet(
-              context,
-              title: context.l10n.app_icon,
-              options: icons,
+            trailing: AppIconDockSlider(
               index: settings.appIcon,
-              onSelected: settings.setAppIcon,
+              onChanged: settings.setAppIcon,
             ),
           ),
       ],
@@ -840,6 +854,15 @@ List<Widget> _supportTiles(BuildContext context) {
           title: context.l10n.report_issue,
           subtitle: context.l10n.report_issue_sub,
           onTap: () => SettingsActions.openUrl(context, '$kIssuesUrl/new'),
+        ),
+        ExpressTile(
+          icon: LucideIcons.sparkles,
+          title: 'Request new features',
+          subtitle: 'Suggest ideas and improvements on GitHub',
+          onTap: () => SettingsActions.openUrl(
+            context,
+            '$kIssuesUrl/new?labels=enhancement&template=feature_request.md',
+          ),
         ),
       ],
     ),

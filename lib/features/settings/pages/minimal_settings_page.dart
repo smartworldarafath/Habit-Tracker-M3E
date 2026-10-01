@@ -18,6 +18,8 @@ import 'package:streak/features/settings/pages/archived_habits_page.dart';
 import 'package:streak/features/settings/settings_actions.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
 import 'package:streak/features/settings/widgets/minimal_settings_widgets.dart';
+import 'package:streak/features/settings/widgets/settings_rows.dart';
+import 'package:streak/core/widgets/verified_badge.dart';
 import 'package:streak/features/settings/widgets/settings_sheets.dart';
 
 class MinimalSettingsPage extends StatelessWidget {
@@ -229,6 +231,18 @@ class _ProfileRow extends StatelessWidget {
                       ),
                     ),
                   ),
+                  Consumer<SettingsController>(
+                    builder: (context, s, _) {
+                      if (s.verifiedBadge <= 0) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(left: 6),
+                        child: VerifiedBadge(
+                          color: VerifiedBadgeType.fromId(s.verifiedBadge).color,
+                          size: 20,
+                        ),
+                      );
+                    },
+                  ),
                   const SizedBox(width: 9),
                   Icon(LucideIcons.pencil, size: 14, color: context.tokens.muted),
                 ],
@@ -290,6 +304,15 @@ class _AppearancePage extends StatelessWidget {
               onTap: () => showAccentSheet(context),
             ),
             SoftRow(
+              icon: LucideIcons.badgeCheck,
+              title: 'Get verified',
+              subtitle: 'Instagram-style badge on profile',
+              trailing: VerifiedBadgeDockSlider(
+                index: settings.verifiedBadge,
+                onChanged: settings.setVerifiedBadge,
+              ),
+            ),
+            SoftRow(
               icon: LucideIcons.image,
               title: context.l10n.app_background,
               subtitle: context.l10n.app_background_sub,
@@ -320,21 +343,9 @@ class _AppearancePage extends StatelessWidget {
                 icon: LucideIcons.appWindow,
                 title: context.l10n.app_icon,
                 subtitle: context.l10n.app_icon_sub,
-                value: [
-                  context.l10n.icon_default,
-                  context.l10n.icon_neutral,
-                  context.l10n.icon_accent,
-                ][settings.appIcon],
-                onTap: () => showOptionSheet(
-                  context,
-                  title: context.l10n.app_icon,
-                  options: [
-                    context.l10n.icon_default,
-                    context.l10n.icon_neutral,
-                    context.l10n.icon_accent,
-                  ],
+                trailing: AppIconDockSlider(
                   index: settings.appIcon,
-                  onSelected: settings.setAppIcon,
+                  onChanged: settings.setAppIcon,
                 ),
               ),
             ],
@@ -779,6 +790,15 @@ class _SupportPage extends StatelessWidget {
               title: context.l10n.report_issue,
               subtitle: context.l10n.report_issue_sub,
               onTap: () => SettingsActions.openUrl(context, '$kIssuesUrl/new'),
+            ),
+            SoftRow(
+              icon: LucideIcons.sparkles,
+              title: 'Request new features',
+              subtitle: 'Suggest ideas and improvements on GitHub',
+              onTap: () => SettingsActions.openUrl(
+                context,
+                '$kIssuesUrl/new?labels=enhancement&template=feature_request.md',
+              ),
             ),
           ],
         ),

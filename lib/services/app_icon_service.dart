@@ -6,7 +6,7 @@ class AppIconService {
 
   static const _channel = MethodChannel('streak/app_icon');
 
-  static const _names = ['default', 'neutral', 'accent'];
+  static const _names = ['default', 'neutral', 'accent', 'orange'];
 
   static Future<void> apply(int index) async {
     if (!hasAppIcons) return;

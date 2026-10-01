@@ -21,6 +21,7 @@ class MainActivity : FlutterFragmentActivity() {
         "default" to ".MainActivityDefault",
         "neutral" to ".MainActivityNeutral",
         "accent" to ".MainActivityAccent",
+        "orange" to ".MainActivityOrange",
     )
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {

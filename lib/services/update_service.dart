@@ -110,9 +110,9 @@ class UpdateService {
     try {
       final info = await PackageInfo.fromPlatform();
       final v = info.version.trim();
-      return v.isNotEmpty ? v : '1.0.0';
+      return v.isNotEmpty ? v : '1.2.0';
     } catch (_) {
-      return '1.0.0';
+      return '1.2.0';
     }
   }
 
