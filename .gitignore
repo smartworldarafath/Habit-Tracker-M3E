@@ -52,3 +52,7 @@ app.*.map.json
 
 # Kotlin compiler cache
 /android/.kotlin/
+
+# Release bundles
+release_assets*/
+

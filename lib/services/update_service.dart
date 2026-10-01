@@ -47,12 +47,43 @@ class AppRelease {
   final List<ReleaseAsset> assets;
   final bool isPrerelease;
 
-  ReleaseAsset? get apkAsset {
-    for (final asset in assets) {
-      if (asset.isApk) return asset;
+  ReleaseAsset? getPreferredApk([String? targetAbi]) {
+    final abi = targetAbi ?? UpdateService.getDeviceAbi();
+    final apkAssets = assets.where((a) => a.isApk).toList();
+    if (apkAssets.isEmpty) return null;
+
+    // 1. Exact or partial match for device ABI
+    for (final a in apkAssets) {
+      final name = a.name.toLowerCase();
+      if (name.contains(abi)) return a;
+      if (abi == 'arm64-v8a' && (name.contains('arm64') || name.contains('v8a'))) {
+        return a;
+      }
+      if (abi == 'armeabi-v7a' &&
+          (name.contains('armeabi') || name.contains('v7a') || name.contains('arm-v7a'))) {
+        return a;
+      }
+      if (abi == 'x86_64' && name.contains('x86_64')) {
+        return a;
+      }
     }
-    return null;
+
+    // 2. Universal / main APK without ABI suffix
+    for (final a in apkAssets) {
+      final name = a.name.toLowerCase();
+      if (!name.contains('v7a') &&
+          !name.contains('v8a') &&
+          !name.contains('arm') &&
+          !name.contains('x86')) {
+        return a;
+      }
+    }
+
+    // 3. Fallback to any APK available
+    return apkAssets.first;
   }
+
+  ReleaseAsset? get apkAsset => getPreferredApk();
 
   factory AppRelease.fromJson(Map<String, dynamic> json) {
     final rawAssets = json['assets'] as List<dynamic>? ?? const [];
@@ -106,13 +137,22 @@ class UpdateService {
   static const String releasesApiUrl =
       'https://api.github.com/repos/$repoOwner/$repoName/releases';
 
+  static String getDeviceAbi() {
+    final pv = Platform.version.toLowerCase();
+    if (pv.contains('arm64') || pv.contains('aarch64')) return 'arm64-v8a';
+    if (pv.contains('arm')) return 'armeabi-v7a';
+    if (pv.contains('x64') || pv.contains('x86_64')) return 'x86_64';
+    if (pv.contains('ia32') || pv.contains('x86')) return 'x86';
+    return 'arm64-v8a';
+  }
+
   static Future<String> getCurrentVersion() async {
     try {
       final info = await PackageInfo.fromPlatform();
       final v = info.version.trim();
-      return v.isNotEmpty ? v : '1.2.0';
+      return v.isNotEmpty ? v : '1.2.5';
     } catch (_) {
-      return '1.2.0';
+      return '1.2.5';
     }
   }
 

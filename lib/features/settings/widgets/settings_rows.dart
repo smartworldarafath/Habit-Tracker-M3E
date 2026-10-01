@@ -313,13 +313,14 @@ class Segmented extends StatelessWidget {
     final safeIndex = index.clamp(0, count - 1);
     final maxChars = options.fold<int>(0, (prev, s) => math.max(prev, s.length));
     final double itemWidth = customItemWidth ??
-        math.max(38.0, (maxChars * 7.2 + 14.0).clamp(38.0, 58.0));
+        math.max(36.0, (maxChars * 7.0 + 12.0).clamp(36.0, 56.0));
     final double totalWidth = itemWidth * count;
 
     return Container(
-      width: totalWidth + 6,
+      width: totalWidth + 8.0,
       height: 34,
       padding: const EdgeInsets.all(3),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(12),
@@ -328,7 +329,10 @@ class Segmented extends StatelessWidget {
           width: 1,
         ),
       ),
-      child: Stack(
+      child: SizedBox(
+        width: totalWidth,
+        height: 26,
+        child: Stack(
         children: [
           // Animated sliding dock pill thumb
           AnimatedPositioned(
@@ -398,6 +402,7 @@ class Segmented extends StatelessWidget {
           ),
         ],
       ),
+      ),
     );
   }
 }
@@ -462,6 +467,7 @@ class _AppIconDockSliderState extends State<AppIconDockSlider> {
       width: 198,
       height: 38,
       padding: const EdgeInsets.all(3),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(12),
@@ -568,7 +574,7 @@ class VerifiedBadgeDockSlider extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
 
-  static const double _itemWidth = 52.0;
+  static const double _itemWidth = 49.0;
 
   @override
   Widget build(BuildContext context) {
@@ -578,9 +584,10 @@ class VerifiedBadgeDockSlider extends StatelessWidget {
     final totalWidth = _itemWidth * count;
 
     return Container(
-      width: totalWidth + 6,
+      width: totalWidth + 8.0,
       height: 34,
       padding: const EdgeInsets.all(3),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(12),
@@ -589,7 +596,10 @@ class VerifiedBadgeDockSlider extends StatelessWidget {
           width: 1,
         ),
       ),
-      child: Stack(
+      child: SizedBox(
+        width: totalWidth,
+        height: 26,
+        child: Stack(
         children: [
           AnimatedPositioned(
             duration: const Duration(milliseconds: 240),
@@ -656,6 +666,7 @@ class VerifiedBadgeDockSlider extends StatelessWidget {
             ],
           ),
         ],
+      ),
       ),
     );
   }
