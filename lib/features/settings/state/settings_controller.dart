@@ -59,6 +59,7 @@ class SettingsController extends ChangeNotifier {
         List<String>.from(LocalStore.setting('vacationAllIds', const <String>[]));
     _profilePhoto = LocalStore.setting('profilePhoto', '');
     _appIcon = LocalStore.setting('appIcon', 0);
+    _verifiedBadge = LocalStore.setting('verifiedBadge', 1);
     _accentColor = LocalStore.setting('accentColor', AppPalette.brand.toARGB32());
     _heatmapMode = LocalStore.setting('heatmapMode', 0);
     _heatmapPath = LocalStore.setting('heatmapPath', false);
@@ -141,6 +142,7 @@ class SettingsController extends ChangeNotifier {
   late List<String> _vacationAllIds;
   late String _profilePhoto;
   late int _appIcon;
+  late int _verifiedBadge;
   late int _accentColor;
   late int _heatmapMode;
   late bool _heatmapPath;
@@ -232,6 +234,7 @@ class SettingsController extends ChangeNotifier {
   String get profilePhoto => _profilePhoto;
 
   int get appIcon => _appIcon;
+  int get verifiedBadge => _verifiedBadge;
 
   Color get accentColor => Color(_accentColor);
 
@@ -781,6 +784,12 @@ class SettingsController extends ChangeNotifier {
     await LocalStore.writeSetting('appIcon', index);
     notifyListeners();
     await AppIconService.apply(index);
+  }
+
+  Future<void> setVerifiedBadge(int val) async {
+    _verifiedBadge = val;
+    await LocalStore.writeSetting('verifiedBadge', val);
+    notifyListeners();
   }
 
   Color get widgetBgColor => Color(_widgetBgColor);

@@ -29,7 +29,7 @@ class AboutPage extends StatefulWidget {
 }
 
 class _AboutPageState extends State<AboutPage> {
-  String _version = 'v1.0.0';
+  String _version = 'v1.2.0';
 
   @override
   void initState() {
@@ -155,7 +155,7 @@ class _AboutPageState extends State<AboutPage> {
             index: 1,
             delay: _base,
             child: Typewriter(
-              text: 'Streak',
+              text: 'Habit Tracker M3E',
               duration: const Duration(milliseconds: 640),
               delay: const Duration(milliseconds: 120),
               style: nameStyle,
@@ -166,7 +166,7 @@ class _AboutPageState extends State<AboutPage> {
             index: 2,
             delay: _base,
             child: Typewriter(
-              text: context.l10n.about_subtitle,
+              text: 'Where small habits become big changes.',
               duration: const Duration(milliseconds: 1000),
               delay: const Duration(milliseconds: 380),
               style: subtitleStyle,
@@ -177,7 +177,7 @@ class _AboutPageState extends State<AboutPage> {
             index: 3,
             delay: _base,
             child: Typewriter(
-              text: context.l10n.about_story,
+              text: 'Habit Tracker M3E was built as a simple, privacy-focused alternative to the habit trackers that limit your experience with paywalls, ads, tracking, or restrictions on how many habits you can create. It’s completely free, with no ads, no subscriptions, and no tracking. Everything runs locally on your device, so your data stays yours. Open source, lightweight, and built with a simple philosophy: your habits, your data, your control.',
               duration: const Duration(milliseconds: 2200),
               delay: const Duration(milliseconds: 1400),
               style: storyStyle,

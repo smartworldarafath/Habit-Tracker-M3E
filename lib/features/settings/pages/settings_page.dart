@@ -23,6 +23,7 @@ import 'package:streak/features/settings/settings_actions.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
 import 'package:streak/features/settings/widgets/settings_rows.dart';
 import 'package:streak/features/settings/widgets/minimal_settings_widgets.dart';
+import 'package:streak/core/widgets/verified_badge.dart';
 import 'package:streak/features/settings/widgets/settings_sheets.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -205,6 +206,16 @@ class _ClassicAppearancePage extends StatelessWidget {
           onTap: () => showAccentSheet(context),
         ),
         settingsDivider(context),
+        SettingRow(
+          icon: LucideIcons.badgeCheck,
+          title: 'Get verified',
+          subtitle: 'Instagram-style badge on profile',
+          trailing: VerifiedBadgeDockSlider(
+            index: settings.verifiedBadge,
+            onChanged: settings.setVerifiedBadge,
+          ),
+        ),
+        settingsDivider(context),
         PickerRow(
           icon: LucideIcons.image,
           title: context.l10n.app_background,
@@ -232,12 +243,7 @@ class _ClassicAppearancePage extends StatelessWidget {
             icon: LucideIcons.appWindow,
             title: context.l10n.app_icon,
             subtitle: context.l10n.app_icon_sub,
-            trailing: Segmented(
-              options: [
-                context.l10n.icon_default,
-                context.l10n.icon_neutral,
-                context.l10n.icon_accent,
-              ],
+            trailing: AppIconDockSlider(
               index: settings.appIcon,
               onChanged: settings.setAppIcon,
             ),
@@ -795,6 +801,16 @@ class _ClassicSupportPage extends StatelessWidget {
           subtitle: context.l10n.report_issue_sub,
           onTap: () => SettingsActions.openUrl(context, '$kIssuesUrl/new'),
         ),
+        settingsDivider(context),
+        LinkRow(
+          icon: LucideIcons.sparkles,
+          title: 'Request new features',
+          subtitle: 'Suggest ideas and improvements on GitHub',
+          onTap: () => SettingsActions.openUrl(
+            context,
+            '$kIssuesUrl/new?labels=enhancement&template=feature_request.md',
+          ),
+        ),
       ],
     );
   }
@@ -894,6 +910,18 @@ class _ProfileHeader extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                     color: scheme.onSurface,
                   ),
+                ),
+                Consumer<SettingsController>(
+                  builder: (context, s, _) {
+                    if (s.verifiedBadge <= 0) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: VerifiedBadge(
+                        color: VerifiedBadgeType.fromId(s.verifiedBadge).color,
+                        size: 18,
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(width: 6),
                 Icon(LucideIcons.pencil, size: 15, color: context.tokens.muted),

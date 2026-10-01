@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "InlitX" "\0"
-            VALUE "FileDescription", "Streak" "\0"
+            VALUE "CompanyName", "Arafath Rahman" "\0"
+            VALUE "FileDescription", "Habit Tracker M3E" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "Streak" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 InlitX. Licensed under the GNU GPL v3." "\0"
-            VALUE "OriginalFilename", "Streak.exe" "\0"
-            VALUE "ProductName", "Streak" "\0"
+            VALUE "InternalName", "HabitTrackerM3E" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Arafath Rahman. Licensed under the GNU GPL v3." "\0"
+            VALUE "OriginalFilename", "HabitTrackerM3E.exe" "\0"
+            VALUE "ProductName", "Habit Tracker M3E" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

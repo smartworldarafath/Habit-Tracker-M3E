@@ -11,6 +11,7 @@ import 'package:streak/core/widgets/entrance.dart';
 import 'package:streak/core/express/express_page.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
 import 'package:streak/services/update_service.dart';
+import 'package:streak/core/widgets/fluid_water_waves.dart';
 
 class AppUpdatesPage extends StatefulWidget {
   const AppUpdatesPage({super.key});
@@ -22,7 +23,7 @@ class AppUpdatesPage extends StatefulWidget {
 class _AppUpdatesPageState extends State<AppUpdatesPage> {
   bool _isLoading = false;
   UpdateCheckResult? _result;
-  String _currentVersion = '1.0.0';
+  String _currentVersion = '1.2.0';
 
   @override
   void initState() {
@@ -107,24 +108,79 @@ class _AppUpdatesPageState extends State<AppUpdatesPage> {
         child: ListView(
           padding: context.pagePadding(16, 12, 16, 80),
           children: [
+            // App Icon Header
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 20),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 76,
+                      height: 76,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: scheme.primary.withValues(alpha: 0.25),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.asset(
+                          'assets/app_icons/icon_default.png',
+                          width: 76,
+                          height: 76,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Habit Tracker M3E',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'v$_currentVersion',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: muted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
             // Status Card
             Entrance(
-              child: Card(
-                elevation: 0,
-                color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(
-                    color: hasUpdate
-                        ? scheme.primary.withValues(alpha: 0.5)
-                        : scheme.outlineVariant.withValues(alpha: 0.3),
-                    width: hasUpdate ? 1.5 : 1,
+              child: FluidWaterWaveWidget(
+                active: hasUpdate,
+                primaryColor: scheme.primary,
+                child: Card(
+                  elevation: 0,
+                  color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: hasUpdate
+                          ? scheme.primary.withValues(alpha: 0.5)
+                          : scheme.outlineVariant.withValues(alpha: 0.3),
+                      width: hasUpdate ? 1.5 : 1,
+                    ),
                   ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
                       Container(
                         width: 64,
                         height: 64,
@@ -202,7 +258,8 @@ class _AppUpdatesPageState extends State<AppUpdatesPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+          ),
+          const SizedBox(height: 20),
 
             // If Update Available: New Release Details
             if (hasUpdate && release != null) ...[
@@ -289,6 +346,44 @@ class _AppUpdatesPageState extends State<AppUpdatesPage> {
                         ],
                         const SizedBox(height: 18),
                         if (apkAsset != null) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: scheme.primary.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: scheme.primary.withValues(alpha: 0.2),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(LucideIcons.fileBox, size: 20, color: scheme.primary),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        apkAsset.name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                      ),
+                                      Text(
+                                        'Package Size: ${(apkAsset.size / (1024 * 1024)).toStringAsFixed(1)} MB',
+                                        style: TextStyle(
+                                          color: scheme.primary,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                           SizedBox(
                             width: double.infinity,
                             child: FilledButton.icon(
@@ -342,24 +437,6 @@ class _AppUpdatesPageState extends State<AppUpdatesPage> {
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           color: scheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    Divider(
-                      height: 1,
-                      indent: 16,
-                      endIndent: 16,
-                      color: scheme.outlineVariant.withValues(alpha: 0.2),
-                    ),
-                    ListTile(
-                      leading: Icon(LucideIcons.box, color: scheme.primary),
-                      title: const Text('Application ID'),
-                      trailing: Text(
-                        'com.habittrackerm3e.app',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontFamily: 'monospace',
-                          color: muted,
                         ),
                       ),
                     ),

@@ -72,11 +72,11 @@ class HabitWidget : GlanceAppWidget() {
             val days = data?.optJSONArray("days")
             when {
                 data == null -> EmptyNote(
-                    WidgetText.get(context, "no_data", "No data yet\nOpen Streak to sync"),
+                    WidgetText.get(context, "no_data", "No data yet\nOpen Habit Tracker M3E to sync"),
                     style,
                 )
                 habits == null || days == null || habits.length() == 0 -> EmptyNote(
-                    WidgetText.get(context, "no_habits", "No habits yet\nTap to open Streak"),
+                    WidgetText.get(context, "no_habits", "No habits yet\nTap to open Habit Tracker M3E"),
                     style,
                 )
                 else -> {

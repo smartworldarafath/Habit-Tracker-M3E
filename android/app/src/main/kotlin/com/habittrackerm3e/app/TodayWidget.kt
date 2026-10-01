@@ -89,7 +89,7 @@ class TodayWidget : GlanceAppWidget() {
                     }
                 }
             } else {
-                EmptyNote(WidgetText.get(context, "open_to_sync", "Open Streak to sync"), style)
+                EmptyNote(WidgetText.get(context, "open_to_sync", "Open Habit Tracker M3E to sync"), style)
             }
         }
     }

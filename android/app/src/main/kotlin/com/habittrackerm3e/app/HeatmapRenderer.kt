@@ -168,7 +168,7 @@ object HeatmapRenderer {
             views.setViewVisibility(R.id.hm_empty, View.VISIBLE)
             views.setTextViewText(
                 R.id.hm_empty,
-                WidgetText.get(context, "open_to_sync", "Open Streak to sync"),
+                WidgetText.get(context, "open_to_sync", "Open Habit Tracker M3E to sync"),
             )
             views.setTextColor(R.id.hm_empty, style.muted)
             views.setOnClickPendingIntent(R.id.root, openIntent(context, appWidgetId, null))

@@ -1,6 +1,9 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:streak/app/theme/app_tokens.dart';
+import 'package:streak/core/widgets/verified_badge.dart';
 
 Widget settingsDivider(BuildContext context) => Divider(
       height: 1,
@@ -293,52 +296,365 @@ class Segmented extends StatelessWidget {
     required this.options,
     required this.index,
     required this.onChanged,
+    this.customItemWidth,
   });
 
   final List<String> options;
   final int index;
   final ValueChanged<int> onChanged;
+  final double? customItemWidth;
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colors;
+    final count = options.length;
+    if (count == 0) return const SizedBox.shrink();
+
+    final safeIndex = index.clamp(0, count - 1);
+    final maxChars = options.fold<int>(0, (prev, s) => math.max(prev, s.length));
+    final double itemWidth = customItemWidth ??
+        math.max(38.0, (maxChars * 7.2 + 14.0).clamp(38.0, 58.0));
+    final double totalWidth = itemWidth * count;
 
     return Container(
-      padding: const EdgeInsets.all(2.5),
+      width: totalWidth + 6,
+      height: 34,
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(10),
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.25),
+          width: 1,
+        ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Stack(
         children: [
-          for (var i = 0; i < options.length; i++)
-            Semantics(
-              button: true,
-              selected: i == index,
-              child: GestureDetector(
-                onTap: () => onChanged(i),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: i == index ? scheme.primary : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
+          // Animated sliding dock pill thumb
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOutCubic,
+            left: safeIndex * itemWidth,
+            top: 0,
+            bottom: 0,
+            width: itemWidth,
+            child: Container(
+              decoration: BoxDecoration(
+                color: scheme.primary,
+                borderRadius: BorderRadius.circular(9),
+                boxShadow: [
+                  BoxShadow(
+                    color: scheme.primary.withValues(alpha: 0.35),
+                    blurRadius: 5,
+                    offset: const Offset(0, 1.5),
                   ),
-                  child: Text(
-                    options[i],
-                    maxLines: 1,
-                    softWrap: false,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: i == index ? scheme.onPrimary : context.tokens.muted,
+                ],
+              ),
+            ),
+          ),
+          // Option touch targets & texts
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < count; i++)
+                SizedBox(
+                  width: itemWidth,
+                  height: double.infinity,
+                  child: Semantics(
+                    button: true,
+                    selected: i == safeIndex,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        if (i != safeIndex) {
+                          HapticFeedback.selectionClick();
+                          onChanged(i);
+                        }
+                      },
+                      child: Center(
+                        child: AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOut,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: i == safeIndex
+                                ? scheme.onPrimary
+                                : context.tokens.muted,
+                            fontFamily: 'Figtree',
+                          ),
+                          child: Text(
+                            options[i],
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AppIconDockSlider extends StatefulWidget {
+  const AppIconDockSlider({
+    super.key,
+    required this.index,
+    required this.onChanged,
+  });
+
+  final int index;
+  final ValueChanged<int> onChanged;
+
+  @override
+  State<AppIconDockSlider> createState() => _AppIconDockSliderState();
+}
+
+class _AppIconDockSliderState extends State<AppIconDockSlider> {
+  final ScrollController _scrollController = ScrollController();
+
+  static const _items = [
+    (name: 'Default', asset: 'assets/app_icons/icon_default.png'),
+    (name: 'Green', asset: 'assets/app_icons/icon_green.png'),
+    (name: 'Tricolor', asset: 'assets/app_icons/icon_tricolor.png'),
+    (name: 'Orange', asset: 'assets/app_icons/icon_orange.png'),
+  ];
+
+  static const double _itemWidth = 64.0;
+
+  @override
+  void didUpdateWidget(covariant AppIconDockSlider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.index != oldWidget.index) {
+      _scrollToIndex(widget.index);
+    }
+  }
+
+  void _scrollToIndex(int idx) {
+    if (!_scrollController.hasClients) return;
+    final target = (idx * _itemWidth) - 40;
+    _scrollController.animateTo(
+      target.clamp(0.0, _scrollController.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    final count = _items.length;
+    final safeIndex = widget.index.clamp(0, count - 1);
+
+    return Container(
+      width: 198,
+      height: 38,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.25),
+          width: 1,
+        ),
+      ),
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: SizedBox(
+          width: _itemWidth * count,
+          height: 32,
+          child: Stack(
+            children: [
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.easeOutCubic,
+                left: safeIndex * _itemWidth,
+                top: 0,
+                bottom: 0,
+                width: _itemWidth,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    borderRadius: BorderRadius.circular(9),
+                    boxShadow: [
+                      BoxShadow(
+                        color: scheme.primary.withValues(alpha: 0.35),
+                        blurRadius: 5,
+                        offset: const Offset(0, 1.5),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  for (var i = 0; i < count; i++)
+                    SizedBox(
+                      width: _itemWidth,
+                      height: double.infinity,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          if (i != safeIndex) {
+                            HapticFeedback.selectionClick();
+                            widget.onChanged(i);
+                            _scrollToIndex(i);
+                          }
+                        },
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: Image.asset(
+                                  _items[i].asset,
+                                  width: 15,
+                                  height: 15,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  _items[i].name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: i == safeIndex
+                                        ? scheme.onPrimary
+                                        : context.tokens.muted,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class VerifiedBadgeDockSlider extends StatelessWidget {
+  const VerifiedBadgeDockSlider({
+    super.key,
+    required this.index,
+    required this.onChanged,
+  });
+
+  final int index;
+  final ValueChanged<int> onChanged;
+
+  static const double _itemWidth = 52.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    final count = VerifiedBadgeType.values.length;
+    final safeIndex = index.clamp(0, count - 1);
+    final totalWidth = _itemWidth * count;
+
+    return Container(
+      width: totalWidth + 6,
+      height: 34,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.25),
+          width: 1,
+        ),
+      ),
+      child: Stack(
+        children: [
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOutCubic,
+            left: safeIndex * _itemWidth,
+            top: 0,
+            bottom: 0,
+            width: _itemWidth,
+            child: Container(
+              decoration: BoxDecoration(
+                color: scheme.primary,
+                borderRadius: BorderRadius.circular(9),
+                boxShadow: [
+                  BoxShadow(
+                    color: scheme.primary.withValues(alpha: 0.35),
+                    blurRadius: 5,
+                    offset: const Offset(0, 1.5),
+                  ),
+                ],
               ),
             ),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < count; i++)
+                SizedBox(
+                  width: _itemWidth,
+                  height: double.infinity,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      if (i != safeIndex) {
+                        HapticFeedback.selectionClick();
+                        onChanged(i);
+                      }
+                    },
+                    child: Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (i > 0) ...[
+                            VerifiedBadge(
+                              color: VerifiedBadgeType.values[i].color,
+                              size: 13,
+                            ),
+                            const SizedBox(width: 3),
+                          ],
+                          Text(
+                            VerifiedBadgeType.values[i].label,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: i == safeIndex
+                                  ? scheme.onPrimary
+                                  : context.tokens.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );
