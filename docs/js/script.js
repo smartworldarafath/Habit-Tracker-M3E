@@ -274,6 +274,14 @@ fetch(`https://api.github.com/repos/${REPO}/releases/latest`)
     const iosIpa = assets.find((a) => a.name.endsWith('.ipa'));
     const iosBtn = document.getElementById('dl-ios-btn');
     if (iosIpa && iosBtn) iosBtn.href = iosIpa.browser_download_url;
+
+    // macOS
+    const macDmg = assets.find((a) => a.name.endsWith('.dmg'));
+    const macZip = assets.find((a) => a.name.includes('macos') && a.name.endsWith('.zip'));
+    const macBtn = document.getElementById('dl-mac-btn');
+    const macZipLink = document.getElementById('dl-mac-zip');
+    if (macDmg && macBtn) macBtn.href = macDmg.browser_download_url;
+    if (macZip && macZipLink) macZipLink.href = macZip.browser_download_url;
   })
   .catch(() => {});
 
