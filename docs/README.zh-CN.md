@@ -66,12 +66,12 @@
 <img src="../screenshots/01-today.jpg" alt="今天" width="145" />
 <img src="../screenshots/02-focus.jpg" alt="专注" width="145" />
 <img src="../screenshots/03-stats.jpg" alt="统计" width="145" />
-<img src="../screenshots/04-insights.jpg" alt="洞察" width="145" />
-
-<img src="../screenshots/05-amount.jpg" alt="数量型习惯" width="145" />
 <img src="../screenshots/06-notes.jpg" alt="每日笔记" width="145" />
-<img src="../screenshots/07-customize.jpg" alt="个性化" width="145" />
+
 <img src="../screenshots/08-private.jpg" alt="免费且私密" width="145" />
+<img src="../screenshots/04-insights.jpg" alt="洞察" width="145" />
+<img src="../screenshots/07-customize.jpg" alt="个性化" width="145" />
+<img src="../screenshots/05-amount.jpg" alt="数量型习惯" width="145" />
 
 <sub><b>今天</b> · <b>专注</b> · <b>统计</b> · <b>洞察</b> · <b>数量</b> · <b>笔记</b> · <b>个性化</b> · <b>免费且私密</b></sub>
 
