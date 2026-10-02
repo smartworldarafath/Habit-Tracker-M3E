@@ -199,15 +199,29 @@ survive the move. Any other CSV works too, as long as it has a habit and a date.
 
 Download Habit Tracker M3E directly from [**GitHub Releases**](https://github.com/smartworldarafath/Habit-Tracker-M3E/releases).
 
-Habit Tracker M3E runs on Android, Windows, Linux, and iOS (iPhone & iPad):
+Habit Tracker M3E runs on Android, Windows, Linux, iOS (iPhone & iPad), and macOS:
 
 | Platform | Status |
 |----------|--------|
-| <img src="https://cdn-icons-png.flaticon.com/512/270/270780.png" width="26" height="26" alt="Android" />&nbsp;&nbsp;**Android** | ✅ **Supported** |
-| <img src="https://cdn-icons-png.flaticon.com/512/732/732221.png" width="26" height="26" alt="Windows" />&nbsp;&nbsp;**Windows** | ✅ **Supported** |
+| <img src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/android-icon.png" width="26" height="26" alt="Android" />&nbsp;&nbsp;**Android** | ✅ **Supported** |
+| <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOxYL1ESXVU3dbGhhKUf6YqL2WmXGdPWC2GomXKeBJF40CE2YRMvKptE91&s=10" width="26" height="26" alt="Windows" />&nbsp;&nbsp;**Windows** | ✅ **Supported** |
 | <img src="https://cdn-icons-png.flaticon.com/512/6124/6124995.png" width="26" height="26" alt="Linux" />&nbsp;&nbsp;**Linux** | ✅ **Supported** |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="https://upload.wikimedia.org/wikipedia/commons/3/31/Apple_logo_white.svg" /><img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" width="26" height="26" alt="iOS" /></picture>&nbsp;&nbsp;**iOS (iPhone & iPad)** | ✅ **Supported** |
-| <img src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Finder_Icon_macOS_Big_Sur.png" width="26" height="26" alt="macOS" />&nbsp;&nbsp;**macOS** | 📅 **Planned** |
+| <img src="https://static.vecteezy.com/system/resources/thumbnails/021/496/368/small/ios-icon-logo-software-phone-apple-symbol-with-name-black-design-mobile-illustration-free-vector.jpg" width="26" height="26" alt="iOS" />&nbsp;&nbsp;**iOS (iPhone & iPad)** | ✅ **Supported** |
+| <img src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Finder_Icon_macOS_Big_Sur.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original" width="26" height="26" alt="macOS" />&nbsp;&nbsp;**macOS** | ✅ **Supported** |
+
+<details>
+<summary><b>macOS</b></summary>
+
+Two files on the [**Releases**](https://github.com/smartworldarafath/Habit-Tracker-M3E/releases) page for macOS:
+
+| File | For |
+|------|-----|
+| `HabitTrackerM3E-v1.3.0-macos.dmg` | Drag-and-drop installer: open DMG and drag to Applications |
+| `HabitTrackerM3E-v1.3.0-macos.zip` | Portable `.app` archive: unzip and run directly |
+
+Runs on **macOS 12.0 (Monterey) and newer** (Apple Silicon & Intel).
+
+</details>
 
 <details>
 <summary><b>Linux</b></summary>
