@@ -95,6 +95,7 @@ class _SplashVideoScreenState extends State<SplashVideoScreen>
       _controller?.pause();
       _controller?.dispose();
       _controller = null;
+      if (mounted) setState(() {});
     });
   }
 
@@ -108,55 +109,56 @@ class _SplashVideoScreenState extends State<SplashVideoScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // The underlying main app, prepared and revealed smoothly
+    if (_fadeController.isCompleted) {
+      return widget.child;
+    }
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // The underlying main app, prepared and revealed smoothly
+        AnimatedBuilder(
+          animation: _fadeController,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _fadeAnimation.value,
+              child: Transform.scale(
+                scale: _scaleAnimation.value,
+                child: widget.child,
+              ),
+            );
+          },
+        ),
+
+        // Splash video layer that fades out when finished
+        if (!_fadeController.isCompleted)
           AnimatedBuilder(
             animation: _fadeController,
             builder: (context, child) {
+              final splashOpacity = (1.0 - _fadeAnimation.value).clamp(0.0, 1.0);
+              if (splashOpacity <= 0) return const SizedBox.shrink();
+
               return Opacity(
-                opacity: _fadeAnimation.value,
-                child: Transform.scale(
-                  scale: _scaleAnimation.value,
-                  child: widget.child,
+                opacity: splashOpacity,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _completeSplash,
+                  child: ColoredBox(
+                    color: Colors.black,
+                    child: Center(
+                      child: _isVideoInitialized && _controller != null
+                          ? AspectRatio(
+                              aspectRatio: _controller!.value.aspectRatio,
+                              child: VideoPlayer(_controller!),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ),
                 ),
               );
             },
           ),
-
-          // Splash video layer that fades out when finished
-          if (!_fadeController.isCompleted)
-            AnimatedBuilder(
-              animation: _fadeController,
-              builder: (context, child) {
-                final splashOpacity = (1.0 - _fadeAnimation.value).clamp(0.0, 1.0);
-                if (splashOpacity <= 0) return const SizedBox.shrink();
-
-                return Opacity(
-                  opacity: splashOpacity,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: _completeSplash,
-                    child: ColoredBox(
-                      color: Colors.black,
-                      child: Center(
-                        child: _isVideoInitialized && _controller != null
-                            ? AspectRatio(
-                                aspectRatio: _controller!.value.aspectRatio,
-                                child: VideoPlayer(_controller!),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-        ],
-      ),
+      ],
     );
   }
 }

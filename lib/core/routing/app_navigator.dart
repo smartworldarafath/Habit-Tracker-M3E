@@ -67,41 +67,65 @@ class AppNavigator {
     bool fade = false,
     String? name,
   }) {
-    return PageRouteBuilder<T>(
-      settings: RouteSettings(name: name),
-      fullscreenDialog: fullscreenDialog,
-      transitionDuration: const Duration(milliseconds: 340),
-      reverseTransitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      pageBuilder: (_, __, ___) => AppBackground(child: page),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        final route = ModalRoute.of(context)! as PageRoute<T>;
-        if (fullscreenDialog) {
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 1),
-              end: Offset.zero,
-            ).animate(
-              CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-                reverseCurve: Curves.easeInCubic,
+    if (fullscreenDialog || fade) {
+      return PageRouteBuilder<T>(
+        settings: RouteSettings(name: name),
+        fullscreenDialog: fullscreenDialog,
+        transitionDuration: const Duration(milliseconds: 340),
+        reverseTransitionDuration: const Duration(milliseconds: 300),
+        opaque: true,
+        pageBuilder: (_, __, ___) => AppBackground(child: page),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          if (fullscreenDialog) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                  reverseCurve: Curves.easeInCubic,
+                ),
               ),
-            ),
-            child: child,
-          );
-        }
+              child: child,
+            );
+          }
+          return FadeThrough(animation: animation, child: child);
+        },
+      );
+    }
 
-        if (fade) return FadeThrough(animation: animation, child: child);
-
-        return const CupertinoPageTransitionsBuilder().buildTransitions(
-          route,
-          context,
-          animation,
-          secondaryAnimation,
-          child,
-        );
-      },
+    return AppPredictivePageRoute<T>(
+      settings: RouteSettings(name: name),
+      fullscreenDialog: false,
+      builder: (_) => AppBackground(child: page),
     );
   }
+}
+
+class AppPredictivePageRoute<T> extends PageRoute<T>
+    with CupertinoRouteTransitionMixin<T> {
+  AppPredictivePageRoute({
+    required this.builder,
+    super.settings,
+    super.fullscreenDialog,
+  });
+
+  final WidgetBuilder builder;
+
+  @override
+  Widget buildContent(BuildContext context) => builder(context);
+
+  @override
+  String? get title => null;
+
+  @override
+  bool get maintainState => true;
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 320);
+
+  @override
+  Duration get reverseTransitionDuration => const Duration(milliseconds: 280);
 }

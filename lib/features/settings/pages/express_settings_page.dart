@@ -23,6 +23,7 @@ import 'package:streak/features/settings/pages/app_updates_page.dart';
 import 'package:streak/features/settings/pages/app_style_page.dart';
 import 'package:streak/features/settings/pages/archived_habits_page.dart';
 import 'package:streak/features/settings/pages/quotes_page.dart';
+import 'package:streak/features/settings/widgets/profile_avatar_view.dart';
 import 'package:streak/features/settings/settings_actions.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
 import 'package:streak/features/settings/widgets/minimal_settings_widgets.dart';
@@ -278,18 +279,21 @@ class _ProfileHero extends StatelessWidget {
             button: true,
             label: context.l10n.change_photo,
             child: GestureDetector(
-              onTap: () => SettingsActions.pickProfilePhoto(context),
-              child: SizedBox(
-                width: 72,
-                height: 72,
-                child: DecoratedBox(
-                  decoration: ShapeDecoration(
-                    shape: const ExpressBorder(shape: ExpressShape.cookie),
-                    image: DecorationImage(
-                      image: hasPhoto
-                          ? FileImage(File(filePath)) as ImageProvider
-                          : const AssetImage('assets/profile_default.jpg'),
-                      fit: BoxFit.cover,
+              onTap: () => ProfileAvatarView.show(context),
+              child: Hero(
+                tag: 'settings_profile_avatar',
+                child: SizedBox(
+                  width: 72,
+                  height: 72,
+                  child: DecoratedBox(
+                    decoration: ShapeDecoration(
+                      shape: const ExpressBorder(shape: ExpressShape.cookie),
+                      image: DecorationImage(
+                        image: hasPhoto
+                            ? FileImage(File(filePath)) as ImageProvider
+                            : const AssetImage('assets/profile_default.jpg'),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
@@ -909,7 +913,7 @@ class _FooterState extends State<_Footer> {
         ),
         const SizedBox(height: 14),
         Text(
-          'STREAK $_version'.trim(),
+          'M3E $_version'.trim(),
           style: ExpressType.body.at(
             12,
             weight: 800,

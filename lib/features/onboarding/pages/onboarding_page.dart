@@ -286,12 +286,13 @@ class _Welcome extends StatelessWidget {
         Text(l10n.onb_kicker.toUpperCase(), style: _kicker(context)),
         const SizedBox(height: 6),
         Text(
-          'Streak',
+          'Habit Tracker M3E',
+          textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 46,
-            height: 1,
+            fontSize: 34,
+            height: 1.15,
             fontWeight: FontWeight.w800,
-            letterSpacing: -1.2,
+            letterSpacing: -0.8,
             color: context.colors.onSurface,
           ),
         ),

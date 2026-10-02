@@ -121,7 +121,7 @@ class NotificationService {
       notificationCategories: _categories(await localizations()),
     );
     const windows = WindowsInitializationSettings(
-      appName: 'Streak',
+      appName: 'Habit Tracker M3E',
       appUserModelId: 'com.habittrackerm3e.app',
       guid: 'cfb32a7d-9c06-495b-8afa-df8829d33edc',
     );

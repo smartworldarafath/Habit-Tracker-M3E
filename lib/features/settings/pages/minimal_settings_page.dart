@@ -21,6 +21,7 @@ import 'package:streak/features/settings/widgets/minimal_settings_widgets.dart';
 import 'package:streak/features/settings/widgets/settings_rows.dart';
 import 'package:streak/core/widgets/verified_badge.dart';
 import 'package:streak/features/settings/widgets/settings_sheets.dart';
+import 'package:streak/features/settings/widgets/profile_avatar_view.dart';
 
 class MinimalSettingsPage extends StatelessWidget {
   const MinimalSettingsPage({super.key});
@@ -138,7 +139,7 @@ class _FooterState extends State<_Footer> {
     return Column(
       children: [
         Text(
-          'STREAK',
+          'M3E',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w800,
@@ -189,18 +190,21 @@ class _ProfileRow extends StatelessWidget {
           button: true,
           label: context.l10n.change_photo,
           child: GestureDetector(
-            onTap: () => SettingsActions.pickProfilePhoto(context),
-            child: Container(
-              width: 62,
-              height: 62,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: context.colors.surfaceContainerHighest,
-                image: DecorationImage(
-                  image: hasPhoto
-                      ? FileImage(File(filePath)) as ImageProvider
-                      : const AssetImage('assets/profile_default.jpg'),
-                  fit: BoxFit.cover,
+            onTap: () => ProfileAvatarView.show(context),
+            child: Hero(
+              tag: 'settings_profile_avatar',
+              child: Container(
+                width: 62,
+                height: 62,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: context.colors.surfaceContainerHighest,
+                  image: DecorationImage(
+                    image: hasPhoto
+                        ? FileImage(File(filePath)) as ImageProvider
+                        : const AssetImage('assets/profile_default.jpg'),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),

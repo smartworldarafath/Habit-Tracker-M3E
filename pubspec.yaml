@@ -1,9 +1,9 @@
 name: streak
-description: "Streak: a minimal habit tracker that helps you build lasting streaks."
+description: "Habit Tracker M3E: a minimal habit tracker that helps you build lasting streaks."
 
 publish_to: 'none'
 
-version: 1.2.5+3
+version: 1.3.0+4
 
 environment:
   sdk: ^3.9.2

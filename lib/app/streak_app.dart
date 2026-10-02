@@ -38,8 +38,13 @@ class StreakApp extends StatelessWidget {
           AppLocalizations.of(context),
           () => context.read<HabitsController>().asMap,
         );
+        final isDark = switch (settings.themeMode) {
+          ThemeMode.dark => true,
+          ThemeMode.light => false,
+          ThemeMode.system => Theme.of(context).brightness == Brightness.dark,
+        };
         return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: AppTheme.systemBars(Theme.of(context).brightness),
+          value: AppTheme.systemBars(isDark ? Brightness.dark : Brightness.light),
           child: AppLockGate(
             child: AppBackground(
               child: _DesktopFrame(
