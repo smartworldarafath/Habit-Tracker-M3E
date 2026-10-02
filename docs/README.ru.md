@@ -63,15 +63,15 @@
 
 <div align="center">
 
-<img src="../screenshots/01-today.png" alt="Сегодня" width="145" />
-<img src="../screenshots/02-focus.png" alt="Фокус" width="145" />
-<img src="../screenshots/03-stats.png" alt="Статистика" width="145" />
-<img src="../screenshots/04-insights.png" alt="Аналитика" width="145" />
+<img src="../screenshots/01-today.jpg" alt="Сегодня" width="145" />
+<img src="../screenshots/02-focus.jpg" alt="Фокус" width="145" />
+<img src="../screenshots/03-stats.jpg" alt="Статистика" width="145" />
+<img src="../screenshots/04-insights.jpg" alt="Аналитика" width="145" />
 
-<img src="../screenshots/05-amount.png" alt="Количественные привычки" width="145" />
-<img src="../screenshots/06-notes.png" alt="Заметки дня" width="145" />
-<img src="../screenshots/07-customize.png" alt="Персонализация" width="145" />
-<img src="../screenshots/08-private.png" alt="Бесплатно и приватно" width="145" />
+<img src="../screenshots/05-amount.jpg" alt="Количественные привычки" width="145" />
+<img src="../screenshots/06-notes.jpg" alt="Заметки дня" width="145" />
+<img src="../screenshots/07-customize.jpg" alt="Персонализация" width="145" />
+<img src="../screenshots/08-private.jpg" alt="Бесплатно и приватно" width="145" />
 
 <sub><b>Сегодня</b> · <b>Фокус</b> · <b>Статистика</b> · <b>Аналитика</b> · <b>Количество</b> · <b>Заметки</b> · <b>Персонализация</b> · <b>Бесплатно и приватно</b></sub>
 

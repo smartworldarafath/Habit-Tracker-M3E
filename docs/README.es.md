@@ -63,15 +63,15 @@ Registra un hábito con un solo toque, mantén tu constancia y mira crecer tus r
 
 <div align="center">
 
-<img src="../screenshots/01-today.png" alt="Hoy" width="145" />
-<img src="../screenshots/02-focus.png" alt="Concentración" width="145" />
-<img src="../screenshots/03-stats.png" alt="Estadísticas" width="145" />
-<img src="../screenshots/04-insights.png" alt="Análisis" width="145" />
+<img src="../screenshots/01-today.jpg" alt="Hoy" width="145" />
+<img src="../screenshots/02-focus.jpg" alt="Concentración" width="145" />
+<img src="../screenshots/03-stats.jpg" alt="Estadísticas" width="145" />
+<img src="../screenshots/04-insights.jpg" alt="Análisis" width="145" />
 
-<img src="../screenshots/05-amount.png" alt="Hábitos de cantidad" width="145" />
-<img src="../screenshots/06-notes.png" alt="Notas del día" width="145" />
-<img src="../screenshots/07-customize.png" alt="Personaliza" width="145" />
-<img src="../screenshots/08-private.png" alt="Libre y privada" width="145" />
+<img src="../screenshots/05-amount.jpg" alt="Hábitos de cantidad" width="145" />
+<img src="../screenshots/06-notes.jpg" alt="Notas del día" width="145" />
+<img src="../screenshots/07-customize.jpg" alt="Personaliza" width="145" />
+<img src="../screenshots/08-private.jpg" alt="Libre y privada" width="145" />
 
 <sub><b>Hoy</b> · <b>Concentración</b> · <b>Estadísticas</b> · <b>Análisis</b> · <b>Cantidades</b> · <b>Notas</b> · <b>Personaliza</b> · <b>Libre y privada</b></sub>
 
