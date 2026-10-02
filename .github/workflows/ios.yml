@@ -2,13 +2,22 @@ name: iOS build
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to attach the iOS IPA to, e.g. v1.3.0'
+        required: true
+        default: 'v1.3.0'
+        type: string
+
+permissions:
+  contents: write
 
 env:
-  FLUTTER_VERSION: '3.41.9'
+  FLUTTER_VERSION: '3.47.5'
 
 jobs:
   ios:
-    name: Build unsigned ipa
+    name: Build and attach iOS IPA
     runs-on: macos-latest
 
     steps:
@@ -28,15 +37,17 @@ jobs:
       - name: Build iOS
         run: flutter build ios --release --no-codesign
 
-      - name: Package
+      - name: Package IPA
         run: |
           mkdir -p Payload
-          mv build/ios/iphoneos/Runner.app Payload/
-          zip -qry Streak-ios.ipa Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -qry HabitTrackerM3E-v1.3.0.ipa Payload
+          cp HabitTrackerM3E-v1.3.0.ipa Streak-ios.ipa
 
-      - name: Upload the ipa
-        uses: actions/upload-artifact@v4
+      - name: Attach IPA to GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: Streak-ios
-          path: Streak-ios.ipa
-          if-no-files-found: error
+          tag_name: ${{ inputs.tag }}
+          files: |
+            HabitTrackerM3E-v1.3.0.ipa
+            Streak-ios.ipa
