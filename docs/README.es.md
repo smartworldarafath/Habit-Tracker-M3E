@@ -14,7 +14,12 @@
 
 ### Streak
 
-<img src="../assets/icon.svg" width="72" alt="Logo de Streak" />
+<p align="center">
+  <img src="../assets/app_icons/icon_default.png" width="76" alt="Icono Violeta" />&nbsp;&nbsp;
+  <img src="../assets/app_icons/icon_orange.png" width="76" alt="Icono Naranja" />&nbsp;&nbsp;
+  <img src="../assets/app_icons/icon_green.png" width="76" alt="Icono Verde" />&nbsp;&nbsp;
+  <img src="../assets/app_icons/icon_tricolor.png" width="76" alt="Icono Tricolor" />
+</p>
 
 ### Un rastreador de hábitos minimalista, privado y sin anuncios
 
