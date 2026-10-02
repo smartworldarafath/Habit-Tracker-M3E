@@ -203,11 +203,11 @@ Habit Tracker M3E runs on Android, Windows and Linux:
 
 | Platform | Status |
 |----------|--------|
-| Android | ✅ Supported |
-| Windows | ✅ Supported |
-| Linux | ✅ Supported |
-| iOS | 🚧 In progress |
-| macOS | 📅 Planned |
+| <img src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/android-icon.png" width="26" height="26" alt="Android" />&nbsp;&nbsp;**Android** | ✅ **Supported** |
+| <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOxYL1ESXVU3dbGhhKUf6YqL2WmXGdPWC2GomXKeBJF40CE2YRMvKptE91&amp;s=10" width="26" height="26" alt="Windows" />&nbsp;&nbsp;**Windows** | ✅ **Supported** |
+| <img src="https://cdn-icons-png.flaticon.com/512/6124/6124995.png" width="26" height="26" alt="Linux" />&nbsp;&nbsp;**Linux** | ✅ **Supported** |
+| <img src="https://static.vecteezy.com/system/resources/thumbnails/021/496/368/small/ios-icon-logo-software-phone-apple-symbol-with-name-black-design-mobile-illustration-free-vector.jpg" width="26" height="26" alt="iOS" />&nbsp;&nbsp;**iOS** | 🚧 **In progress** |
+| <img src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Finder_Icon_macOS_Big_Sur.png" width="26" height="26" alt="macOS" />&nbsp;&nbsp;**macOS** | 📅 **Planned** |
 
 <details>
 <summary><b>Linux</b></summary>
