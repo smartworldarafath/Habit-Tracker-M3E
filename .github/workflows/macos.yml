@@ -1,0 +1,56 @@
+name: macOS build
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to attach the macOS packages to, e.g. v1.3.0'
+        required: true
+        default: 'v1.3.0'
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: '3.47.5'
+
+jobs:
+  macos:
+    name: Build and attach macOS DMG & ZIP
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build macOS
+        run: flutter build macos --release
+
+      - name: Package macOS App (DMG & ZIP)
+        run: |
+          cd "build/macos/Build/Products/Release"
+          APP_NAME=$(find . -maxdepth 1 -name "*.app" -print | head -n 1)
+          echo "Found app bundle: $APP_NAME"
+          zip -qry "HabitTrackerM3E-v1.3.0-macos.zip" "$APP_NAME"
+          hdiutil create -volname "Habit Tracker M3E" -srcfolder "$APP_NAME" -ov -format UDZO "HabitTrackerM3E-v1.3.0-macos.dmg"
+          mv "HabitTrackerM3E-v1.3.0-macos.zip" "$GITHUB_WORKSPACE/"
+          mv "HabitTrackerM3E-v1.3.0-macos.dmg" "$GITHUB_WORKSPACE/"
+
+      - name: Attach macOS packages to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          files: |
+            HabitTrackerM3E-v1.3.0-macos.dmg
+            HabitTrackerM3E-v1.3.0-macos.zip
