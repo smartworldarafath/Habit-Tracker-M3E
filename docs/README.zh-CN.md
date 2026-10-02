@@ -14,7 +14,12 @@
 
 ### Streak
 
-<img src="../assets/icon.svg" width="72" alt="Streak 标志" />
+<p align="center">
+  <img src="../assets/app_icons/icon_default.png" width="76" alt="Purple Icon" />&nbsp;&nbsp;
+  <img src="../assets/app_icons/icon_orange.png" width="76" alt="Orange Icon" />&nbsp;&nbsp;
+  <img src="../assets/app_icons/icon_green.png" width="76" alt="Green Icon" />&nbsp;&nbsp;
+  <img src="../assets/app_icons/icon_tricolor.png" width="76" alt="Tricolor Icon" />
+</p>
 
 ### 极简、私密、无广告的习惯追踪应用
 

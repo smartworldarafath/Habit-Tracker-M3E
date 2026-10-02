@@ -14,7 +14,12 @@
 
 ### Streak
 
-<img src="../assets/icon.svg" width="72" alt="Логотип Streak" />
+<p align="center">
+  <img src="../assets/app_icons/icon_default.png" width="76" alt="Purple Icon" />&nbsp;&nbsp;
+  <img src="../assets/app_icons/icon_orange.png" width="76" alt="Orange Icon" />&nbsp;&nbsp;
+  <img src="../assets/app_icons/icon_green.png" width="76" alt="Green Icon" />&nbsp;&nbsp;
+  <img src="../assets/app_icons/icon_tricolor.png" width="76" alt="Tricolor Icon" />
+</p>
 
 ### Минималистичный, приватный трекер привычек без рекламы
 
