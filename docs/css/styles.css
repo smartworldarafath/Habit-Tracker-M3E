@@ -141,7 +141,7 @@ a {
     radial-gradient(40% 30% at 85% 30%, rgba(167, 139, 250, 0.25), transparent 70%);
 }
 
-/* NAVBAR */
+/* LIQUID GLASS FLOATING DOCK */
 .bar {
   position: sticky;
   top: 14px;
@@ -152,20 +152,57 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 9px 10px 9px 16px;
+  padding: 10px 12px 10px 18px;
   border-radius: 999px;
-  background: var(--bar-bg);
-  border: 1px solid var(--line);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  box-shadow: 0 10px 34px -18px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  transition: width .45s var(--ease), padding .45s var(--ease), background .35s var(--ease), border-color .35s var(--ease), box-shadow .35s var(--ease);
+
+  /* Pure Liquid Glass Material */
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(28px) saturate(210%) brightness(110%);
+  -webkit-backdrop-filter: blur(28px) saturate(210%) brightness(110%);
+
+  /* Pill-bevel specular refraction edges and soft ambient shadow */
+  box-shadow: 
+    0 20px 50px -12px rgba(0, 0, 0, 0.55),
+    0 0 32px -8px rgba(124, 58, 237, 0.3),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -1.5px 1px 0 rgba(255, 255, 255, 0.06),
+    inset 1px 0 2px 0 rgba(255, 255, 255, 0.12),
+    inset -1px 0 2px 0 rgba(255, 255, 255, 0.12);
+
+  transition: width .45s var(--ease), padding .45s var(--ease), background .4s var(--ease), border-color .4s var(--ease), box-shadow .4s var(--ease);
 }
 
 .bar.is-small {
   width: min(760px, calc(100% - 32px));
-  padding: 6px 8px 6px 14px;
-  background: var(--bar-bg-small);
+  padding: 7px 10px 7px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 24px 56px -12px rgba(0, 0, 0, 0.65),
+    0 0 40px -6px rgba(124, 58, 237, 0.38),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1.5px 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .bar {
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(28px) saturate(210%) brightness(102%);
+  -webkit-backdrop-filter: blur(28px) saturate(210%) brightness(102%);
+  box-shadow: 
+    0 20px 48px -15px rgba(0, 0, 0, 0.08),
+    0 0 35px -8px rgba(124, 58, 237, 0.15),
+    inset 0 2px 1.5px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .bar.is-small {
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 
+    0 24px 54px -14px rgba(0, 0, 0, 0.12),
+    0 0 40px -6px rgba(124, 58, 237, 0.2),
+    inset 0 2px 1.5px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.05);
 }
 
 .bar.is-small .bar__nav a { padding: 6px 11px; font-size: 12.5px; }
@@ -175,18 +212,26 @@ a {
 .bar__brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
   font-weight: 800;
   letter-spacing: -0.01em;
 }
 
-.bar__brand img {
-  border-radius: 6px;
-  transition: transform 0.25s var(--ease);
+.bar__logo {
+  border-radius: 9px;
+  filter: drop-shadow(0 2px 10px rgba(124, 58, 237, 0.45));
+  transition: transform 0.35s cubic-bezier(.34, 1.56, .64, 1);
+  object-fit: cover;
 }
 
-.bar__brand:hover img {
-  transform: scale(1.08) rotate(3deg);
+.bar__brand:hover .bar__logo {
+  transform: scale(1.15) rotate(4deg);
+}
+
+.foot__logo {
+  border-radius: 8px;
+  filter: drop-shadow(0 2px 8px rgba(124, 58, 237, 0.3));
+  object-fit: cover;
 }
 
 .bar__nav {
