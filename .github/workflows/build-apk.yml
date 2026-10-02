@@ -16,7 +16,7 @@ permissions:
 # Pinned Flutter version. F-Droid extracts this exact value from the recipe so
 # its build matches upstream. Defined once here and reused by both jobs.
 env:
-  FLUTTER_VERSION: '3.41.9'
+  FLUTTER_VERSION: '3.47.5'
 
 jobs:
   build:
