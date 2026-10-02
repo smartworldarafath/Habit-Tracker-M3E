@@ -112,11 +112,11 @@ class ShareStatCard extends StatelessWidget {
                       ),
                       SizedBox(width: width * 0.025),
                       Text(
-                        'Streak',
+                        'Habit Tracker M3E',
                         style: TextStyle(
                           fontFamily: 'PlayfairDisplay',
                           fontStyle: FontStyle.italic,
-                          fontSize: width * 0.04,
+                          fontSize: width * 0.036,
                           fontWeight: FontWeight.w600,
                           color: Colors.white.withValues(alpha: 0.92),
                         ),

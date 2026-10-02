@@ -25,6 +25,7 @@ import 'package:streak/features/settings/widgets/settings_rows.dart';
 import 'package:streak/features/settings/widgets/minimal_settings_widgets.dart';
 import 'package:streak/core/widgets/verified_badge.dart';
 import 'package:streak/features/settings/widgets/settings_sheets.dart';
+import 'package:streak/features/settings/widgets/profile_avatar_view.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -139,6 +140,19 @@ class ClassicSettingsPage extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 28),
+          Center(
+            child: Text(
+              'M3E v1.3.0',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.2,
+                color: context.tokens.muted.withValues(alpha: 0.6),
+              ),
+            ),
+          ),
+          const SizedBox(height: 40),
         ],
       ),
     );
@@ -856,20 +870,23 @@ class _ProfileHeader extends StatelessWidget {
           button: true,
           label: context.l10n.change_photo,
           child: GestureDetector(
-            onTap: () => SettingsActions.pickProfilePhoto(context),
+            onTap: () => ProfileAvatarView.show(context),
             child: Stack(
               children: [
-                Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: scheme.surfaceContainerHighest,
-                    image: DecorationImage(
-                      image: hasPhoto
-                          ? FileImage(File(filePath)) as ImageProvider
-                          : const AssetImage('assets/profile_default.jpg'),
-                      fit: BoxFit.cover,
+                Hero(
+                  tag: 'settings_profile_avatar',
+                  child: Container(
+                    width: 88,
+                    height: 88,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: scheme.surfaceContainerHighest,
+                      image: DecorationImage(
+                        image: hasPhoto
+                            ? FileImage(File(filePath)) as ImageProvider
+                            : const AssetImage('assets/profile_default.jpg'),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),

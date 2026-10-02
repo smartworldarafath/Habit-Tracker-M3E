@@ -28,7 +28,8 @@
     <application
         android:label="@string/app_name"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:enableOnBackInvokedCallback="true">
 
         <!-- Keep the notification icon statically referenced so the release
              packaging never strips it. It is otherwise only resolved by name at

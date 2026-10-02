@@ -13,15 +13,23 @@ class AppBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsController>();
 
+    final isDark = switch (settings.themeMode) {
+      ThemeMode.dark => true,
+      ThemeMode.light => false,
+      ThemeMode.system => Theme.of(context).brightness == Brightness.dark,
+    };
+
     return Stack(
       fit: StackFit.expand,
       children: [
         _Backdrop(
           type: settings.appBackground,
           image: settings.bgImage,
-          isDark: Theme.of(context).brightness == Brightness.dark,
+          isDark: isDark,
           flat: settings.isExpressStyle || settings.isMinimalStyle
-              ? Theme.of(context).colorScheme.surface
+              ? (isDark
+                  ? (settings.isMinimalStyle ? AppPalette.paperDark : AppPalette.darkSurface)
+                  : (settings.isMinimalStyle ? const Color(0xFFFFFFFF) : const Color(0xFFFAFAFC)))
               : null,
           dotAlpha: settings.isMinimalStyle ? 0.06 : null,
         ),

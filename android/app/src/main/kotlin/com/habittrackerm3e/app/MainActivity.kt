@@ -5,6 +5,8 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.os.Build
+import android.os.Bundle
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -23,6 +25,58 @@ class MainActivity : FlutterFragmentActivity() {
         "accent" to ".MainActivityAccent",
         "orange" to ".MainActivityOrange",
     )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableHighRefreshRate()
+    }
+
+    private fun enableHighRefreshRate() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    display
+                } else {
+                    @Suppress("DEPRECATION")
+                    windowManager.defaultDisplay
+                } ?: return
+
+                val modes = display.supportedModes ?: return
+                var maxRate = 60f
+                var bestModeId = 0
+
+                val currentMode = display.mode
+                val currentWidth = currentMode?.physicalWidth ?: 0
+                val currentHeight = currentMode?.physicalHeight ?: 0
+
+                for (mode in modes) {
+                    val matchesRes = currentWidth == 0 ||
+                        (mode.physicalWidth == currentWidth && mode.physicalHeight == currentHeight)
+                    if (matchesRes && mode.refreshRate > maxRate) {
+                        maxRate = mode.refreshRate
+                        bestModeId = mode.modeId
+                    }
+                }
+
+                if (bestModeId == 0) {
+                    for (mode in modes) {
+                        if (mode.refreshRate > maxRate) {
+                            maxRate = mode.refreshRate
+                            bestModeId = mode.modeId
+                        }
+                    }
+                }
+
+                if (bestModeId != 0) {
+                    val params = window.attributes
+                    params.preferredDisplayModeId = bestModeId
+                    window.attributes = params
+                }
+            } catch (_: Exception) {
+                // Silently fallback if device or OS restricts mode override
+            }
+        }
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
