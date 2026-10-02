@@ -306,8 +306,8 @@ if (heat) {
       cell.style.boxShadow = 'none';
       return;
     }
-    cell.style.background = `rgba(139,92,246,${(0.25 + value * 0.18).toFixed(2)})`;
-    cell.style.boxShadow = value >= 4 ? `0 0 ${6 + value * 2}px rgba(139,92,246,.45)` : 'none';
+    cell.style.background = `rgba(255,107,0,${(0.28 + value * 0.18).toFixed(2)})`;
+    cell.style.boxShadow = value >= 4 ? `0 0 ${6 + value * 2}px rgba(255,107,0,.65)` : 'none';
   };
 
   cells.forEach((cell) => paintCell(cell, Math.random() > 0.42 ? level() : 0));
@@ -321,3 +321,174 @@ if (heat) {
     }, 450);
   }
 }
+
+/* INTERACTIVE CURSOR ORANGE GLOW & PARTICLES */
+(function initAmbientGlowParticles() {
+  const canvas = document.getElementById('ambient-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  let width = 0;
+  let height = 0;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+  }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+
+  const particles = [];
+  const MAX_PARTICLES = 50;
+  const mouse = { x: -1000, y: -1000, targetX: -1000, targetY: -1000, active: false, speed: 0 };
+  let lastMove = 0;
+
+  class GlowParticle {
+    constructor(x, y, isBurst = false) {
+      this.x = x + (Math.random() - 0.5) * (isBurst ? 24 : 50);
+      this.y = y + (Math.random() - 0.5) * (isBurst ? 24 : 50);
+      const angle = Math.random() * Math.PI * 2;
+      const speed = (Math.random() * 0.8 + 0.3) * (isBurst ? 1.4 : 0.9);
+      this.vx = Math.cos(angle) * speed;
+      this.vy = Math.sin(angle) * speed - 0.28;
+      this.radius = Math.random() * 2.2 + 1.2;
+      this.maxLife = Math.random() * 55 + 45;
+      this.life = this.maxLife;
+      const colors = [
+        '255, 107, 0',
+        '255, 140, 20',
+        '255, 175, 45',
+        '255, 85, 0'
+      ];
+      this.color = colors[Math.floor(Math.random() * colors.length)];
+      this.alpha = Math.random() * 0.6 + 0.4;
+    }
+
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      this.vy -= 0.006;
+      this.vx *= 0.986;
+      this.life -= 1;
+    }
+
+    draw(context) {
+      if (this.life <= 0) return;
+      const progress = this.life / this.maxLife;
+      const currentAlpha = this.alpha * progress;
+
+      // Outer ambient glow
+      const glowGrad = context.createRadialGradient(
+        this.x * dpr, this.y * dpr, 0,
+        this.x * dpr, this.y * dpr, this.radius * 4.8 * dpr
+      );
+      glowGrad.addColorStop(0, `rgba(${this.color}, ${currentAlpha * 0.95})`);
+      glowGrad.addColorStop(0.45, `rgba(${this.color}, ${currentAlpha * 0.4})`);
+      glowGrad.addColorStop(1, `rgba(${this.color}, 0)`);
+
+      context.beginPath();
+      context.arc(this.x * dpr, this.y * dpr, this.radius * 4.8 * dpr, 0, Math.PI * 2);
+      context.fillStyle = glowGrad;
+      context.fill();
+
+      // Core sparkle
+      context.beginPath();
+      context.arc(this.x * dpr, this.y * dpr, this.radius * dpr, 0, Math.PI * 2);
+      context.fillStyle = `rgba(255, 248, 235, ${currentAlpha * 0.98})`;
+      context.fill();
+    }
+  }
+
+  function onPointerMove(e) {
+    const x = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : -1000);
+    const y = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : -1000);
+    const now = performance.now();
+    lastMove = now;
+
+    if (!mouse.active) {
+      mouse.x = x;
+      mouse.y = y;
+      mouse.targetX = x;
+      mouse.targetY = y;
+      mouse.active = true;
+    } else {
+      const dx = x - mouse.targetX;
+      const dy = y - mouse.targetY;
+      mouse.speed = Math.sqrt(dx * dx + dy * dy);
+      mouse.targetX = x;
+      mouse.targetY = y;
+    }
+
+    if (particles.length < MAX_PARTICLES && Math.random() < 0.8) {
+      particles.push(new GlowParticle(x, y, true));
+      if (mouse.speed > 6 && particles.length < MAX_PARTICLES) {
+        particles.push(new GlowParticle(x, y, false));
+      }
+    }
+  }
+
+  window.addEventListener('mousemove', onPointerMove, { passive: true });
+  window.addEventListener('touchmove', onPointerMove, { passive: true });
+
+  document.addEventListener('mouseleave', () => {
+    mouse.active = false;
+  });
+
+  function render() {
+    requestAnimationFrame(render);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
+    if (mouse.active) {
+      mouse.x += (mouse.targetX - mouse.x) * 0.16;
+      mouse.y += (mouse.targetY - mouse.y) * 0.16;
+
+      const glowRadius = isLight ? 180 : 220;
+      const cursorGlow = ctx.createRadialGradient(
+        mouse.x * dpr, mouse.y * dpr, 0,
+        mouse.x * dpr, mouse.y * dpr, glowRadius * dpr
+      );
+
+      if (isLight) {
+        cursorGlow.addColorStop(0, 'rgba(255, 140, 20, 0.20)');
+        cursorGlow.addColorStop(0.4, 'rgba(255, 160, 40, 0.09)');
+        cursorGlow.addColorStop(0.8, 'rgba(255, 160, 40, 0.02)');
+        cursorGlow.addColorStop(1, 'rgba(255, 160, 40, 0)');
+      } else {
+        cursorGlow.addColorStop(0, 'rgba(255, 110, 0, 0.25)');
+        cursorGlow.addColorStop(0.35, 'rgba(255, 130, 15, 0.12)');
+        cursorGlow.addColorStop(0.7, 'rgba(255, 110, 0, 0.04)');
+        cursorGlow.addColorStop(1, 'rgba(255, 110, 0, 0)');
+      }
+
+      ctx.beginPath();
+      ctx.arc(mouse.x * dpr, mouse.y * dpr, glowRadius * dpr, 0, Math.PI * 2);
+      ctx.fillStyle = cursorGlow;
+      ctx.fill();
+
+      if (Math.random() < 0.06 && particles.length < MAX_PARTICLES) {
+        particles.push(new GlowParticle(mouse.x, mouse.y, false));
+      }
+    }
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.update();
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+      } else {
+        p.draw(ctx);
+      }
+    }
+  }
+
+  requestAnimationFrame(render);
+})();
