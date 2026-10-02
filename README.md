@@ -199,14 +199,14 @@ survive the move. Any other CSV works too, as long as it has a habit and a date.
 
 Download Habit Tracker M3E directly from [**GitHub Releases**](https://github.com/smartworldarafath/Habit-Tracker-M3E/releases).
 
-Habit Tracker M3E runs on Android, Windows and Linux:
+Habit Tracker M3E runs on Android, Windows, Linux, and iOS (iPhone & iPad):
 
 | Platform | Status |
 |----------|--------|
 | <img src="https://cdn-icons-png.flaticon.com/512/270/270780.png" width="26" height="26" alt="Android" />&nbsp;&nbsp;**Android** | ✅ **Supported** |
 | <img src="https://cdn-icons-png.flaticon.com/512/732/732221.png" width="26" height="26" alt="Windows" />&nbsp;&nbsp;**Windows** | ✅ **Supported** |
 | <img src="https://cdn-icons-png.flaticon.com/512/6124/6124995.png" width="26" height="26" alt="Linux" />&nbsp;&nbsp;**Linux** | ✅ **Supported** |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="https://upload.wikimedia.org/wikipedia/commons/3/31/Apple_logo_white.svg" /><img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" width="26" height="26" alt="iOS" /></picture>&nbsp;&nbsp;**iOS** | 🚧 **In progress** |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="https://upload.wikimedia.org/wikipedia/commons/3/31/Apple_logo_white.svg" /><img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" width="26" height="26" alt="iOS" /></picture>&nbsp;&nbsp;**iOS (iPhone & iPad)** | ✅ **Supported** |
 | <img src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Finder_Icon_macOS_Big_Sur.png" width="26" height="26" alt="macOS" />&nbsp;&nbsp;**macOS** | 📅 **Planned** |
 
 <details>

@@ -269,6 +269,11 @@ fetch(`https://api.github.com/repos/${REPO}/releases/latest`)
     const apkUniLink = document.getElementById('dl-android-uni');
     if (apkArm64 && apkBtn) apkBtn.href = apkArm64.browser_download_url;
     if (apkUniversal && apkUniLink) apkUniLink.href = apkUniversal.browser_download_url;
+
+    // iOS (iPhone & iPad)
+    const iosIpa = assets.find((a) => a.name.endsWith('.ipa'));
+    const iosBtn = document.getElementById('dl-ios-btn');
+    if (iosIpa && iosBtn) iosBtn.href = iosIpa.browser_download_url;
   })
   .catch(() => {});
 
