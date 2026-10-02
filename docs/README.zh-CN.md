@@ -30,9 +30,6 @@
   <img alt="无广告、无追踪" src="https://img.shields.io/badge/No%20ads%20%C2%B7%20No%20tracking-22C55E?style=flat&logo=shield&logoColor=white" />
   <img alt="Downloads" src="https://img.shields.io/github/downloads/InlitX/streak/total?style=flat&logo=github&logoColor=white&label=Downloads&color=7C3AED" />
 </p>
-<a href="https://github.com/smartworldarafath/Habit-Tracker-M3E" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/79460" alt="Habit-Tracker-M3E | Trendshift" width="250" height="55"/></a>
-
-<br/>
 
 <a href="https://f-droid.org/packages/com.streak.app/"><img alt="在 F-Droid 上获取" src="../assets/badges/get-it-on-fdroid.png" height="60" /></a>
 &nbsp;

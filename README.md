@@ -30,9 +30,6 @@ Log a habit in a single tap, keep your momentum, and watch your streaks grow.
   <a href="#privacy"><img alt="No ads, no tracking" src="https://img.shields.io/badge/No%20ads%20%C2%B7%20No%20tracking-22C55E?style=flat&logo=shield&logoColor=white" /></a>
   <img alt="Downloads" src="https://img.shields.io/github/downloads/smartworldarafath/Habit-Tracker-M3E/total?style=flat&logo=github&logoColor=white&label=Downloads&color=7C3AED" />
 </p>
-<a href="https://github.com/smartworldarafath/Habit-Tracker-M3E" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/79460" alt="Habit-Tracker-M3E | Trendshift" width="250" height="55"/></a>
-
-<br/>
 
 <a href="https://github.com/smartworldarafath/Habit-Tracker-M3E/releases"><img alt="Get it on GitHub" src="assets/badges/get-it-on-github.png" height="60" /></a>
 
