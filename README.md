@@ -58,12 +58,12 @@ Log a habit in a single tap, keep your momentum, and watch your streaks grow.
 <img src="screenshots/01-today.jpg" alt="Today" width="145" />
 <img src="screenshots/02-focus.jpg" alt="Focus" width="145" />
 <img src="screenshots/03-stats.jpg" alt="Statistics" width="145" />
-<img src="screenshots/04-insights.jpg" alt="Insights" width="145" />
-
-<img src="screenshots/05-amount.jpg" alt="Amount habits" width="145" />
 <img src="screenshots/06-notes.jpg" alt="Day notes" width="145" />
-<img src="screenshots/07-customize.jpg" alt="Personalize" width="145" />
+
 <img src="screenshots/08-private.jpg" alt="Free &amp; private" width="145" />
+<img src="screenshots/04-insights.jpg" alt="Insights" width="145" />
+<img src="screenshots/07-customize.jpg" alt="Personalize" width="145" />
+<img src="screenshots/05-amount.jpg" alt="Amount habits" width="145" />
 
 <sub><b>Today</b> · <b>Focus</b> · <b>Statistics</b> · <b>Insights</b> · <b>Amounts</b> · <b>Notes</b> · <b>Personalize</b> · <b>Free &amp; private</b></sub>
 
