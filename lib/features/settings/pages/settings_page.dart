@@ -143,7 +143,7 @@ class ClassicSettingsPage extends StatelessWidget {
           const SizedBox(height: 28),
           Center(
             child: Text(
-              'M3E v1.3.0',
+              'M3E v1.3.1',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,

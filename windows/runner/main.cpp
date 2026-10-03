@@ -1,6 +1,7 @@
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
 #include <windows.h>
+#include <stdlib.h>
 
 #include "flutter_window.h"
 #include "utils.h"
@@ -10,6 +11,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   if (!::AttachConsole(ATTACH_PARENT_PROCESS) && ::IsDebuggerPresent()) {
     CreateAndAttachConsole();
   }
+
+  ::_putenv_s("FLUTTER_ENGINE_SWITCHES", "1");
+  ::_putenv_s("FLUTTER_ENGINE_SWITCH_1", "enable-impeller=false");
 
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
