@@ -44,8 +44,14 @@ jobs:
       - name: Zip the build
         run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath Streak-windows-x64.zip
 
+      - name: Build Inno Setup Installer
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" windows\installer\installer.iss
+
       - name: Add it to the release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag }}
-          files: Streak-windows-x64.zip
+          files: |
+            Streak-windows-x64.zip
+            build/windows/installer/Streak-windows-x64-setup.exe
