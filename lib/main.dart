@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -46,7 +47,7 @@ Future<void> main() async {
 }
 
 String? _writeStartupLog(Object error, StackTrace stack) {
-  if (isMobile) return null;
+  if (kIsWeb || isMobile) return null;
   try {
     final file = File('${Directory.systemTemp.path}/streak_startup_error.txt');
     file.writeAsStringSync('${DateTime.now()}\n$error\n\n$stack');

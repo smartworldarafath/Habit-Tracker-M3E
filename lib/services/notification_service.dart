@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' show PlatformDispatcher;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -107,6 +108,10 @@ class NotificationService {
   }
 
   Future<void> initialize() async {
+    if (kIsWeb) {
+      _ready = true;
+      return;
+    }
     if (_ready) return;
 
     tz.initializeTimeZones();

@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:streak/core/utils/app_dirs.dart';
+import 'package:streak/core/utils/app_platform.dart';
 
 class FocusTrack {
   const FocusTrack({
@@ -95,7 +96,7 @@ class FocusAudio {
     'm4a',
     'aac',
     'wav',
-    if (!Platform.isWindows) ...['ogg', 'opus'],
+    if (!AppPlatform.isWindows) ...['ogg', 'opus'],
     'flac',
     'mp4',
   ];

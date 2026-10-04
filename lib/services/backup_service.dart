@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:streak/core/utils/app_dirs.dart';
+import 'package:streak/core/utils/app_platform.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:streak/core/database/local_store.dart';
@@ -100,7 +101,8 @@ class BackupService {
   }
 
   static Future<Directory?> defaultBackupDir() async {
-    final root = Platform.isAndroid
+    if (AppPlatform.isWeb) return null;
+    final root = AppPlatform.isAndroid
         ? await getExternalStorageDirectory()
         : await appDataDir();
     if (root == null) return null;
@@ -108,7 +110,7 @@ class BackupService {
   }
 
   static Future<bool> ensureStorageAccess() async {
-    if (!Platform.isAndroid) return true;
+    if (!AppPlatform.isAndroid) return true;
     if (await Permission.manageExternalStorage.isGranted) return true;
     if (await Permission.storage.isGranted) return true;
     final manage = await Permission.manageExternalStorage.request();

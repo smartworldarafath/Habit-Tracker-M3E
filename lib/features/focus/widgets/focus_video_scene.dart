@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:streak/core/utils/app_platform.dart';
 import 'package:video_player_win/video_player_win.dart';
 
 const focusVideoScenes = <String>[
@@ -10,10 +11,11 @@ const focusVideoScenes = <String>[
   'cat_fireplace',
 ];
 
-bool get hasVideoScenes => Platform.isWindows || Platform.isLinux;
+bool get hasVideoScenes => AppPlatform.isWindows || AppPlatform.isLinux;
 
-String get _scenesDir =>
-    '${File(Platform.resolvedExecutable).parent.path}/data/scenes';
+String get _scenesDir => (AppPlatform.isWindows || AppPlatform.isLinux)
+    ? '${File(Platform.resolvedExecutable).parent.path}/data/scenes'
+    : '';
 
 File focusVideoFile(String name) => File('$_scenesDir/$name.mp4');
 

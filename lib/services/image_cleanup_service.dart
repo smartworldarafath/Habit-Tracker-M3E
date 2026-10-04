@@ -27,6 +27,7 @@ class ImageCleanupService {
   }
 
   static Future<void> run() async {
+    if (kIsWeb) return;
     try {
       final freed = await CoverStorage.sweep(inUse());
       if (freed > 0) debugPrint('Freed $freed bytes of unused images');

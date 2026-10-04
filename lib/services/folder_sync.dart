@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:streak/core/database/local_store.dart';
 import 'package:streak/features/habits/data/completion.dart';
 import 'package:streak/features/habits/data/habit.dart';
@@ -17,6 +17,7 @@ class FolderSync {
       LocalStore.setting('autoBackupFolder', '').isNotEmpty;
 
   static Future<int> pull() async {
+    if (kIsWeb) return 0;
     final folder = LocalStore.setting('autoBackupFolder', '');
     if (folder.isEmpty) return 0;
     try {
