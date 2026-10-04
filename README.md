@@ -36,9 +36,13 @@ Log a habit in a single tap, keep your momentum, and watch your streaks grow.
   <img alt="Downloads" src="https://img.shields.io/github/downloads/smartworldarafath/Habit-Tracker-M3E/total?style=flat&logo=github&logoColor=white&label=Downloads&color=7C3AED" />
 </p>
 
-<a href="https://github.com/smartworldarafath/Habit-Tracker-M3E/releases"><img alt="Get it on GitHub" src="assets/badges/get-it-on-github.png" height="60" /></a>
+<a href="https://github.com/smartworldarafath/Habit-Tracker-M3E/releases"><img alt="Get it on GitHub" src="assets/badges/get-it-on-github.png" height="52" /></a>
+&nbsp;&nbsp;
+<a href="https://smartworldarafath.github.io/Habit-Tracker-M3E/app/" target="_blank" rel="noopener noreferrer"><img alt="Try Live Web App" src="https://img.shields.io/badge/%F0%9F%8C%90_Live_Demo-Try_Web_App-FF8C1E?style=for-the-badge&logo=googlechrome&logoColor=white" height="52" /></a>
 
-<br/>
+<p align="center">
+  <sub>✨ <b>Want to try it right now without installing?</b> Check out the live interactive web experience in your browser: <a href="https://smartworldarafath.github.io/Habit-Tracker-M3E/app/"><b>Launch Web App ↗</b></a></sub>
+</p>
 
 <sub>
   <a href="https://smartworldarafath.github.io/Habit-Tracker-M3E/app/"><b>🌐 Live Web App</b></a> ·
