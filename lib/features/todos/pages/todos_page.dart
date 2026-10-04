@@ -9,6 +9,7 @@ import 'package:streak/core/extensions/inset_extensions.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/routing/app_navigator.dart';
 import 'package:streak/core/routing/back_handlers.dart';
+import 'package:streak/core/utils/app_platform.dart';
 import 'package:streak/core/widgets/app_confirm_dialog.dart';
 import 'package:streak/core/widgets/app_empty_state.dart';
 import 'package:streak/core/widgets/app_text_field.dart';
@@ -700,7 +701,7 @@ class _TodosPageState extends State<TodosPage>
     final pushed = ModalRoute.of(context)?.canPop ?? false;
 
     return PopScope(
-      canPop: !pushed || Platform.isIOS,
+      canPop: !pushed || AppPlatform.isIOS,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop || !pushed || BackHandlers.handle()) return;
         AppNavigator.pop();

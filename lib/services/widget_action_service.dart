@@ -20,6 +20,7 @@ class WidgetActionService {
     Map<String, Habit> habits, {
     List<Todo> todos = const [],
   }) async {
+    if (!hasHomeWidgets) return false;
     await HomeWidgetService.prepare();
     final pending = await _read();
     if (pending.isEmpty) return false;

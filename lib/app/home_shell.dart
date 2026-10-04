@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:streak/core/utils/app_platform.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:streak/app/theme/app_tokens.dart';
@@ -165,7 +166,7 @@ class _HomeShellState extends State<HomeShell>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       final habits = context.read<HabitsController>();
-      if (Platform.isIOS) _applyWidgetActions(habits);
+      if (AppPlatform.isIOS) _applyWidgetActions(habits);
       habits.refresh().then((_) => HomeWidgetService.sync(habits.asMap));
       context.read<TodosController>().reload();
       TodayIntro.replay();

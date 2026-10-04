@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:streak/core/utils/app_platform.dart';
 
 class ReleaseAsset {
   const ReleaseAsset({
@@ -138,6 +139,7 @@ class UpdateService {
       'https://api.github.com/repos/$repoOwner/$repoName/releases';
 
   static String getDeviceAbi() {
+    if (AppPlatform.isWeb) return 'web';
     final pv = Platform.version.toLowerCase();
     if (pv.contains('arm64') || pv.contains('aarch64')) return 'arm64-v8a';
     if (pv.contains('arm')) return 'armeabi-v7a';
@@ -158,6 +160,12 @@ class UpdateService {
 
   static Future<UpdateCheckResult> checkForUpdates() async {
     final currentVersion = await getCurrentVersion();
+    if (AppPlatform.isWeb) {
+      return UpdateCheckResult(
+        currentVersion: currentVersion,
+        hasUpdate: false,
+      );
+    }
     final client = HttpClient();
     client.connectionTimeout = const Duration(seconds: 12);
 

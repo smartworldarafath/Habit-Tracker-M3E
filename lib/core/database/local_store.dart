@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:streak/core/utils/app_dirs.dart';
 import 'package:streak/features/habits/data/category.dart';
@@ -44,7 +44,7 @@ class LocalStore {
   }
 
   static Future<void> init() async {
-    if (isMobile) {
+    if (kIsWeb || isMobile) {
       await Hive.initFlutter();
     } else {
       Hive.init((await appDataDir()).path);

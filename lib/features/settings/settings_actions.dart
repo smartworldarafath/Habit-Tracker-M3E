@@ -13,6 +13,7 @@ import 'package:streak/core/database/local_store.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/widgets/sheet_type.dart';
 import 'package:streak/core/utils/app_dirs.dart';
+import 'package:streak/core/utils/app_platform.dart';
 import 'package:streak/core/utils/app_snackbar.dart';
 import 'package:streak/core/utils/share_origin.dart';
 import 'package:streak/core/widgets/app_confirm_dialog.dart';
@@ -209,7 +210,7 @@ class SettingsActions {
                     onTap: () => settings.setAutoBackup(i),
                   ),
                 const Divider(height: 20),
-                if (!Platform.isIOS)
+                if (!AppPlatform.isIOS && !AppPlatform.isWeb)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(LucideIcons.folder, color: context.tokens.muted),
@@ -323,7 +324,7 @@ class SettingsActions {
     await context.read<SettingsController>().reloadFromStore();
     if (!context.mounted) return;
     AppSnackbar.success(context, context.l10n.wipe_data_done);
-    if (!Platform.isLinux) await openAppSettings();
+    if (!AppPlatform.isLinux && !AppPlatform.isWeb) await openAppSettings();
   }
 
   static Future<void> toggleAppLock(BuildContext context, bool value) async {

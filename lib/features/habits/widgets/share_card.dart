@@ -16,6 +16,7 @@ import 'package:streak/core/express/express_type.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/minimal/minimal_type.dart';
 import 'package:streak/core/routing/app_navigator.dart';
+import 'package:streak/core/utils/app_platform.dart';
 import 'package:streak/core/utils/app_snackbar.dart';
 import 'package:streak/core/utils/share_origin.dart';
 import 'package:streak/core/widgets/entrance.dart';
@@ -154,7 +155,7 @@ class _SharePageState extends State<SharePage> {
   }
 
   Future<bool> _store(Uint8List bytes) async {
-    if (!Platform.isLinux) {
+    if (AppPlatform.isMobile) {
       if (!await Gal.hasAccess(toAlbum: true)) {
         await Gal.requestAccess(toAlbum: true);
       }
@@ -165,9 +166,12 @@ class _SharePageState extends State<SharePage> {
       fileName: 'streak_${widget.habit.id}.png',
       type: FileType.custom,
       allowedExtensions: const ['png'],
+      bytes: bytes,
     );
     if (path == null) return false;
-    await File(path).writeAsBytes(bytes);
+    if (!AppPlatform.isWeb) {
+      await File(path).writeAsBytes(bytes);
+    }
     return true;
   }
 
@@ -273,14 +277,14 @@ class _SharePageState extends State<SharePage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (!Platform.isLinux)
+                      if (AppPlatform.isMobile)
                       _CircleAction(
                         style: style,
                         icon: LucideIcons.share2,
                         label: context.l10n.share,
                         onTap: _busy ? null : _share,
                       ),
-                      if (!Platform.isLinux) const SizedBox(width: 40),
+                      if (AppPlatform.isMobile) const SizedBox(width: 40),
                       _CircleAction(
                         style: style,
                         shapeIndex: 3,

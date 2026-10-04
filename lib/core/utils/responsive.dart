@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
+import 'package:streak/core/utils/app_platform.dart';
 
 const phoneWidth = 560.0;
 
@@ -21,10 +22,10 @@ const detailWidth = 900.0;
 const columnsWidth = 1000.0;
 
 bool isWideLayout(BuildContext context) =>
-    !Platform.isAndroid && MediaQuery.sizeOf(context).width >= splitWidth;
+    !AppPlatform.isAndroid && MediaQuery.sizeOf(context).width >= splitWidth;
 
 bool hasSideRail(BuildContext context) =>
-    !Platform.isAndroid && MediaQuery.sizeOf(context).width >= railWidth;
+    !AppPlatform.isAndroid && MediaQuery.sizeOf(context).width >= railWidth;
 
 bool isCompactRail(BuildContext context) =>
     MediaQuery.sizeOf(context).width < wideWidth;
