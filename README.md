@@ -92,92 +92,82 @@ Everything stays on your device. No account, no ads, nothing to sync.
 <tr>
 <td width="50%" valign="top">
 
-### Tracking
+### 🎯 Versatile Habit Tracking
 
-- One-tap logging from the home screen, a widget or the notification
-- Three kinds of habit: **normal**, **avoid** (with relapses) and **amount**,
-  with your unit and daily goal
-- **Checklists** split a habit into steps, done when all are checked
-- **Flexible schedules**: daily, X times a week or month, chosen weekdays, or
-  every N days
-- **Fill in the past**: tap any day to add or remove it
-- **Day notes**: long-press a day to write what happened, or attach a photo
-- **Vacation mode** pauses a habit without breaking anything
-
-</td>
-<td width="50%" valign="top">
-
-### Seeing your progress
-
-- GitHub-style **activity grid**, by week, month or the whole year
-- **Month calendar**, with your week starting on Monday, Saturday or Sunday
-- **Completions per month**, so you can see the shape of a whole year
-- **Streak evolution** charted over time, watching the line climb
-- **"When are you most consistent?"** finds the hours you actually show up
-- Totals, best and current streak, completion rate and a per-habit
-  **strength** score
-- A **shareable progress card** in several sizes, exported as a polished image
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### Focus sessions
-
-- A timer for the habits that need one, free or tied to a habit and its goal
-- **Pomodoro rounds** with short breaks, or one long stretch
-- Three clock styles: **Circle**, **Flip** and **Dots**
-- Built-in sounds (rain, brown noise, fire) or your own tracks, in order
-  or shuffled
-- Calm scenes as a background, or a photo of your own
-- Tick off subtasks without leaving the timer, and keep the screen awake
-- A **daily focus goal**, plus a history of every session you finish
+- **One-Tap Logging**: Quick check-offs directly from your home screen, lock-screen notifications, or desktop.
+- **Three Core Habit Types**:
+  - **Standard**: Build positive daily or recurring rituals.
+  - **Avoid / Quitting**: Break unwanted habits with relapse counters and sobriety timers.
+  - **Quantitative / Amount**: Track numbers with custom units (e.g. 2,000 ml water, 10 pages read, 5 km run).
+- **Sub-Habits & Checklists**: Split larger habits into actionable steps that complete together.
+- **Flexible Scheduling**: Every day, X times per week/month, custom weekdays, or repeating intervals (every N days).
+- **Backfill & History Editing**: Missed logging yesterday? Tap any past date on the calendar to mark or adjust it.
+- **Rich Day Journaling**: Long-press any date to record reflections, habit notes, or attach progress photos.
+- **Vacation / Freeze Mode**: Pause habits while traveling or sick without breaking your hard-earned streak.
 
 </td>
 <td width="50%" valign="top">
 
-### Making it yours
+### 📊 Deep Analytics & Visualization
 
-- **Classic, Minimal or Express**: three complete designs, each with its own
-  typography, shapes and motion
-- Minimalist icon pack, or any emoji you like
-- Custom accent color with a full picker
-- Light and dark themes, plus five app backgrounds: solid, gradient, dots,
-  true-black OLED or a photo of your own
-- Cover photos, categories, drag-to-reorder, profile name and photo
-- Three launcher icons, so Habit Tracker M3E matches the rest of your home screen
-- A burst of confetti the day you finish everything
+- **GitHub-Style Contribution Grid**: Interactive heatmaps viewing your consistency by week, month, or a full 365-day year.
+- **Interactive Calendars**: Clean monthly views with customizable week start (Monday, Saturday, or Sunday).
+- **Consistency & Peak Hours**: Automatic insights showing the exact hours of the day you are most productive.
+- **Streak Evolution & Score**: Real-time tracking of current streak, all-time best streak, and a resilient strength percentage algorithm.
+- **Yearly & Monthly Breakdown**: At-a-glance bar charts visualizing completions over months and quarters.
+- **Polished Share Cards**: Generate high-resolution, gradient or photo-backed streak brag cards to share anywhere.
 
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
 
-### Reminders and widgets
+### ⏱️ Immersive Focus & Pomodoro
 
-- Reminders per habit, on the days you choose or every N days, each with a
-  short encouraging line
-- **Done**, **Snooze** and **Add amount** buttons right in the notification
-- **Four home-screen widgets**: habit, today, stats and activity grid
-- Each widget styled on its own, with color or photo, opacity and border
-- Choose which figures the **stats widget** shows, and how they sit together
-- Tick a day straight from a widget, it saves without opening the app
-- Tap the activity grid to jump into that habit
+- **Built-in Focus Timer**: Dedicated stopwatch or countdown timer tied directly to your habits.
+- **Pomodoro Cycles**: Customizable work intervals and short/long break timers.
+- **3 Elegant Clock Styles**: **Circle Dial**, retro **Flip Board**, and modern **Dots Matrix**.
+- **Ambient Soundscapes**: Built-in calming sounds (Gentle Rain, Cozy Fireplace, Brown Noise) plus support for custom audio tracks.
+- **Dynamic Backgrounds & Scenes**: Beautiful video motion scenes, minimalist gradients, or your own custom wallpaper.
+- **Floating Island / Mini Player**: Keep your focus timer visible in a compact floating PIP/island view while multitasking.
+- **Subtask Checklist**: Check off agenda items without ever leaving the timer screen.
 
 </td>
 <td width="50%" valign="top">
 
-### Your data
+### 🎨 Material 3 Expressive UI & Customization
 
-- **Import** from Loop Habit Tracker, HabitKit, Habitica and HabitBull,
-  history and streaks included, or any CSV with a habit and a date
-- Backup and restore with a single file you keep yourself
-- **Automatic backups**, daily or weekly, to a folder of your choosing
-- **App lock** with a PIN or your fingerprint, for phones without one
-- **Archive** habits without losing a day of their history
-- Everything is offline: no account, no server, nothing to sync
-- Seven languages, with more open on Weblate
+- **Three Signature Styles**:
+  - **Classic**: Familiar, cozy, and card-based.
+  - **Minimal**: Ultra-clean, distraction-free typographic elegance.
+  - **Expressive (M3E)**: Bold pill-shaped surfaces, fluid spring motions, and dynamic depth.
+- **Buttery Smooth Performance**: Hardware-accelerated 120Hz & 144Hz high refresh rate display support.
+- **Predictive Back & Micro-Animations**: Native swipe gestures and shared element photo transitions.
+- **Unlimited Palette**: Dynamic Material You palette or custom color picker with OLED pitch-black dark mode.
+- **Multi-Platform Consistency**: Identical delightful experience across Android, Windows, Linux, and Web.
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 📝 Integrated To-Do & Tasks
+
+- **Unified Planner**: Manage day-to-day tasks alongside your ongoing habits in one single app.
+- **Project Folders & Color Tags**: Group tasks by work, study, personal, or custom projects.
+- **Priorities & Due Dates**: Star priority tasks, set deadlines, and filter by overdue, today, or upcoming.
+- **Quick Card Stack**: Swipe through tasks like cards with satisfying deal and fling animations.
+
+</td>
+<td width="50%" valign="top">
+
+### 🔒 100% Private, Offline & Portable
+
+- **Zero Cloud & Zero Tracking**: No accounts, no sign-ups, no ads, and no external trackers. Everything stays local.
+- **Effortless Migration**: Import your entire historical streak data from **Loop Habit Tracker**, **HabitKit**, **Habitica**, **HabitBull**, or standard CSV.
+- **Automated Local Backups**: Daily or weekly scheduled automatic JSON backups to a folder you control.
+- **Biometric App Lock**: Protect your private habit notes and stats with Fingerprint / Face ID or custom PIN.
+- **PWA / Web Support**: Run the complete app directly in any modern browser without installing anything.
 
 </td>
 </tr>
@@ -213,6 +203,7 @@ Habit Tracker M3E runs on Android, Windows, Linux, iOS (iPhone & iPad), and macO
 | <img src="https://cdn-icons-png.flaticon.com/512/6124/6124995.png" width="26" height="26" alt="Linux" />&nbsp;&nbsp;**Linux** | ✅ **Supported** |
 | <img src="https://static.vecteezy.com/system/resources/thumbnails/021/496/368/small/ios-icon-logo-software-phone-apple-symbol-with-name-black-design-mobile-illustration-free-vector.jpg" width="26" height="26" alt="iOS" />&nbsp;&nbsp;**iOS (iPhone & iPad)** | ✅ **Supported** |
 | <img src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Finder_Icon_macOS_Big_Sur.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original" width="26" height="26" alt="macOS" />&nbsp;&nbsp;**macOS** | ✅ **Supported** |
+| <img src="https://cdn-icons-png.flaticon.com/512/1006/1006771.png" width="26" height="26" alt="Web" />&nbsp;&nbsp;**Web (PWA)** | ✅ **[Live Demo](https://smartworldarafath.github.io/Habit-Tracker-M3E/app/)** |
 
 <details>
 <summary><b>macOS</b></summary>
