@@ -19,9 +19,6 @@ if (themeBtn) {
     const nextTheme = isLight ? 'dark' : 'light';
     root.dataset.theme = nextTheme;
     store('m3e-theme', nextTheme);
-    if (typeof setShelfMode === 'function') {
-      setShelfMode(nextTheme, true);
-    }
   });
 }
 
@@ -150,36 +147,33 @@ if (heat) {
   }
 }
 
-// Horizontal screenshot shelf & theme mode switcher
+// Horizontal screenshot shelf & light/dark switching button
 const shelf = document.getElementById('shelf');
-const shelfModeBtns = document.querySelectorAll('[data-shelf-mode]');
+const shelfSwitchBtn = document.getElementById('shelf-mode-toggle');
+let currentShelfMode = 'light'; // Default is always light screens
 
-function setShelfMode(mode, save = true) {
+function applyShelfMode(mode) {
+  currentShelfMode = mode;
   if (shelf) {
     shelf.dataset.mode = mode;
   }
-  shelfModeBtns.forEach((btn) => {
-    const active = btn.dataset.shelfMode === mode;
-    btn.classList.toggle('is-active', active);
-    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-  });
-  if (save) {
-    store('m3e-shelf-mode', mode);
+  if (shelfSwitchBtn) {
+    const isDark = mode === 'dark';
+    shelfSwitchBtn.classList.toggle('is-dark-active', isDark);
+    shelfSwitchBtn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+    shelfSwitchBtn.dataset.activeMode = mode;
   }
 }
 
-shelfModeBtns.forEach((btn) => {
-  btn.addEventListener('click', () => {
-    setShelfMode(btn.dataset.shelfMode, true);
+if (shelfSwitchBtn) {
+  shelfSwitchBtn.addEventListener('click', () => {
+    const nextMode = currentShelfMode === 'dark' ? 'light' : 'dark';
+    applyShelfMode(nextMode);
   });
-});
-
-const savedShelfMode = store('m3e-shelf-mode');
-if (savedShelfMode) {
-  setShelfMode(savedShelfMode, false);
-} else {
-  setShelfMode(root.dataset.theme === 'light' ? 'light' : 'dark', false);
 }
+
+// Initial state: default is light screens
+applyShelfMode('light');
 
 if (shelf) {
   const [back, next] = document.querySelectorAll('[data-shelf]');
