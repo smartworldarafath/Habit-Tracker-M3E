@@ -181,25 +181,32 @@
           <h2 class="h2"><span class="en">A look inside</span><span class="es">Por dentro</span></h2>
           <p class="shelf-hint"><span class="en">Scroll sideways, tap to zoom</span><span class="es">Desliza de lado, toca para ampliar</span></p>
         </div>
-        <div class="shelf-toggle" id="shelf-mode-toggle" role="group" aria-label="Screens theme mode">
-          <span class="shelf-toggle__label"><span class="en">Theme:</span><span class="es">Tema:</span></span>
-          <div class="shelf-toggle__pill">
-            <button type="button" class="shelf-toggle__btn is-active" data-shelf-mode="dark" aria-pressed="true">
+        <button type="button" class="shelf-switch-btn" id="shelf-mode-toggle" aria-label="Toggle dark and light screens" aria-pressed="false" data-active-mode="light">
+          <span class="shelf-switch-track" aria-hidden="true">
+            <span class="shelf-switch-thumb">
+              <svg class="thumb-icon thumb-icon--sun" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+              <svg class="thumb-icon thumb-icon--moon" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </span>
+          </span>
+          <span class="shelf-switch-label">
+            <span class="label--to-dark">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-              <span>Dark</span>
-            </button>
-            <button type="button" class="shelf-toggle__btn" data-shelf-mode="light" aria-pressed="false">
+              <span class="en">Dark mode</span>
+              <span class="es">Modo oscuro</span>
+            </span>
+            <span class="label--to-light">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-              <span>Light</span>
-            </button>
-          </div>
-        </div>
+              <span class="en">Light mode</span>
+              <span class="es">Modo claro</span>
+            </span>
+          </span>
+        </button>
       </div>
       <div class="shelf-wrap">
         <button class="nudge nudge--prev" type="button" data-shelf="-1" aria-label="Previous">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg>
         </button>
-        <div class="shelf" id="shelf" data-mode="dark" tabindex="0" aria-label="Screens">
+        <div class="shelf" id="shelf" data-mode="light" tabindex="0" aria-label="Screens">
           <figure class="shot">
             <button class="zoom" type="button" data-group="screens" data-src-light="assets/screens/light/today.webp" data-src-dark="assets/screens/dark/today.webp" aria-label="Zoom: Today and streaks">
               <div class="shot__frame">

@@ -598,60 +598,127 @@ main {
   margin: 0;
 }
 
-/* SCREENSHOT THEME SWITCHER */
-.shelf-toggle {
+/* SCREENSHOT THEME SWITCH BUTTON */
+.shelf-switch-btn {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-}
-
-.shelf-toggle__label {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--faint);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.shelf-toggle__pill {
-  display: inline-flex;
-  align-items: center;
+  gap: 11px;
+  padding: 8px 16px 8px 10px;
+  border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--line-2);
-  border-radius: 999px;
-  padding: 3px;
-  gap: 2px;
-  backdrop-filter: blur(8px);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.25s var(--ease);
+  user-select: none;
 }
 
-[data-theme="light"] .shelf-toggle__pill {
-  background: rgba(0, 0, 0, 0.05);
+.shelf-switch-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 107, 0, 0.45);
+  box-shadow: 0 4px 20px rgba(255, 107, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+[data-theme="light"] .shelf-switch-btn {
+  background: #f0f0f4;
   border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
 }
 
-.shelf-toggle__btn {
+[data-theme="light"] .shelf-switch-btn:hover {
+  background: #e8e8ee;
+  border-color: rgba(255, 107, 0, 0.4);
+}
+
+/* Switch Track */
+.shelf-switch-track {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+[data-theme="light"] .shelf-switch-track {
+  background: #d4d4dc;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Sliding Thumb */
+.shelf-switch-thumb {
+  position: absolute;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #FF6B00;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease, color 0.3s ease;
+}
+
+.thumb-icon--moon {
+  display: none;
+}
+.thumb-icon--sun {
+  display: block;
+}
+
+/* Dark mode active (when toggled to dark) */
+.shelf-switch-btn.is-dark-active .shelf-switch-track {
+  background: var(--orange);
+  border-color: var(--orange);
+}
+
+.shelf-switch-btn.is-dark-active .shelf-switch-thumb {
+  transform: translateX(18px);
+  background: #18181c;
+  color: #FF9B4E;
+}
+
+.shelf-switch-btn.is-dark-active .thumb-icon--sun {
+  display: none;
+}
+.shelf-switch-btn.is-dark-active .thumb-icon--moon {
+  display: block;
+}
+
+/* Switch Labels */
+.shelf-switch-label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.label--to-dark {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--muted);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.25s var(--ease);
 }
 
-.shelf-toggle__btn:hover {
-  color: var(--fg);
+.label--to-light {
+  display: none;
 }
 
-.shelf-toggle__btn.is-active {
-  background: var(--orange);
-  color: #fff;
-  box-shadow: 0 2px 10px rgba(255, 107, 0, 0.45);
+.shelf-switch-btn.is-dark-active .label--to-dark {
+  display: none;
+}
+
+.shelf-switch-btn.is-dark-active .label--to-light {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .shelf-wrap {
@@ -742,29 +809,29 @@ main {
   will-change: opacity, transform;
 }
 
-/* Default / Dark active */
-.shelf:not([data-mode="light"]) .shot__img--dark,
+/* Default / Light mode active: Light screens visible, Dark hidden */
+.shelf[data-mode="light"] .shot__img--light,
+.shelf:not([data-mode="dark"]) .shot__img--light {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.shelf[data-mode="light"] .shot__img--dark,
+.shelf:not([data-mode="dark"]) .shot__img--dark {
+  opacity: 0;
+  transform: scale(0.97);
+  pointer-events: none;
+}
+
+/* Dark mode active: Dark screens visible, Light hidden */
 .shelf[data-mode="dark"] .shot__img--dark {
   opacity: 1;
   transform: scale(1);
   pointer-events: auto;
 }
 
-.shelf:not([data-mode="light"]) .shot__img--light,
 .shelf[data-mode="dark"] .shot__img--light {
-  opacity: 0;
-  transform: scale(0.97);
-  pointer-events: none;
-}
-
-/* Light active */
-.shelf[data-mode="light"] .shot__img--light {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-}
-
-.shelf[data-mode="light"] .shot__img--dark {
   opacity: 0;
   transform: scale(0.97);
   pointer-events: none;
