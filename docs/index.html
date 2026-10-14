@@ -406,9 +406,9 @@
             <span class="en">No company, no investors, no ads, and no premium lockouts. I maintain and enhance Habit Tracker M3E in my free time and keep it 100% free so anyone can use it. If it helps you keep your habits, starring the project or buying a coffee helps keep it going!</span>
             <span class="es">Sin empresa, sin inversores, sin anuncios y sin versiones de pago. Mantengo Habit Tracker M3E en mi tiempo libre y lo ofrezco 100% gratis. Si te ayuda en tus hábitos, dar una estrella o compartirlo ayuda mucho.</span>
           </p>
-          <a class="kofi" href="https://ko-fi.com/inlitx" target="_blank" rel="noopener">
-            <img loading="lazy" decoding="async" src="assets/kofi.png" width="232" height="58" alt="Buy a coffee on Ko-fi">
-          </a>
+          <button class="kofi kofi-btn" id="coffee-trigger" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Support with a coffee">
+            <img loading="lazy" decoding="async" src="assets/kofi.png" width="232" height="58" alt="Buy a coffee">
+          </button>
           <a class="back-it__sig" href="https://github.com/smartworldarafath" target="_blank" rel="noopener">
             <img src="https://github.com/smartworldarafath.png?size=80" width="30" height="30" alt="" loading="lazy">
             <span><b>smartworldarafath</b> · <span class="en">maintainer of Habit Tracker M3E</span><span class="es">mantenedor de Habit Tracker M3E</span></span>
@@ -474,8 +474,110 @@
         <a href="app/" target="_blank" rel="noopener">Live Web App</a>
         <a href="https://github.com/smartworldarafath/Habit-Tracker-M3E/releases" target="_blank" rel="noopener">Releases</a>
         <a href="https://github.com/smartworldarafath/Habit-Tracker-M3E/issues" target="_blank" rel="noopener">Issues</a>
-        <a href="https://ko-fi.com/inlitx" target="_blank" rel="noopener">Ko-fi</a>
+        <button type="button" class="foot__pay-link" id="foot-coffee-trigger">Support / Donate</button>
       </nav>
+      <p class="foot__c">
+        <a href="https://github.com/smartworldarafath/Habit-Tracker-M3E/blob/main/LICENSE" target="_blank" rel="noopener">GPLv3</a>
+        · <span class="en">Made with ❤️ by</span><span class="es">Hecho con ❤️ por</span> <a href="https://github.com/smartworldarafath" target="_blank" rel="noopener">smartworldarafath</a> (based on <a href="https://github.com/InlitX/streak" target="_blank" rel="noopener">Streak</a>)
+      </p>
+    </div>
+  </footer>
+
+  <!-- FLOATING PAYMENT WINDOW MODAL -->
+  <div class="pay-modal" id="pay-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="pay-modal-title">
+    <div class="pay-modal__backdrop" id="pay-backdrop"></div>
+    <div class="pay-card" id="pay-card">
+      <div class="pay-card__header">
+        <div class="pay-card__title-wrap">
+          <span class="pay-card__icon" aria-hidden="true">☕</span>
+          <div>
+            <h3 class="pay-card__title" id="pay-modal-title">
+              <span class="en">Support Habit Tracker M3E</span>
+              <span class="es">Apoya Habit Tracker M3E</span>
+            </h3>
+            <p class="pay-card__subtitle">
+              <span class="en">Choose your preferred payment method below</span>
+              <span class="es">Elige tu método de pago preferido</span>
+            </p>
+          </div>
+        </div>
+        <button type="button" class="pay-card__close" id="pay-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+        </button>
+      </div>
+
+      <div class="pay-card__body">
+        <!-- bKash -->
+        <div class="pay-method pay-method--bkash">
+          <div class="pay-method__info">
+            <div class="pay-method__badge badge--bkash">bKash</div>
+            <div class="pay-method__details">
+              <span class="pay-method__type"><span class="en">Personal / Send Money</span><span class="es">Personal</span></span>
+              <span class="pay-method__val" id="val-bkash">01XXXXXXXXX</span>
+            </div>
+          </div>
+          <button type="button" class="pay-copy-btn" data-copy-target="val-bkash" aria-label="Copy bKash Number">
+            <svg class="ic-copy" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <svg class="ic-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span class="copy-text"><span class="en">Copy</span><span class="es">Copiar</span></span>
+          </button>
+        </div>
+
+        <!-- Nagad -->
+        <div class="pay-method pay-method--nagad">
+          <div class="pay-method__info">
+            <div class="pay-method__badge badge--nagad">Nagad</div>
+            <div class="pay-method__details">
+              <span class="pay-method__type"><span class="en">Personal / Send Money</span><span class="es">Personal</span></span>
+              <span class="pay-method__val" id="val-nagad">01XXXXXXXXX</span>
+            </div>
+          </div>
+          <button type="button" class="pay-copy-btn" data-copy-target="val-nagad" aria-label="Copy Nagad Number">
+            <svg class="ic-copy" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <svg class="ic-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span class="copy-text"><span class="en">Copy</span><span class="es">Copiar</span></span>
+          </button>
+        </div>
+
+        <!-- Rocket -->
+        <div class="pay-method pay-method--rocket">
+          <div class="pay-method__info">
+            <div class="pay-method__badge badge--rocket">Rocket</div>
+            <div class="pay-method__details">
+              <span class="pay-method__type"><span class="en">Personal / Send Money</span><span class="es">Personal</span></span>
+              <span class="pay-method__val" id="val-rocket">01XXXXXXXXX</span>
+            </div>
+          </div>
+          <button type="button" class="pay-copy-btn" data-copy-target="val-rocket" aria-label="Copy Rocket Number">
+            <svg class="ic-copy" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <svg class="ic-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span class="copy-text"><span class="en">Copy</span><span class="es">Copiar</span></span>
+          </button>
+        </div>
+
+        <!-- Crypto / USDT -->
+        <div class="pay-method pay-method--crypto">
+          <div class="pay-method__info">
+            <div class="pay-method__badge badge--crypto">USDT</div>
+            <div class="pay-method__details">
+              <span class="pay-method__type"><span class="en">TRC20 Address</span><span class="es">Dirección TRC20</span></span>
+              <span class="pay-method__val pay-method__val--mono" id="val-crypto">TPplaceholderWalletAddressHere12345</span>
+            </div>
+          </div>
+          <button type="button" class="pay-copy-btn" data-copy-target="val-crypto" aria-label="Copy USDT TRC20 Address">
+            <svg class="ic-copy" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <svg class="ic-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span class="copy-text"><span class="en">Copy</span><span class="es">Copiar</span></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="pay-card__footer">
+        <span class="en">❤️ Thank you for helping keep Habit Tracker M3E alive & free!</span>
+        <span class="es">¡❤️ Gracias por apoyar Habit Tracker M3E!</span>
+      </div>
+    </div>
+  </div>
       <p class="foot__c">
         <a href="https://github.com/smartworldarafath/Habit-Tracker-M3E/blob/main/LICENSE" target="_blank" rel="noopener">GPLv3</a>
         · <span class="en">Made with ❤️ by</span><span class="es">Hecho con ❤️ por</span> <a href="https://github.com/smartworldarafath" target="_blank" rel="noopener">smartworldarafath</a> (based on <a href="https://github.com/InlitX/streak" target="_blank" rel="noopener">Streak</a>)
