@@ -349,6 +349,24 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
+// Payment modal tabs (RedotPay, Payoneer, nsave)
+const payTabs = document.querySelectorAll('[data-pay-tab]');
+const payPanels = document.querySelectorAll('.pay-panel');
+
+payTabs.forEach((tab) => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.payTab;
+    payTabs.forEach((t) => {
+      const active = t === tab;
+      t.classList.toggle('is-active', active);
+      t.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    payPanels.forEach((panel) => {
+      panel.classList.toggle('is-active', panel.id === `panel-${target}`);
+    });
+  });
+});
+
 // 1-Click Copy in Payment Modal
 document.querySelectorAll('.pay-copy-btn').forEach((btn) => {
   btn.addEventListener('click', async () => {
