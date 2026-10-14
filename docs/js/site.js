@@ -292,3 +292,89 @@ document.querySelectorAll('[data-share]').forEach((button) => {
     setTimeout(() => button.classList.remove('is-copied'), 2600);
   });
 });
+
+// Floating payment details modal
+const payModal = document.getElementById('pay-modal');
+const coffeeTrigger = document.getElementById('coffee-trigger');
+const footCoffeeTrigger = document.getElementById('foot-coffee-trigger');
+const payClose = document.getElementById('pay-close');
+const payBackdrop = document.getElementById('pay-backdrop');
+const payCard = document.getElementById('pay-card');
+
+function openPayModal(sourceEl) {
+  if (!payModal) return;
+  const triggerEl = sourceEl || coffeeTrigger;
+  if (triggerEl && payCard) {
+    const rect = triggerEl.getBoundingClientRect();
+    const originX = rect.left + rect.width / 2;
+    const originY = rect.top + rect.height / 2;
+    payCard.style.transformOrigin = `${originX}px ${originY}px`;
+  } else if (payCard) {
+    payCard.style.transformOrigin = 'center center';
+  }
+  payModal.classList.add('is-open');
+  payModal.setAttribute('aria-hidden', 'false');
+  if (coffeeTrigger) coffeeTrigger.setAttribute('aria-expanded', 'true');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePayModal() {
+  if (!payModal) return;
+  payModal.classList.remove('is-open');
+  payModal.setAttribute('aria-hidden', 'true');
+  if (coffeeTrigger) coffeeTrigger.setAttribute('aria-expanded', 'false');
+  document.body.style.overflow = '';
+}
+
+if (coffeeTrigger) {
+  coffeeTrigger.addEventListener('click', (e) => {
+    e.preventDefault();
+    openPayModal(coffeeTrigger);
+  });
+}
+
+if (footCoffeeTrigger) {
+  footCoffeeTrigger.addEventListener('click', (e) => {
+    e.preventDefault();
+    openPayModal(footCoffeeTrigger);
+  });
+}
+
+if (payClose) payClose.addEventListener('click', closePayModal);
+if (payBackdrop) payBackdrop.addEventListener('click', closePayModal);
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && payModal && payModal.classList.contains('is-open')) {
+    closePayModal();
+  }
+});
+
+// 1-Click Copy in Payment Modal
+document.querySelectorAll('.pay-copy-btn').forEach((btn) => {
+  btn.addEventListener('click', async () => {
+    const targetId = btn.dataset.copyTarget;
+    const valEl = document.getElementById(targetId);
+    if (!valEl) return;
+    const textToCopy = valEl.textContent.trim();
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      btn.classList.add('is-copied');
+      const copyTextEl = btn.querySelector('.copy-text');
+      const origHtml = copyTextEl ? copyTextEl.innerHTML : '';
+      if (copyTextEl) {
+        copyTextEl.innerHTML = '<span class="en">Copied!</span><span class="es">¡Copiado!</span>';
+      }
+      setTimeout(() => {
+        btn.classList.remove('is-copied');
+        if (copyTextEl) copyTextEl.innerHTML = origHtml;
+      }, 2400);
+    } catch {
+      const range = document.createRange();
+      range.selectNodeContents(valEl);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  });
+});
+
