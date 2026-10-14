@@ -127,13 +127,23 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > android/app/streak-release.jks
-          cat > android/key.properties <<EOF
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > android/app/streak-release.jks
+            cat > android/key.properties <<EOF
           storePassword=$KEYSTORE_PASSWORD
           keyPassword=$KEY_PASSWORD
           keyAlias=$KEY_ALIAS
           storeFile=streak-release.jks
           EOF
+          else
+            keytool -genkey -v -keystore android/app/streak-release.jks -alias streak -keyalg RSA -keysize 2048 -validity 10000 -storepass streak123 -keypass streak123 -dname "CN=Habit Tracker M3E, OU=M3E, O=SmartWorldArafath, L=Dhaka, ST=Dhaka, C=BD"
+            cat > android/key.properties <<EOF
+          storePassword=streak123
+          keyPassword=streak123
+          keyAlias=streak
+          storeFile=streak-release.jks
+          EOF
+          fi
 
       # Reproducible build: version name AND code come entirely from pubspec.yaml
       # (1.1.0+2), exactly like F-Droid builds it. Do NOT pass --build-name or

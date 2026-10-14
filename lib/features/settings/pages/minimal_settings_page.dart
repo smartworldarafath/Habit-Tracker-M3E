@@ -9,6 +9,7 @@ import 'package:streak/core/extensions/inset_extensions.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/routing/app_navigator.dart';
 import 'package:streak/core/utils/app_dirs.dart';
+import 'package:streak/core/utils/app_platform.dart';
 import 'package:streak/core/widgets/section_label.dart';
 import 'package:streak/features/settings/data_folder_actions.dart';
 import 'package:streak/features/settings/pages/about_page.dart';
@@ -354,7 +355,7 @@ class _AppearancePage extends StatelessWidget {
                 ),
               ),
             ],
-            if (Platform.isAndroid)
+            if (AppPlatform.isAndroid)
               SoftRow(
                 icon: LucideIcons.layoutDashboard,
                 title: context.l10n.widgets,

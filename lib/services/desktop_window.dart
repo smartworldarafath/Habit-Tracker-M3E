@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/services.dart';
+import 'package:streak/core/utils/app_platform.dart';
 
 class DesktopWindow {
   const DesktopWindow._();
@@ -8,7 +7,7 @@ class DesktopWindow {
   static const _channel = MethodChannel('streak/window');
 
   static Future<void> setFullscreen(bool on) async {
-    if (!Platform.isWindows && !Platform.isLinux) return;
+    if (!AppPlatform.isWindows && !AppPlatform.isLinux) return;
     try {
       await _channel.invokeMethod<void>('fullscreen', on);
     } on PlatformException {

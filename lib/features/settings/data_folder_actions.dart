@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:streak/core/database/data_location.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/utils/app_dirs.dart';
+import 'package:streak/core/utils/app_platform.dart';
 import 'package:streak/core/utils/app_snackbar.dart';
 import 'package:streak/core/widgets/app_confirm_dialog.dart';
 import 'package:streak/features/settings/widgets/minimal_settings_widgets.dart';
@@ -16,7 +17,7 @@ class DataFolderActions {
   const DataFolderActions._();
 
   static bool get available =>
-      (Platform.isWindows || Platform.isLinux) && !isFlatpak;
+      (AppPlatform.isWindows || AppPlatform.isLinux) && !isFlatpak;
 
   static Future<void> pick(BuildContext context) {
     final l10n = context.l10n;

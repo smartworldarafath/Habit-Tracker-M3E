@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 double coverBlurSigma(int clarity) => (100 - clarity.clamp(10, 100)) * 0.14;
@@ -20,7 +21,7 @@ class CoverImage extends StatelessWidget {
   static final _known = <String, bool>{};
 
   static bool exists(String path) {
-    if (path.isEmpty) return false;
+    if (kIsWeb || path.isEmpty) return false;
     return _known[path] ??= File(path).existsSync();
   }
 
