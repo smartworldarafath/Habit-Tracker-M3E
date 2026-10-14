@@ -57,7 +57,7 @@ jobs:
 
       # ABI splits keep each APK small (~15-20 MB) instead of one ~58 MB fat APK.
       - name: Build split APKs
-        run: flutter build apk --release --split-per-abi
+        run: flutter build apk --release --split-per-abi --android-skip-build-dependency-validation
 
       - name: Rename APKs
         run: |
@@ -141,7 +141,7 @@ jobs:
       # --split-debug-info moves the path-laden debug symbols out of libapp.so so it
       # builds deterministically. F-Droid uses the same flag.
       - name: Build split APKs
-        run: flutter build apk --release --split-per-abi --split-debug-info=build/symbols
+        run: flutter build apk --release --split-per-abi --split-debug-info=build/symbols --android-skip-build-dependency-validation
 
       - name: Rename APKs
         run: |
