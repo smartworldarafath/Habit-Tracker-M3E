@@ -35,10 +35,12 @@ class DataLocation {
   static String? get rewriteFrom => _rewriteFrom;
 
   static Directory get portableDir =>
-      Directory(
-        '${File(Platform.resolvedExecutable).parent.path}'
-        '${Platform.pathSeparator}StreakData',
-      );
+      kIsWeb
+          ? Directory('')
+          : Directory(
+            '${File(Platform.resolvedExecutable).parent.path}'
+            '${Platform.pathSeparator}StreakData',
+          );
 
   static bool holdsData(Directory dir) =>
       File('${dir.path}/habits.hive').existsSync();

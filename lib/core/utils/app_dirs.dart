@@ -13,12 +13,13 @@ bool get isMobile => AppPlatform.isMobile;
 bool get hasAppIcons => isMobile;
 
 bool get hasHomeWidgets =>
-    defaultTargetPlatform == TargetPlatform.android ||
-    defaultTargetPlatform == TargetPlatform.iOS;
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS);
 
 bool get hasBiometricLock => !AppPlatform.isLinux && !kIsWeb;
 
-bool get isFlatpak => Platform.environment.containsKey('FLATPAK_ID');
+bool get isFlatpak => !kIsWeb && Platform.environment.containsKey('FLATPAK_ID');
 
 Future<Directory>? _dataDir;
 
@@ -27,6 +28,7 @@ String _dataPath = '';
 String get dataPath => _dataPath;
 
 bool get isPortable =>
+    !kIsWeb &&
     Platform.isWindows &&
     _dataPath.isNotEmpty &&
     _plain(_dataPath) == _plain(DataLocation.portableDir.path);
@@ -50,7 +52,7 @@ Future<Directory> _resolveDataDir() async {
   final support = await getApplicationSupportDirectory().timeout(wait);
   final chosen = await DataLocation.resolve(support);
   if (chosen != null) return chosen;
-  if (Platform.isLinux) return support;
+  if (AppPlatform.isLinux) return support;
 
   final fallback = File('${support.path}/.documents-unavailable');
   final used = File('${support.path}/.documents-used');

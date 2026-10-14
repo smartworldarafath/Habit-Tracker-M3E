@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:streak/core/i18n/l10n.dart';
+import 'package:streak/core/utils/app_platform.dart';
 import 'package:streak/features/focus/widgets/focus_video_scene.dart';
 import 'package:streak/features/focus/widgets/linux_video_scene.dart';
 
@@ -56,13 +58,14 @@ class FocusBackground extends StatelessWidget {
     );
   }
 
-  Widget _video(File file, Widget poster) => Platform.isLinux
+  Widget _video(File file, Widget poster) => AppPlatform.isLinux
       ? LinuxVideoScene(file: file, poster: poster)
       : FocusVideoScene(file: file, poster: poster);
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = scene == kCustomScene &&
+    final hasImage = !kIsWeb &&
+        scene == kCustomScene &&
         imagePath.isNotEmpty &&
         File(imagePath).existsSync();
 

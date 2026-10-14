@@ -8,6 +8,7 @@ import 'package:streak/core/extensions/inset_extensions.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/routing/app_navigator.dart';
 import 'package:streak/core/utils/app_dirs.dart';
+import 'package:streak/core/utils/app_platform.dart';
 import 'package:streak/core/widgets/entrance.dart';
 import 'package:streak/core/widgets/number_keypad_dialog.dart';
 import 'package:streak/core/widgets/section_label.dart';
@@ -273,7 +274,7 @@ class _ClassicAppearancePage extends StatelessWidget {
             ),
           ),
         ],
-        if (Platform.isAndroid) ...[
+        if (AppPlatform.isAndroid) ...[
           settingsDivider(context),
           NavRow(
             icon: LucideIcons.layoutDashboard,

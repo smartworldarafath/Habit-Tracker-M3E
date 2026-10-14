@@ -66,6 +66,7 @@ Future<AppExitResponse> _leaveNoTrace() async {
 }
 
 bool _blockedByWindows(Object error) =>
+    !kIsWeb &&
     Platform.isWindows &&
     error is FileSystemException &&
     error.osError?.errorCode == 5;

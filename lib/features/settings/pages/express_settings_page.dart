@@ -15,6 +15,7 @@ import 'package:streak/core/extensions/inset_extensions.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/routing/app_navigator.dart';
 import 'package:streak/core/utils/app_dirs.dart';
+import 'package:streak/core/utils/app_platform.dart';
 import 'package:streak/core/utils/responsive.dart';
 import 'package:streak/core/widgets/section_label.dart';
 import 'package:streak/core/widgets/number_keypad_dialog.dart';
@@ -493,7 +494,7 @@ List<Widget> _appearanceTiles(BuildContext context) {
               onChanged: settings.setAppIcon,
             ),
           ),
-        if (Platform.isAndroid)
+        if (AppPlatform.isAndroid)
           ExpressTile(
             icon: LucideIcons.layoutDashboard,
             title: context.l10n.widgets,

@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:streak/core/database/local_store.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/core/utils/app_dirs.dart';
+import 'package:streak/core/utils/app_platform.dart';
 import 'package:streak/features/focus/data/focus_session.dart';
 import 'package:streak/features/focus/state/focus_audio.dart';
 import 'package:streak/l10n/app_localizations.dart';
@@ -528,7 +528,7 @@ class FocusController extends ChangeNotifier {
     try {
       if (!_open || !isRunning) return await notifications.cancelFocusEnd();
       if (isFlow || reachedTarget || !isMobile) return;
-      if (Platform.isAndroid) return await notifications.cancelFocusEnd();
+      if (AppPlatform.isAndroid) return await notifications.cancelFocusEnd();
       final (title, body) = await _endTexts(breakEnded: _isBreak);
       await notifications.scheduleFocusEnd(
         title: title,
