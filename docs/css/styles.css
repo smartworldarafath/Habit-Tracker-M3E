@@ -1209,95 +1209,211 @@ main {
   border-color: rgba(0, 0, 0, 0.08);
 }
 
-.pay-card__body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 18px;
+/* TABS */
+.pay-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  padding: 4px;
+  margin-top: 16px;
 }
 
-.pay-method {
+[data-theme="light"] .pay-tabs {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.pay-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s var(--ease);
+}
+
+.pay-tab:hover {
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.pay-tab.is-active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="light"] .pay-tab.is-active {
+  background: #ffffff;
+  color: #111;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.pay-tab__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot--redotpay {
+  background: #E61C39;
+  box-shadow: 0 0 6px rgba(230, 28, 57, 0.6);
+}
+
+.dot--payoneer {
+  background: #FF5A00;
+  box-shadow: 0 0 6px rgba(255, 90, 0, 0.6);
+}
+
+.dot--nsave {
+  background: #E50914;
+  box-shadow: 0 0 6px rgba(229, 9, 20, 0.6);
+}
+
+/* PANELS */
+.pay-panel {
+  display: none;
+}
+
+.pay-panel.is-active {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: payFade .25s var(--ease);
+}
+
+@keyframes payFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* QR CARD */
+.pay-qr-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.pay-qr-frame {
+  width: 170px;
+  height: 170px;
+  display: grid;
+  place-items: center;
+}
+
+.pay-qr-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.pay-qr-hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333333;
+}
+
+/* USER / PAYONEER CARD */
+.pay-user-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: rgba(255, 90, 0, 0.08);
+  border: 1px solid rgba(255, 90, 0, 0.25);
+  border-radius: 18px;
+}
+
+.pay-user-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF6B00, #E61C39);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.35);
+}
+
+.pay-user-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.pay-user-name {
+  font-size: 15.5px;
+  color: var(--fg);
+  font-weight: 700;
+}
+
+.pay-user-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+/* FIELDS */
+.pay-field {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--line-2);
   border-radius: 16px;
   transition: all .2s var(--ease);
 }
 
-.pay-method:hover {
-  background: rgba(255, 255, 255, 0.06);
+.pay-field:hover {
+  background: rgba(255, 255, 255, 0.07);
   border-color: rgba(255, 107, 0, 0.35);
-  transform: translateY(-1px);
 }
 
-[data-theme="light"] .pay-method {
+[data-theme="light"] .pay-field {
   background: #f8f8fb;
   border-color: rgba(0, 0, 0, 0.06);
 }
 
-[data-theme="light"] .pay-method:hover {
+[data-theme="light"] .pay-field:hover {
   background: #f0f0f5;
   border-color: rgba(255, 107, 0, 0.35);
 }
 
-.pay-method__info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.pay-method__badge {
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  padding: 4px 9px;
-  border-radius: 8px;
-  letter-spacing: 0.04em;
-  flex-shrink: 0;
-}
-
-.badge--bkash {
-  background: #E2136E;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(226, 19, 110, 0.4);
-}
-
-.badge--nagad {
-  background: #F7931E;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(247, 147, 30, 0.4);
-}
-
-.badge--rocket {
-  background: #8C3494;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(140, 52, 148, 0.4);
-}
-
-.badge--crypto {
-  background: #26A17B;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(38, 161, 123, 0.4);
-}
-
-.pay-method__details {
+.pay-field__info {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.pay-method__type {
+.pay-field__label {
   font-size: 11px;
-  color: var(--muted);
   font-family: var(--mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
-.pay-method__val {
+.pay-field__val {
   font-size: 14.5px;
   font-weight: 700;
   color: var(--fg);
@@ -1305,23 +1421,28 @@ main {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  letter-spacing: 0.02em;
+  margin-top: 2px;
 }
 
-.pay-method__val--mono {
-  font-size: 12px;
-  max-width: 170px;
+.pay-field__val--highlight {
+  color: #E50914;
 }
 
+[data-theme="dark"] .pay-field__val--highlight {
+  color: #FF4D61;
+}
+
+/* COPY BUTTON */
 .pay-copy-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 13px;
+  padding: 7px 14px;
   border-radius: 10px;
   background: rgba(255, 107, 0, 0.12);
   border: 1px solid rgba(255, 107, 0, 0.3);
   color: var(--orange-s);
+  font-family: inherit;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;

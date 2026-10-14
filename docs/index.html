@@ -496,7 +496,7 @@
               <span class="es">Apoya Habit Tracker M3E</span>
             </h3>
             <p class="pay-card__subtitle">
-              <span class="en">Choose your preferred payment method below</span>
+              <span class="en">Choose your preferred payment method</span>
               <span class="es">Elige tu método de pago preferido</span>
             </p>
           </div>
@@ -506,69 +506,102 @@
         </button>
       </div>
 
+      <!-- Payment Tabs -->
+      <div class="pay-tabs" role="tablist" aria-label="Payment methods">
+        <button type="button" class="pay-tab is-active" role="tab" aria-selected="true" data-pay-tab="redotpay">
+          <span class="pay-tab__dot dot--redotpay"></span>
+          <span>RedotPay</span>
+        </button>
+        <button type="button" class="pay-tab" role="tab" aria-selected="false" data-pay-tab="payoneer">
+          <span class="pay-tab__dot dot--payoneer"></span>
+          <span>Payoneer</span>
+        </button>
+        <button type="button" class="pay-tab" role="tab" aria-selected="false" data-pay-tab="nsave">
+          <span class="pay-tab__dot dot--nsave"></span>
+          <span>nsave</span>
+        </button>
+      </div>
+
       <div class="pay-card__body">
-        <!-- bKash -->
-        <div class="pay-method pay-method--bkash">
-          <div class="pay-method__info">
-            <div class="pay-method__badge badge--bkash">bKash</div>
-            <div class="pay-method__details">
-              <span class="pay-method__type"><span class="en">Personal / Send Money</span><span class="es">Personal</span></span>
-              <span class="pay-method__val" id="val-bkash">01XXXXXXXXX</span>
+        <!-- 1. REDOTPAY PANEL -->
+        <div class="pay-panel is-active" id="panel-redotpay" role="tabpanel">
+          <div class="pay-qr-card">
+            <div class="pay-qr-frame">
+              <img src="assets/payments/redotpay_square.png" width="170" height="170" alt="RedotPay QR Code" loading="lazy">
             </div>
+            <span class="pay-qr-hint"><span class="en">Scan with RedotPay App to Pay</span><span class="es">Escanea con la app RedotPay</span></span>
           </div>
-          <button type="button" class="pay-copy-btn" data-copy-target="val-bkash" aria-label="Copy bKash Number">
-            <svg class="ic-copy" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <svg class="ic-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span class="copy-text"><span class="en">Copy</span><span class="es">Copiar</span></span>
-          </button>
+
+          <div class="pay-field">
+            <div class="pay-field__info">
+              <span class="pay-field__label">RedotPay ID</span>
+              <span class="pay-field__val" id="val-redotpay">1965421414</span>
+            </div>
+            <button type="button" class="pay-copy-btn" data-copy-target="val-redotpay" aria-label="Copy RedotPay ID">
+              <svg class="ic-copy" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <svg class="ic-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span class="copy-text"><span class="en">Copy ID</span><span class="es">Copiar ID</span></span>
+            </button>
+          </div>
         </div>
 
-        <!-- Nagad -->
-        <div class="pay-method pay-method--nagad">
-          <div class="pay-method__info">
-            <div class="pay-method__badge badge--nagad">Nagad</div>
-            <div class="pay-method__details">
-              <span class="pay-method__type"><span class="en">Personal / Send Money</span><span class="es">Personal</span></span>
-              <span class="pay-method__val" id="val-nagad">01XXXXXXXXX</span>
+        <!-- 2. PAYONEER PANEL -->
+        <div class="pay-panel" id="panel-payoneer" role="tabpanel">
+          <div class="pay-user-card">
+            <div class="pay-user-avatar">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
+            </div>
+            <div class="pay-user-meta">
+              <b class="pay-user-name">Arafath Rahman</b>
+              <span class="pay-user-sub">Payoneer Account</span>
             </div>
           </div>
-          <button type="button" class="pay-copy-btn" data-copy-target="val-nagad" aria-label="Copy Nagad Number">
-            <svg class="ic-copy" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <svg class="ic-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span class="copy-text"><span class="en">Copy</span><span class="es">Copiar</span></span>
-          </button>
+
+          <div class="pay-field">
+            <div class="pay-field__info">
+              <span class="pay-field__label">Payoneer Email</span>
+              <span class="pay-field__val" id="val-payoneer-email">arafathrahman710@gmail.com</span>
+            </div>
+            <button type="button" class="pay-copy-btn" data-copy-target="val-payoneer-email" aria-label="Copy Payoneer Email">
+              <svg class="ic-copy" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <svg class="ic-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span class="copy-text"><span class="en">Copy Email</span><span class="es">Copiar Email</span></span>
+            </button>
+          </div>
+
+          <div class="pay-field">
+            <div class="pay-field__info">
+              <span class="pay-field__label">Customer ID</span>
+              <span class="pay-field__val" id="val-payoneer-id">70366820</span>
+            </div>
+            <button type="button" class="pay-copy-btn" data-copy-target="val-payoneer-id" aria-label="Copy Payoneer Customer ID">
+              <svg class="ic-copy" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <svg class="ic-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span class="copy-text"><span class="en">Copy ID</span><span class="es">Copiar ID</span></span>
+            </button>
+          </div>
         </div>
 
-        <!-- Rocket -->
-        <div class="pay-method pay-method--rocket">
-          <div class="pay-method__info">
-            <div class="pay-method__badge badge--rocket">Rocket</div>
-            <div class="pay-method__details">
-              <span class="pay-method__type"><span class="en">Personal / Send Money</span><span class="es">Personal</span></span>
-              <span class="pay-method__val" id="val-rocket">01XXXXXXXXX</span>
+        <!-- 3. NSAVE PANEL -->
+        <div class="pay-panel" id="panel-nsave" role="tabpanel">
+          <div class="pay-qr-card">
+            <div class="pay-qr-frame">
+              <img src="assets/payments/nsave_code.png" width="170" height="170" alt="nsave QR Code" loading="lazy">
             </div>
+            <span class="pay-qr-hint"><span class="en">Scan QR Code with nsave app</span><span class="es">Escanea con la app nsave</span></span>
           </div>
-          <button type="button" class="pay-copy-btn" data-copy-target="val-rocket" aria-label="Copy Rocket Number">
-            <svg class="ic-copy" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <svg class="ic-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span class="copy-text"><span class="en">Copy</span><span class="es">Copiar</span></span>
-          </button>
-        </div>
 
-        <!-- Crypto / USDT -->
-        <div class="pay-method pay-method--crypto">
-          <div class="pay-method__info">
-            <div class="pay-method__badge badge--crypto">USDT</div>
-            <div class="pay-method__details">
-              <span class="pay-method__type"><span class="en">TRC20 Address</span><span class="es">Dirección TRC20</span></span>
-              <span class="pay-method__val pay-method__val--mono" id="val-crypto">TPplaceholderWalletAddressHere12345</span>
+          <div class="pay-field">
+            <div class="pay-field__info">
+              <span class="pay-field__label">Md Arafath Rahman</span>
+              <span class="pay-field__val pay-field__val--highlight" id="val-nsave">@arafath_rahman9</span>
             </div>
+            <button type="button" class="pay-copy-btn" data-copy-target="val-nsave" aria-label="Copy nsave Tag">
+              <svg class="ic-copy" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <svg class="ic-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span class="copy-text"><span class="en">Copy Tag</span><span class="es">Copiar Tag</span></span>
+            </button>
           </div>
-          <button type="button" class="pay-copy-btn" data-copy-target="val-crypto" aria-label="Copy USDT TRC20 Address">
-            <svg class="ic-copy" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <svg class="ic-check" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span class="copy-text"><span class="en">Copy</span><span class="es">Copiar</span></span>
-          </button>
         </div>
       </div>
 
