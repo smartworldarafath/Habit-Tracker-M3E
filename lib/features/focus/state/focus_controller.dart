@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:streak/core/database/local_store.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
+import 'package:streak/core/utils/app_dirs.dart';
 import 'package:streak/features/focus/data/focus_session.dart';
 import 'package:streak/features/focus/state/focus_audio.dart';
+import 'package:streak/l10n/app_localizations.dart';
 import 'package:streak/services/focus_service.dart';
 import 'package:streak/services/notification_service.dart';
 import 'package:uuid/uuid.dart';
@@ -30,6 +33,7 @@ class FocusController extends ChangeNotifier {
     final map = LocalStore.settingMap('focusActive');
     if (map.isEmpty) return;
     _habitId = (map['habitId'] ?? '') as String;
+    _label = map['label'] is String ? map['label'] as String : '';
     _targetMinutes = ((map['target'] ?? 25) as num).toInt();
     _focusMinutes = ((map['focus'] ?? _targetMinutes) as num).toInt();
     _breakMinutes = ((map['break'] ?? 0) as num).toInt();
@@ -51,6 +55,7 @@ class FocusController extends ChangeNotifier {
   void _persist() {
     LocalStore.writeSetting('focusActive', {
       'habitId': _habitId,
+      'label': _label,
       'target': _targetMinutes,
       'focus': _focusMinutes,
       'break': _breakMinutes,
@@ -66,6 +71,7 @@ class FocusController extends ChangeNotifier {
   final List<FocusTask> _tasks = [];
 
   String _habitId = '';
+  String _label = '';
   int _targetMinutes = 25;
   int _focusMinutes = 25;
   int _breakMinutes = 0;
@@ -76,6 +82,7 @@ class FocusController extends ChangeNotifier {
   int _round = 1;
   bool _open = false;
   bool _awaiting = false;
+  int _switchIn = 0;
   int _accumulated = 0;
   DateTime? _since;
   Timer? _ticker;
@@ -123,6 +130,7 @@ class FocusController extends ChangeNotifier {
     required String habitId,
     required DateTime startedAt,
     required int minutes,
+    String label = '',
   }) async {
     final session = FocusSession(
       id: const Uuid().v4(),
@@ -131,6 +139,7 @@ class FocusController extends ChangeNotifier {
       seconds: minutes * 60,
       completed: true,
       startedAt: startedAt,
+      label: label,
     );
     await _keep(session);
     notifyListeners();
@@ -154,15 +163,25 @@ class FocusController extends ChangeNotifier {
   int get pendingTasks => _tasks.where((t) => !t.done).length;
 
   String get habitId => _habitId;
+  String get label => _label;
   bool get isBreak => _isBreak;
   int get round => _round;
   bool get isPomodoro => _breakMinutes > 0;
+  static const longBreakEvery = 4;
+  int get _longBreakMinutes => LocalStore.setting('focusLongBreak', 0);
+  bool get isLongBreak =>
+      _isBreak && _longBreakMinutes > 0 && _round % longBreakEvery == 0;
   int get targetMinutes => _targetMinutes;
   int get targetSeconds => _targetMinutes * 60;
 
   bool get isActive => _open;
   bool get isRunning => _since != null;
   bool get isAwaiting => _awaiting;
+  bool get isFinished => _open && !isPomodoro && reachedTarget;
+
+  static const switchDelay = 5;
+
+  int get switchIn => _switchIn;
 
   int elapsedAt(DateTime at) {
     final live = _since == null ? 0 : at.difference(_since!).inSeconds;
@@ -193,8 +212,11 @@ class FocusController extends ChangeNotifier {
     required String habitId,
     required int targetMinutes,
     int breakMinutes = 0,
+    String label = '',
   }) {
     _habitId = habitId;
+    _label = label;
+    if (label.isNotEmpty) unawaited(rememberLabel(habitId, label));
     _targetMinutes = targetMinutes;
     _focusMinutes = targetMinutes;
     _breakMinutes = targetMinutes <= 0 ? 0 : breakMinutes;
@@ -236,15 +258,16 @@ class FocusController extends ChangeNotifier {
     unawaited(FocusAudio.resume());
   }
 
-  void continueNow() {
+  void continueNow({DateTime? at}) {
     if (!_awaiting && !(isPomodoro && reachedTarget)) return;
     _awaiting = false;
     unawaited(FocusAudio.stopAlert());
-    _advancePhase();
+    _advancePhase(at: at);
   }
 
   void reset() {
     _awaiting = false;
+    _switchIn = 0;
     unawaited(FocusAudio.stopAlert());
     _accumulated = 0;
     _since = isRunning ? DateTime.now() : null;
@@ -257,6 +280,9 @@ class FocusController extends ChangeNotifier {
 
   void addMinute() {
     if (!_open || isFlow) return;
+    _awaiting = false;
+    _switchIn = 0;
+    unawaited(FocusAudio.stopAlert());
     if (reachedTarget) {
       _accumulated = targetSeconds;
       if (isRunning) _since = DateTime.now();
@@ -269,10 +295,10 @@ class FocusController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void skipBreak() {
+  void skipBreak({DateTime? at}) {
     _awaiting = false;
     unawaited(FocusAudio.stopAlert());
-    if (_isBreak) _advancePhase();
+    if (_isBreak) _advancePhase(at: at);
   }
 
   void addTask() {
@@ -306,29 +332,38 @@ class FocusController extends ChangeNotifier {
       case FocusAction.resume:
         resume(at: action.at);
       case FocusAction.stop:
-        return stop(completed: reachedTarget || isFlow, at: action.at);
+        return stop(
+          completed: isFlow || elapsedAt(action.at) >= targetSeconds,
+          at: action.at,
+        );
       case FocusAction.minute:
         addMinute();
       case FocusAction.skip:
-        skipBreak();
+        skipBreak(at: action.at);
       case FocusAction.next:
-        continueNow();
+        continueNow(at: action.at);
     }
     return null;
   }
 
   Future<FocusSession?> stop({required bool completed, DateTime? at}) async {
     final endedAt = at ?? DateTime.now();
-    final seconds = _isBreak ? 0 : elapsedAt(endedAt);
+    final dropped = isPomodoro &&
+        !completed &&
+        LocalStore.setting('focusWholeRounds', false);
+    final seconds = _isBreak || dropped ? 0 : elapsedAt(endedAt);
     final habitId = _habitId;
+    final label = _label;
     final target = _focusMinutes;
     _stopTicker();
     _awaiting = false;
+    _switchIn = 0;
     unawaited(FocusAudio.stopAlert());
     if (FocusAudio.current.value.isNotEmpty) unawaited(FocusAudio.stop());
     _accumulated = 0;
     _since = null;
     _habitId = '';
+    _label = '';
     _tasks.clear();
     _celebrated = false;
     _isBreak = false;
@@ -352,6 +387,7 @@ class FocusController extends ChangeNotifier {
       seconds: seconds,
       completed: completed,
       startedAt: endedAt.subtract(Duration(seconds: seconds)),
+      label: label,
     );
     await _keep(session);
     notifyListeners();
@@ -364,7 +400,7 @@ class FocusController extends ChangeNotifier {
     onRoundSaved?.call(session);
   }
 
-  void _advancePhase() {
+  void _advancePhase({DateTime? at}) {
     final endedAt = _phaseEnd;
     if (!_isBreak) {
       final seconds = elapsedAt(endedAt);
@@ -378,6 +414,7 @@ class FocusController extends ChangeNotifier {
               seconds: seconds,
               completed: true,
               startedAt: endedAt.subtract(Duration(seconds: seconds)),
+              label: _label,
             ),
           ),
         );
@@ -387,9 +424,14 @@ class FocusController extends ChangeNotifier {
     }
     _isBreak = !_isBreak;
     _awaiting = false;
-    _targetMinutes = _isBreak ? _breakMinutes : _focusMinutes;
+    _switchIn = 0;
+    _targetMinutes = !_isBreak
+        ? _focusMinutes
+        : isLongBreak
+        ? _longBreakMinutes
+        : _breakMinutes;
     _accumulated = 0;
-    _since = DateTime.now();
+    _since = at ?? DateTime.now();
     _celebrated = false;
     _startTicker();
     _persist();
@@ -415,16 +457,25 @@ class FocusController extends ChangeNotifier {
   void _startTicker() {
     _ticker?.cancel();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_switchIn > 0) {
+        if (--_switchIn == 0) return _advancePhase();
+        _sync();
+        return _tick();
+      }
       if (!_celebrated && reachedTarget) {
         _celebrated = true;
         completedTick.value++;
-        final hold = isPomodoro && LocalStore.setting('focusHold', false);
-        unawaited(
-          FocusAudio.alert(
-            LocalStore.setting('focusAlert', ''),
-            loop: hold,
-          ),
-        );
+        if (!isMobile) unawaited(_announceEnd(breakEnded: _isBreak));
+        final always = isPomodoro && LocalStore.setting('focusHold', false);
+        final hold = always || (isPomodoro && _isBreak);
+        if (DateTime.now().difference(_phaseEnd).inSeconds < 60) {
+          unawaited(
+            FocusAudio.alert(
+              LocalStore.setting('focusAlert', ''),
+              loop: always,
+            ),
+          );
+        }
         if (hold) {
           _awaiting = true;
           _stopTicker();
@@ -432,8 +483,8 @@ class FocusController extends ChangeNotifier {
           _sync();
           notifyListeners();
         } else if (isPomodoro) {
-          _advancePhase();
-          return;
+          _switchIn = switchDelay;
+          _sync();
         } else {
           _stopTicker();
           _sync();
@@ -456,15 +507,32 @@ class FocusController extends ChangeNotifier {
     return isFlow ? began : began + targetSeconds * 1000 + 999;
   }
 
+  Future<(String, String)> _endTexts({required bool breakEnded}) async {
+    final strings = await NotificationService().localizations();
+    if (breakEnded) return (strings.focus_break_over, strings.focus_notif_back);
+    if (isPomodoro) return (strings.focus_done_title, strings.focus_notif_break);
+    return (strings.focus_done_title, strings.focus_notif_body);
+  }
+
+  Future<void> _announceEnd({required bool breakEnded}) async {
+    final (title, body) = await _endTexts(breakEnded: breakEnded);
+    await NotificationService().showFocusEnd(
+      title: title,
+      body: body,
+      habitId: _habitId,
+    );
+  }
+
   Future<void> _syncEndAlarm() async {
     final notifications = NotificationService();
     try {
       if (!_open || !isRunning) return await notifications.cancelFocusEnd();
-      if (isFlow || reachedTarget) return;
-      final strings = await notifications.localizations();
+      if (isFlow || reachedTarget || !isMobile) return;
+      if (Platform.isAndroid) return await notifications.cancelFocusEnd();
+      final (title, body) = await _endTexts(breakEnded: _isBreak);
       await notifications.scheduleFocusEnd(
-        title: strings.focus_done_title,
-        body: strings.focus_notif_body,
+        title: title,
+        body: body,
         after: Duration(seconds: remainingSeconds),
       );
     } catch (e) {
@@ -490,14 +558,21 @@ class FocusController extends ChangeNotifier {
         await FocusService.hide();
         return;
       }
-      final name = _habitId.isEmpty ? null : LocalStore.habitName(_habitId);
-      final done = _awaiting || (reachedTarget && !isPomodoro);
+      final habit = _habitId.isEmpty ? null : LocalStore.habitName(_habitId);
+      final name = _label.isEmpty
+          ? habit
+          : habit == null
+          ? _label
+          : '$habit · $_label';
+      final done = _awaiting || _switchIn > 0 || (reachedTarget && !isPomodoro);
       final label = _awaiting
           ? strings.focus_continue
+          : _switchIn > 0
+          ? (_isBreak ? strings.focus_back_in : strings.focus_break_in)('$_switchIn')
           : done
           ? strings.focus_target_reached
           : _isBreak
-              ? strings.focus_break
+              ? (isLongBreak ? strings.focus_long_break : strings.focus_break)
               : !isRunning
                   ? strings.focus_paused
                   : isFlow
@@ -512,6 +587,8 @@ class FocusController extends ChangeNotifier {
               : isRunning
                   ? 'running'
                   : 'paused';
+      final (endTitle, endBody) = await _endTexts(breakEnded: _isBreak);
+      final always = isPomodoro && LocalStore.setting('focusHold', false);
       await FocusService.show(
         habitId: _habitId,
         title: name ?? strings.focus,
@@ -532,10 +609,74 @@ class FocusController extends ChangeNotifier {
         continueLabel: strings.focus_continue,
         skipLabel: strings.focus_skip_break,
         minuteLabel: '+${strings.minutes_short('1')}',
+        endTitle: endTitle,
+        endBody: endBody,
+        hold: always || (isPomodoro && _isBreak),
+        upcoming: isPomodoro ? _upcoming(strings, always: always) : const [],
       );
     } catch (e) {
       debugPrint('Focus notification sync failed: $e');
     }
+  }
+
+  List<Map<String, Object>> _upcoming(
+    AppLocalizations strings, {
+    required bool always,
+  }) {
+    final phases = <Map<String, Object>>[];
+    var round = _round;
+    var onBreak = _isBreak;
+    for (var i = 0; i < 8; i++) {
+      if (onBreak) round++;
+      onBreak = !onBreak;
+      final long =
+          onBreak && _longBreakMinutes > 0 && round % longBreakEvery == 0;
+      final minutes = !onBreak
+          ? _focusMinutes
+          : long
+          ? _longBreakMinutes
+          : _breakMinutes;
+      final label = !onBreak
+          ? strings.focus_notif_running
+          : long
+          ? strings.focus_long_break
+          : strings.focus_break;
+      phases.add({
+        'total': minutes * 60,
+        'state': '$label  ·  ${strings.focus_round(round)}',
+        'phase': onBreak ? 'break' : 'running',
+        'hold': always || onBreak,
+        'endTitle': onBreak ? strings.focus_break_over : strings.focus_done_title,
+        'endBody': onBreak ? strings.focus_notif_back : strings.focus_notif_break,
+      });
+    }
+    return phases;
+  }
+
+  static const _labelsKey = 'focusLabels';
+  static const maxLabels = 20;
+
+  List<String> labelsFor(String habitId) {
+    final saved = LocalStore.settingMap(_labelsKey)[habitId];
+    return saved is List ? List<String>.from(saved) : const [];
+  }
+
+  Future<void> rememberLabel(String habitId, String label) async {
+    final all = LocalStore.settingMap(_labelsKey);
+    final labels = [
+      label,
+      ...labelsFor(habitId).where((l) => l != label),
+    ].take(maxLabels).toList();
+    all[habitId] = labels;
+    await LocalStore.writeSetting(_labelsKey, all);
+    notifyListeners();
+  }
+
+  Future<void> forgetLabel(String habitId, String label) async {
+    final all = LocalStore.settingMap(_labelsKey);
+    all[habitId] = labelsFor(habitId).where((l) => l != label).toList();
+    await LocalStore.writeSetting(_labelsKey, all);
+    notifyListeners();
   }
 
   int get totalSeconds =>

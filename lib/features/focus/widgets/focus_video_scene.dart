@@ -13,8 +13,14 @@ const focusVideoScenes = <String>[
 
 bool get hasVideoScenes => AppPlatform.isWindows || AppPlatform.isLinux;
 
+const focusVideoExtensions = ['mp4', 'mov', 'webm', 'mkv'];
+
+bool isFocusVideo(String path) =>
+    hasVideoScenes &&
+    focusVideoExtensions.contains(path.split('.').last.toLowerCase());
+
 String get _scenesDir => (AppPlatform.isWindows || AppPlatform.isLinux)
-    ? '${File(Platform.resolvedExecutable).parent.path}/data/scenes'
+    ? '/data/scenes'
     : '';
 
 File focusVideoFile(String name) => File('$_scenesDir/$name.mp4');
@@ -37,9 +43,10 @@ class FocusVideoPoster extends StatelessWidget {
 }
 
 class FocusVideoScene extends StatefulWidget {
-  const FocusVideoScene({super.key, required this.name});
+  const FocusVideoScene({super.key, required this.file, required this.poster});
 
-  final String name;
+  final File file;
+  final Widget poster;
 
   @override
   State<FocusVideoScene> createState() => _FocusVideoSceneState();
@@ -57,14 +64,14 @@ class _FocusVideoSceneState extends State<FocusVideoScene> {
   @override
   void didUpdateWidget(FocusVideoScene oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.name == widget.name) return;
+    if (oldWidget.file.path == widget.file.path) return;
     _controller?.dispose();
     _controller = null;
     _load();
   }
 
   Future<void> _load() async {
-    final file = focusVideoFile(widget.name);
+    final file = widget.file;
     if (!file.existsSync()) return;
     final controller = WinVideoPlayerController.file(file);
     try {
@@ -94,7 +101,7 @@ class _FocusVideoSceneState extends State<FocusVideoScene> {
   Widget build(BuildContext context) {
     final controller = _controller;
     if (controller == null || !controller.value.isInitialized) {
-      return FocusVideoPoster(name: widget.name);
+      return widget.poster;
     }
     return FittedBox(
       fit: BoxFit.cover,

@@ -670,13 +670,12 @@
   "app_lock_unavailable": "A biometria não está ativada neste aparelho",
   "auto_backup_folder_set": "Pasta salva",
   "archive_habit": "Arquivar hábito",
-  "focus_track_limit": "Até 10 faixas",
+  "focus_track_limit": "Até 30 faixas",
   "style_minimal_desc": "Grade de hábitos e configurações agrupadas em quatro seções.",
   "focus_keep_awake": "Mantenha a tela ligada",
   "data_sub": "Backup e importação",
   "note_time_optional": "Tempo (opcional)",
   "focus_pause": "Pausa",
-  "focus_track_rain": "Chuva",
   "unit_hours": "horas",
   "focus_end_tasks": "{count} tarefas ainda não foram verificadas.",
   "@focus_end_tasks": {
@@ -969,7 +968,6 @@
   "widget_cfg_follow_system": "Seguir o tema do sistema",
   "widget_cfg_dark_color": "Tema escuro",
   "widget_cfg_light_color": "Tema claro",
-  "widget_cfg_todos_scope": "Tarefas",
   "vacation_all_sub": "Enquanto estiver ativo, nada será considerado como perdido",
   "currency_hint": "Símbolo ou código",
   "money_saved": "Dinheiro guardado",
@@ -1128,7 +1126,7 @@
   },
   "sched_unit_days": "Dias",
   "sched_unit_weeks": "Semanas",
-  "every_n_weeks": "A cada {n} semanas",
+  "every_n_weeks": "{n, plural, =1{Toda semana} other{A cada {n} semanas}}",
   "@every_n_weeks": {
     "placeholders": {
       "n": {
@@ -1136,7 +1134,7 @@
       }
     }
   },
-  "every_n_months": "A cada {n} meses",
+  "every_n_months": "{n, plural, =1{Todo mês} other{A cada {n} meses}}",
   "@every_n_months": {
     "placeholders": {
       "n": {

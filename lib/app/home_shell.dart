@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +6,7 @@ import 'package:streak/core/utils/app_platform.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:streak/app/theme/app_tokens.dart';
+import 'package:streak/app/classic_nav_bar.dart';
 import 'package:streak/core/express/express_nav.dart';
 import 'package:streak/core/express/express_shapes.dart';
 import 'package:streak/core/express/express_surface.dart';
@@ -21,6 +21,7 @@ import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/core/routing/back_handlers.dart';
 import 'package:streak/core/utils/responsive.dart';
 import 'package:streak/core/widgets/page_motion.dart';
+import 'package:streak/core/widgets/glass.dart';
 import 'package:streak/features/focus/state/focus_actions.dart';
 import 'package:streak/features/focus/state/focus_controller.dart';
 import 'package:streak/features/habits/pages/day_timeline_page.dart';
@@ -28,15 +29,22 @@ import 'package:streak/features/habits/pages/home_page.dart';
 import 'package:streak/features/habits/state/habits_controller.dart';
 import 'package:streak/features/habits/widgets/today_intro.dart';
 import 'package:streak/features/settings/pages/settings_page.dart';
+import 'package:streak/features/settings/settings_actions.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
 import 'package:streak/features/statistics/pages/statistics_page.dart';
 import 'package:streak/features/todos/pages/todos_page.dart';
 import 'package:streak/features/todos/state/todos_controller.dart';
+import 'package:streak/services/auto_sync.dart';
 import 'package:streak/services/home_widget_service.dart';
 import 'package:streak/services/widget_action_service.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
+
+  static void showSettings() {
+    AppNavigator.key.currentState?.popUntil((route) => route.isFirst);
+    _toSettings.value++;
+  }
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -46,6 +54,8 @@ enum _Tab { today, todos, plan, stats, settings }
 
 final _paneTab = ValueNotifier(_Tab.today);
 
+final _toSettings = ValueNotifier(0);
+
 class _HomeShellState extends State<HomeShell>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   _Tab _tab = _Tab.today;
@@ -53,7 +63,12 @@ class _HomeShellState extends State<HomeShell>
   final _visited = <_Tab>{_Tab.today};
 
   late final AnimationController _swap;
+  final _compact = ValueNotifier(false);
   Timer? _nextDay;
+  DateTime? _leftAt;
+  bool _replayDue = false;
+
+  static const _awayForReplay = Duration(minutes: 5);
 
   @override
   void initState() {
@@ -65,11 +80,20 @@ class _HomeShellState extends State<HomeShell>
       value: 1,
     );
     WidgetsBinding.instance.addObserver(this);
+    _toSettings.addListener(_openSettings);
     final focus = context.read<FocusController>();
     final habits = context.read<HabitsController>();
     focus.onRoundSaved =
-        (session) => unawaited(countFocusTime(habits, focus, session));
+        (session) => unawaited(creditFocusRound(habits, focus, session));
     _waitForNextDay();
+    final settings = context.read<SettingsController>();
+    AutoSync.start(
+      enabled: () => settings.syncsFolder,
+      reload: () async {
+        if (mounted) await SettingsActions.reloadAll(context);
+      },
+      save: () => settings.runAutoBackup(force: true, archive: false),
+    );
   }
 
   void _waitForNextDay() {
@@ -88,21 +112,51 @@ class _HomeShellState extends State<HomeShell>
   @override
   void dispose() {
     _nextDay?.cancel();
+    AutoSync.stop();
     _swap.dispose();
+    _compact.dispose();
+    _toSettings.removeListener(_openSettings);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   void _select(List<_Tab> tabs, _Tab tab) {
     if (tab == _tab) return;
-    if (tab == _Tab.today) TodayIntro.replay();
+    if (tab == _Tab.today && _replayDue) {
+      _replayDue = false;
+      TodayIntro.replay();
+    }
     setState(() {
       _visited.add(tab);
       _tab = tab;
     });
     _paneTab.value = tab;
     AppNavigator.clearPane();
+    _compact.value = false;
     _swap.forward(from: 0);
+  }
+
+  void _openSettings() {
+    setState(() {
+      _visited.add(_Tab.settings);
+      _tab = _Tab.settings;
+    });
+    _paneTab.value = _Tab.settings;
+  }
+
+  bool _onScroll(ScrollUpdateNotification note) {
+    final delta = note.scrollDelta ?? 0;
+    if (note.metrics.axis != Axis.vertical) return false;
+    if (note.metrics.pixels <= note.metrics.minScrollExtent + 8) {
+      _compact.value = false;
+    } else if (note.dragDetails == null) {
+      return false;
+    } else if (delta > 4) {
+      _compact.value = true;
+    } else if (delta < -4) {
+      _compact.value = false;
+    }
+    return false;
   }
 
   Widget _rail(
@@ -164,14 +218,24 @@ class _HomeShellState extends State<HomeShell>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      _leftAt ??= DateTime.now();
+      unawaited(AutoSync.pause());
+    }
     if (state == AppLifecycleState.resumed) {
+      final left = _leftAt;
+      _leftAt = null;
+      if (left != null && DateTime.now().difference(left) >= _awayForReplay) {
+        _replayDue = _tab != _Tab.today;
+        if (!_replayDue) TodayIntro.replay();
+      }
       final habits = context.read<HabitsController>();
       if (AppPlatform.isIOS) _applyWidgetActions(habits);
       habits.refresh().then((_) => HomeWidgetService.sync(habits.asMap));
-      context.read<TodosController>().reload();
-      TodayIntro.replay();
+      context.read<TodosController>().refresh();
       drainFocusActions();
       context.read<SettingsController>().runAutoBackup();
+      AutoSync.resume();
       _waitForNextDay();
     }
   }
@@ -204,7 +268,6 @@ class _HomeShellState extends State<HomeShell>
         const Scaffold(resizeToAvoidBottomInset: false, body: HomePage()),
       );
     }
-    final scheme = Theme.of(context).colorScheme;
     final express = settings.isExpressStyle;
     final tabs = [
       _Tab.today,
@@ -249,7 +312,9 @@ class _HomeShellState extends State<HomeShell>
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          FadeThrough(
+          NotificationListener<ScrollUpdateNotification>(
+            onNotification: _onScroll,
+            child: FadeThrough(
             animation: _swap,
             child: IndexedStack(
               index: tabs.indexOf(current),
@@ -264,6 +329,19 @@ class _HomeShellState extends State<HomeShell>
               ],
             ),
           ),
+          ),
+          if (!express)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: EdgeBlur(
+                top: false,
+                height: 104 + MediaQuery.viewPaddingOf(context).bottom,
+                sigma: 12,
+                shade: 0.6,
+              ),
+            ),
           Positioned(
             left: 0,
             right: 0,
@@ -281,36 +359,15 @@ class _HomeShellState extends State<HomeShell>
                       index: tabs.indexOf(current),
                       onSelect: (i) => _select(tabs, tabs[i]),
                     )
-                  : Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                decoration: BoxDecoration(
-                  color: scheme.surface.withValues(alpha: 0.94),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: scheme.outlineVariant.withValues(alpha: 0.45),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.24),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
+                  : ClassicNavBar(
+                      items: [
+                        for (final tab in tabs)
+                          (icon: _iconOf(tab), label: _labelOf(context, tab)),
+                      ],
+                      index: tabs.indexOf(current),
+                      onSelect: (i) => _select(tabs, tabs[i]),
+                      compact: _compact,
                     ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final tab in tabs)
-                      _NavItem(
-                        icon: _iconOf(tab),
-                        label: _labelOf(context, tab),
-                        selected: tab == current,
-                        dense: tabs.length > 4,
-                        onTap: () => _select(tabs, tab),
-                      ),
-                  ],
-                ),
-              ),
             ),
           ),
         ],
@@ -343,94 +400,6 @@ String _labelOf(BuildContext context, _Tab tab) => switch (tab) {
       _Tab.stats => context.l10n.stats,
       _Tab.settings => context.l10n.settings,
     };
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.dense = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final bool dense;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tint = selected ? scheme.primary : context.tokens.muted;
-
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      excludeSemantics: true,
-      onTap: onTap,
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: dense ? 2 : 4),
-          child: Center(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 320),
-              curve: Curves.easeOutCubic,
-              padding: EdgeInsets.symmetric(
-                horizontal: dense ? (selected ? 13 : 11) : (selected ? 18 : 16),
-                vertical: 10,
-              ),
-              decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: selected ? 0.16 : 0),
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedScale(
-                    scale: selected ? 1.08 : 1,
-                    duration: const Duration(milliseconds: 320),
-                    curve: Curves.easeOutBack,
-                    child: Icon(icon, size: 21, color: tint),
-                  ),
-                  ClipRect(
-                    child: AnimatedSize(
-                      duration: const Duration(milliseconds: 320),
-                      curve: Curves.easeOutCubic,
-                      child: selected
-                          ? Padding(
-                              padding: const EdgeInsets.only(left: 8),
-                              child: ConstrainedBox(
-                                constraints:
-                                    BoxConstraints(maxWidth: dense ? 72 : 88),
-                                child: Text(
-                                  label,
-                                  maxLines: 1,
-                                  softWrap: false,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: tint,
-                                  ),
-                                ),
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _StableMedia extends StatefulWidget {
   const _StableMedia({required this.child});

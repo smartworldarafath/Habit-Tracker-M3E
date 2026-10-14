@@ -124,8 +124,8 @@ class _TodayProgressState extends State<TodayProgress>
               ),
             ),
             SizedBox(
-              width: 58,
-              height: 58,
+              width: 64,
+              height: 64,
               child: AnimatedBuilder(
                 animation: _curve,
                 builder: (context, _) {
@@ -139,6 +139,8 @@ class _TodayProgressState extends State<TodayProgress>
                     child: Center(
                       child: Text(
                         '${(ratio * 100).round()}%',
+                        textScaler: MediaQuery.textScalerOf(context)
+                            .clamp(maxScaleFactor: 1),
                         style: TextStyle(
                           color: scheme.onSurface,
                           fontSize: 15,

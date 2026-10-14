@@ -17,6 +17,7 @@ import 'package:streak/features/focus/pages/focus_history_page.dart';
 import 'package:streak/features/focus/pages/focus_page.dart';
 import 'package:streak/features/focus/pages/focus_stats_page.dart';
 import 'package:streak/features/focus/widgets/focus_duration_fields.dart';
+import 'package:streak/features/focus/widgets/focus_label_picker.dart';
 import 'package:streak/features/habits/data/habit.dart';
 import 'package:streak/features/habits/state/habits_controller.dart';
 import 'package:streak/core/express/express_button.dart';
@@ -35,6 +36,7 @@ class FocusSetupPage extends StatefulWidget {
 
 class _FocusSetupPageState extends State<FocusSetupPage> {
   late String _habitId = widget.habitId ?? '';
+  String _label = '';
   int _minutes = 25;
   bool _pomodoro = false;
   int _breakMinutes = 5;
@@ -55,22 +57,34 @@ class _FocusSetupPageState extends State<FocusSetupPage> {
 
   void _pick(Habit habit) {
     _habitId = habit.id;
+    _label = '';
     _minutes = habit.focusMinutes;
     _pomodoro = habit.focusBreakMinutes > 0;
     if (_pomodoro) _breakMinutes = habit.focusBreakMinutes;
   }
 
   void _start() {
-    context.read<SettingsController>().rememberFocusSetup(
-          _minutes,
-          _pomodoro ? _breakMinutes : 0,
-        );
+    final breakMinutes = _pomodoro ? _breakMinutes : 0;
+    final habits = context.read<HabitsController>();
+    final habit = habits.byId(_habitId);
+    if (habit == null) {
+      context
+          .read<SettingsController>()
+          .rememberFocusSetup(_minutes, breakMinutes);
+    } else if (habit.focusMinutes != _minutes ||
+        habit.focusBreakMinutes != breakMinutes) {
+      habits.update(habit.copyWith(
+        focusMinutes: _minutes,
+        focusBreakMinutes: breakMinutes,
+      ));
+    }
     AppNavigator.pop();
     AppNavigator.push(
       FocusPage(
         startHabitId: _habitId,
         startMinutes: _minutes,
-        breakMinutes: _pomodoro ? _breakMinutes : 0,
+        breakMinutes: breakMinutes,
+        startLabel: _label,
       ),
       fade: true,
       name: FocusPage.routeName,
@@ -168,7 +182,10 @@ class _FocusSetupPageState extends State<FocusSetupPage> {
                       icon: LucideIcons.timer,
                       color: context.colors.primary,
                       selected: _habitId.isEmpty,
-                      onTap: () => setState(() => _habitId = ''),
+                      onTap: () => setState(() {
+                        _habitId = '';
+                        _label = '';
+                      }),
                     ),
                   ),
                   for (var i = 0; i < habits.length; i++)
@@ -183,6 +200,22 @@ class _FocusSetupPageState extends State<FocusSetupPage> {
                         onTap: () => setState(() => _pick(habits[i])),
                       ),
                     ),
+                  const SizedBox(height: 22),
+                  Entrance(
+                    index: habits.length + 2,
+                    delay: _entrance,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _Label(context.l10n.focus_label),
+                        FocusLabelPicker(
+                          habitId: _habitId,
+                          selected: _label,
+                          onChanged: (value) => setState(() => _label = value),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 22),
                   Entrance(
                     index: habits.length + 2,

@@ -11,9 +11,12 @@ import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/routing/app_navigator.dart';
 import 'package:streak/core/utils/cover_storage.dart';
+import 'package:streak/core/utils/amount_format.dart';
 import 'package:streak/core/widgets/sheet_type.dart';
 import 'package:streak/core/widgets/cover_image.dart';
+import 'package:streak/core/widgets/time_picker.dart';
 import 'package:streak/features/habits/data/category.dart';
+import 'package:streak/features/habits/widgets/habit_time_fields.dart';
 import 'package:streak/features/settings/widgets/minimal_settings_widgets.dart';
 import 'package:streak/features/todos/data/todo.dart';
 import 'package:streak/features/todos/state/todo_tags_controller.dart';
@@ -29,23 +32,32 @@ import 'package:streak/features/todos/widgets/todo_tag_sheet.dart';
 Color notePageColor(BuildContext context, int paper) {
   if (paper < 0) return Colors.transparent;
   if (Theme.of(context).brightness == Brightness.light) return paperColor(paper);
-  return Color.lerp(context.colors.surface, paperColor(paper), 0.3)!;
+  return sheetColor(context, paper);
 }
 
 Future<bool?> openTodoEditor(
   BuildContext context, {
   Todo? todo,
   String project = '',
+  String date = '',
 }) =>
     AppNavigator.key.currentState!.push(
-      TodoNoteRoute(page: TodoEditorPage(todo: todo, project: project)),
+      TodoNoteRoute(
+        page: TodoEditorPage(todo: todo, project: project, date: date),
+      ),
     );
 
 class TodoEditorPage extends StatefulWidget {
-  const TodoEditorPage({super.key, this.todo, this.project = ''});
+  const TodoEditorPage({
+    super.key,
+    this.todo,
+    this.project = '',
+    this.date = '',
+  });
 
   final Todo? todo;
   final String project;
+  final String date;
 
   @override
   State<TodoEditorPage> createState() => _TodoEditorPageState();
@@ -71,8 +83,9 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
   late final _body = TextEditingController(text: widget.todo?.body ?? '');
   final _titleFocus = FocusNode();
   final _bodyFocus = FocusNode();
-  late String _date = widget.todo?.date ?? '';
+  late String _date = widget.todo?.date ?? widget.date;
   late int? _minutes = widget.todo?.minutes;
+  late int? _estimate = widget.todo?.estimate;
   late TodoPriority _priority = widget.todo?.priority ?? TodoPriority.none;
   late int _paper = widget.todo?.paper ?? -1;
   late String _cover = widget.todo?.cover ?? '';
@@ -174,6 +187,7 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
     final empty = text.isEmpty && steps.isEmpty && photos.isEmpty;
     final date = _date;
     final minutes = _minutes;
+    final estimate = _estimate;
     final priority = _priority;
     final tags = [..._tags];
     final project = _project;
@@ -191,6 +205,7 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
             text: text,
             date: date,
             minutes: minutes,
+            estimate: estimate,
             priority: priority,
             photos: photos,
             tags: tags,
@@ -214,6 +229,8 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
       date: date,
       minutes: minutes,
       clearMinutes: minutes == null,
+      estimate: estimate,
+      clearEstimate: estimate == null,
       priority: priority,
       photos: photos,
       tags: tags,
@@ -289,9 +306,9 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
 
   Future<void> _pickTime() async {
     final now = AppClock.now();
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _minutes == null
+    final picked = await pickTime(
+      context,
+      _minutes == null
           ? TimeOfDay(hour: now.hour, minute: 0)
           : TimeOfDay(hour: _minutes! ~/ 60, minute: _minutes! % 60),
     );
@@ -300,6 +317,12 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
       _minutes = picked.hour * 60 + picked.minute;
       if (_date.isEmpty) _date = AppClock.today().dayKey;
     });
+  }
+
+  Future<void> _pickEstimate() async {
+    final minutes = await showDurationSheet(context, minutes: _estimate ?? 0);
+    if (minutes == null || !mounted) return;
+    _edit(() => _estimate = minutes == 0 ? null : minutes);
   }
 
   Future<void> _pickPriority() => showTodoPriorityPicker(
@@ -596,6 +619,13 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
                                     ink: ink,
                                     onTap: _pickDate,
                                   ),
+                                if (_estimate != null)
+                                  _Chip(
+                                    icon: LucideIcons.hourglass,
+                                    label: formatMinutes(_estimate!.toDouble()),
+                                    ink: ink,
+                                    onTap: _pickEstimate,
+                                  ),
                                 if (project != null)
                                   _Chip(
                                     icon: CategoryIcons.resolve(project.icon),
@@ -647,6 +677,13 @@ class _TodoEditorPageState extends State<TodoEditorPage> {
                               ink: ink,
                               active: _tags.isNotEmpty,
                               onTap: _pickTags,
+                            ),
+                            _Tool(
+                              icon: LucideIcons.hourglass,
+                              label: context.l10n.todo_estimate,
+                              ink: ink,
+                              active: _estimate != null,
+                              onTap: _pickEstimate,
                             ),
                             _Tool(
                               icon: LucideIcons.flag,
@@ -759,7 +796,7 @@ class _Tool extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Semantics(
         button: true,
         label: label,
@@ -773,7 +810,7 @@ class _Tool extends StatelessWidget {
               borderRadius: BorderRadius.circular(13),
               onTap: onTap,
               child: SizedBox.square(
-                dimension: 42,
+                dimension: 40,
                 child: Icon(
                   icon,
                   size: 19,

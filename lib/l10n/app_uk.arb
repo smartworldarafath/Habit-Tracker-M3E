@@ -860,13 +860,12 @@
   "app_lock_unavailable": "На цьому телефоні не додано жодної біометрії",
   "auto_backup_folder_set": "Теку збережено",
   "archive_habit": "Архівна звичка",
-  "focus_track_limit": "До 10 треків",
+  "focus_track_limit": "До 30 треків",
   "style_minimal_desc": "Сітка звичок і налаштування згруповані у чотири розділи.",
   "focus_keep_awake": "Не вимикати екран",
   "data_sub": "Резервні копії та імпорт",
   "note_time_optional": "Час (необов’язково)",
   "focus_pause": "Призупинити",
-  "focus_track_rain": "Дощ",
   "unit_hours": "години",
   "focus_end_tasks": "{count} завдань досі не позначено.",
   "@focus_end_tasks": {
@@ -974,7 +973,6 @@
   "rest_days": "Дні відпочинку",
   "rest_days_desc": "Призупиняє її щотижня в ці дні. Ви все одно можете їх реєструвати, і вони будуть зараховані.",
   "todo_time": "Час",
-  "widget_cfg_todos_scope": "Задачі",
   "vacation_all_sub": "Ніщо не вважається пропущеним, поки вона ввімкнена",
   "currency_hint": "Символ або код",
   "money_saved": "Заощаджені гроші",
@@ -1164,7 +1162,7 @@
   "island_p_stone_pile": "Купа каміння",
   "island_p_bench": "Лавка",
   "island_reset_sub": "Усе списується, а кожен бал повертається на ваш рахунок.",
-  "last_check": "Остання перевірка",
+  "last_check": "Останній запис",
   "heatmap_rolling_sub": "Річний графік закінчується сьогодні, а не 31 грудня",
   "island_reset_go": "Почати спочатку",
   "island_how_focus": "1 за хвилину фокусування",
@@ -1264,7 +1262,7 @@
       }
     }
   },
-  "every_n_weeks": "Кожні {n} тиж.",
+  "every_n_weeks": "{n, plural, =1{Щотижня} other{Кожні {n} тиж.}}",
   "@every_n_weeks": {
     "placeholders": {
       "n": {
@@ -1272,7 +1270,7 @@
       }
     }
   },
-  "every_n_months": "Кожні {n} міс.",
+  "every_n_months": "{n, plural, =1{Щомісяця} other{Кожні {n} міс.}}",
   "@every_n_months": {
     "placeholders": {
       "n": {
@@ -1340,8 +1338,6 @@
   "focus_restart_body": "Час, який ви витратили в цьому раунді, буде втрачено.",
   "focus_end_add_time": "Додати час зосередження",
   "focus_repeat_one": "Повторювати знову",
-  "category_order": "Порядок категорій",
-  "category_order_sub": "Перетягніть їх у потрібному вам порядку",
   "category_order_empty": "Призначте звичці категорію, і вона з’явиться тут",
   "notif_streak_week": "🔥 {streak}-тижнева серія",
   "@notif_streak_week": {

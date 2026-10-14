@@ -6,6 +6,7 @@ import 'package:streak/core/widgets/number_keypad_dialog.dart';
 import 'package:streak/features/habits/data/habit.dart';
 import 'package:streak/features/habits/state/habits_controller.dart';
 import 'package:streak/features/habits/widgets/unscheduled_day_dialog.dart';
+import 'package:streak/core/extensions/color_extensions.dart';
 
 Future<void> addCustomAmount(BuildContext context, Habit habit) async {
   if (habit.kind != HabitKind.quantitative) return;
@@ -14,6 +15,7 @@ Future<void> addCustomAmount(BuildContext context, Habit habit) async {
   if (!await confirmUnscheduledDay(context, habit: habit, date: today)) return;
   if (!context.mounted) return;
 
+  final replacing = ValueNotifier(false);
   final amount = await showNumberKeypadDialog(
     context,
     title: context.l10n.quant_add_title,
@@ -21,9 +23,16 @@ Future<void> addCustomAmount(BuildContext context, Habit habit) async {
     unit: habit.unitLabel,
     decimals: true,
     clock: habit.isTimeAmount,
-    accent: habit.color,
+    accent: habit.color.shownIn(context),
+    replacing: replacing,
   );
-  if (amount == null || amount <= 0 || !context.mounted) return;
-
-  await context.read<HabitsController>().addProgress(habit.id, today, amount);
+  final replace = replacing.value;
+  replacing.dispose();
+  if (amount == null || !context.mounted) return;
+  final controller = context.read<HabitsController>();
+  if (replace) {
+    await controller.setProgress(habit.id, today, amount);
+  } else if (amount > 0) {
+    await controller.addProgress(habit.id, today, amount);
+  }
 }

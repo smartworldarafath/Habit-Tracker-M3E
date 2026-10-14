@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:streak/app/theme/app_tokens.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/widgets/app_empty_state.dart';
+import 'package:streak/core/widgets/fold_header.dart';
 import 'package:streak/core/widgets/section_label.dart';
 import 'package:streak/core/widgets/stacked_corners.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
@@ -253,78 +254,82 @@ class TodoCompletedHeader extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    final muted = context.tokens.muted;
-    return Semantics(
-      button: true,
-      expanded: expanded,
-      child: GestureDetector(
+  Widget build(BuildContext context) => FoldHeader(
+        label: context.l10n.todo_completed_count(count),
+        expanded: expanded,
         onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Row(
-            children: [
-              AnimatedRotation(
-                turns: expanded ? 0.25 : 0,
-                duration: const Duration(milliseconds: 200),
-                child: Icon(LucideIcons.chevronRight, size: 16, color: muted),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                context.l10n.todo_completed_count(count),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.1,
-                  color: muted,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+      );
 }
 
-class TodoAddButton extends StatelessWidget {
+class TodoAddButton extends StatefulWidget {
   const TodoAddButton({super.key, required this.onTap});
 
   final VoidCallback onTap;
 
   @override
+  State<TodoAddButton> createState() => _TodoAddButtonState();
+}
+
+class _TodoAddButtonState extends State<TodoAddButton> {
+  bool _down = false;
+
+  void _set(bool down) {
+    if (_down != down) setState(() => _down = down);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final scheme = context.colors;
     final minimal = context.watch<SettingsController>().isMinimalStyle;
+    final face = minimal ? scheme.onSurface : scheme.primary;
+    final ink = minimal ? scheme.surface : scheme.onPrimary;
     return Semantics(
       button: true,
       label: context.l10n.todo_new,
-      child: GestureDetector(
-        onTap: () {
-          onTap();
-        },
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: minimal ? scheme.onSurface : scheme.primary,
-            shape: minimal ? BoxShape.rectangle : BoxShape.circle,
-            borderRadius: minimal ? BorderRadius.circular(19) : null,
-            boxShadow: minimal
-                ? null
-                : [
-                    BoxShadow(
-                      color: scheme.primary.withValues(alpha: 0.34),
-                      blurRadius: 18,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-          ),
-          child: Icon(
-            LucideIcons.plus,
-            size: 24,
-            color: minimal ? scheme.surface : scheme.onPrimary,
+      child: Listener(
+        onPointerDown: (_) => _set(true),
+        onPointerUp: (_) => _set(false),
+        onPointerCancel: (_) => _set(false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedScale(
+            scale: _down ? 0.9 : 1,
+            duration: Duration(milliseconds: _down ? 90 : 320),
+            curve: _down ? Curves.easeOut : Curves.easeOutBack,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(minimal ? 19 : 21),
+                color: minimal ? face : null,
+                gradient: minimal
+                    ? null
+                    : LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color.lerp(face, Colors.white, 0.16)!, face],
+                      ),
+                border: minimal
+                    ? null
+                    : Border.all(color: Colors.white.withValues(alpha: 0.22)),
+                boxShadow: minimal
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: face.withValues(alpha: _down ? 0.2 : 0.38),
+                          blurRadius: _down ? 10 : 22,
+                          offset: Offset(0, _down ? 3 : 8),
+                        ),
+                      ],
+              ),
+              child: AnimatedRotation(
+                turns: _down ? 0.25 : 0,
+                duration: const Duration(milliseconds: 320),
+                curve: Curves.easeOutBack,
+                child: Icon(LucideIcons.plus, size: 26, color: ink),
+              ),
+            ),
           ),
         ),
       ),
@@ -383,7 +388,7 @@ class TodoProjectBar extends StatelessWidget {
     final color = project?.color ?? context.tokens.muted;
     final edge = minimal ? 22.0 : 16.0;
     return Padding(
-      padding: EdgeInsets.fromLTRB(edge, 0, edge, 10),
+      padding: EdgeInsets.fromLTRB(edge, 0, edge - 10, 2),
       child: Row(
         children: [
           Icon(
@@ -414,10 +419,10 @@ class TodoProjectBar extends StatelessWidget {
                 onTap: () => editOrDeleteTag(context, project!),
                 behavior: HitTestBehavior.opaque,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
+                  padding: const EdgeInsets.all(10),
                   child: Icon(
                     LucideIcons.ellipsis,
-                    size: 16,
+                    size: 20,
                     color: context.tokens.muted,
                   ),
                 ),
@@ -427,8 +432,8 @@ class TodoProjectBar extends StatelessWidget {
             onTap: onClear,
             behavior: HitTestBehavior.opaque,
             child: Padding(
-              padding: const EdgeInsets.all(4),
-              child: Icon(LucideIcons.x, size: 16, color: context.tokens.muted),
+              padding: const EdgeInsets.all(10),
+              child: Icon(LucideIcons.x, size: 20, color: context.tokens.muted),
             ),
           ),
         ],

@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:streak/core/utils/app_platform.dart';
@@ -29,3 +28,11 @@ bool hasSideRail(BuildContext context) =>
 
 bool isCompactRail(BuildContext context) =>
     MediaQuery.sizeOf(context).width < wideWidth;
+
+bool stackedRows(BuildContext context) =>
+    MediaQuery.sizeOf(context).width <
+    360 * MediaQuery.textScalerOf(context).scale(1);
+
+bool bareRows(BuildContext context) =>
+    MediaQuery.sizeOf(context).width <
+    240 * MediaQuery.textScalerOf(context).scale(1);

@@ -78,10 +78,17 @@ class TodosController extends ChangeNotifier {
     TodosWidgetService.syncSoon(_todos);
   }
 
+  Future<void> refresh() async {
+    if (!LocalStore.todosChangedElsewhere) return;
+    await LocalStore.reloadTodos();
+    reload();
+  }
+
   Future<Todo> create({
     required String text,
     String date = '',
     int? minutes,
+    int? estimate,
     TodoPriority priority = TodoPriority.none,
     List<String> photos = const [],
     List<String> tags = const [],
@@ -96,6 +103,7 @@ class TodosController extends ChangeNotifier {
       text: text.trim(),
       date: date,
       minutes: minutes,
+      estimate: estimate,
       priority: priority,
       photos: photos,
       tags: tags,

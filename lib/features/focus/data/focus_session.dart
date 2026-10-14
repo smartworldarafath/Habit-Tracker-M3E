@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:streak/core/extensions/date_extensions.dart';
 
 class FocusSession {
@@ -9,6 +11,7 @@ class FocusSession {
     required this.completed,
     required this.startedAt,
     this.counted = false,
+    this.label = '',
   });
 
   final String id;
@@ -18,6 +21,7 @@ class FocusSession {
   final bool completed;
   final DateTime startedAt;
   final bool counted;
+  final String label;
 
   int get minutes => seconds ~/ 60;
 
@@ -27,10 +31,11 @@ class FocusSession {
 
   List<FocusSession> split() {
     final pieces = <FocusSession>[];
-    var start = startedAt;
+    var start = startedAt.toLocal();
     var left = seconds;
     while (left > 0) {
-      final span = dayBorderAfter(start).difference(start).inSeconds;
+      final gap = dayBorderAfter(start).difference(start).inMilliseconds;
+      final span = max(1, (gap / 1000).ceil());
       if (span >= left) {
         pieces.add(_pieceOf(pieces.length + 1, start, left, last: true));
         break;
@@ -55,6 +60,7 @@ class FocusSession {
         completed: completed && last,
         startedAt: start,
         counted: counted,
+        label: label,
       );
 
   FocusSession get asCounted => FocusSession(
@@ -65,6 +71,7 @@ class FocusSession {
         completed: completed,
         startedAt: startedAt,
         counted: true,
+        label: label,
       );
 
   Map<String, dynamic> toMap() => {
@@ -75,6 +82,7 @@ class FocusSession {
         'completed': completed,
         'startedAt': startedAt.toIso8601String(),
         if (counted) 'counted': true,
+        if (label.isNotEmpty) 'label': label,
       };
 
   factory FocusSession.fromMap(Map<String, dynamic> map) => FocusSession(
@@ -86,6 +94,7 @@ class FocusSession {
         startedAt: DateTime.tryParse((map['startedAt'] ?? '') as String) ??
             DateTime.now(),
         counted: map['counted'] == true,
+        label: map['label'] is String ? map['label'] as String : '',
       );
 }
 

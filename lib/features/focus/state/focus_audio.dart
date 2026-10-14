@@ -21,6 +21,8 @@ class FocusTrack {
   Source get source =>
       asset ? AssetSource('sounds/$id') : DeviceFileSource(id);
 
+  bool get loops => asset && loopingTracks.contains(id);
+
   String encode() => '$id|$name';
 
   static FocusTrack? decode(String raw) {
@@ -63,9 +65,12 @@ const builtInTracks = <String, String>{
   'rain.mp3': 'Rain',
   'brown_noise.mp3': 'Brown noise',
   'fire.mp3': 'Fire',
+  'ticking.mp3': 'Ticking clock',
   'one_love.mp3': 'One Love',
   'i_can_find_you.mp3': 'I Can Find You',
 };
+
+const loopingTracks = {'ticking.mp3'};
 
 String builtInTrackId(String id) {
   final mp3 = id.replaceFirst(RegExp(r'\.ogg$'), '.mp3');
@@ -83,13 +88,14 @@ class FocusAudio {
   static final ValueNotifier<bool> playing = ValueNotifier(false);
   static final ValueNotifier<Duration> position = ValueNotifier(Duration.zero);
   static final ValueNotifier<Duration> length = ValueNotifier(Duration.zero);
+  static final ValueNotifier<double> volume = ValueNotifier(1);
 
   static List<FocusTrack> _queue = const [];
   static bool _shuffle = false;
   static bool _repeatOne = false;
   static bool _wired = false;
 
-  static const maxTracks = 10;
+  static const maxTracks = 30;
 
   static final trackExtensions = [
     'mp3',
@@ -137,11 +143,11 @@ class FocusAudio {
     position.value = Duration.zero;
     length.value = Duration.zero;
     await _player.setReleaseMode(
-      _repeatOne ? ReleaseMode.loop : ReleaseMode.stop,
+      _repeatOne || track.loops ? ReleaseMode.loop : ReleaseMode.stop,
     );
     current.value = track.id;
     try {
-      await _player.play(track.source);
+      await _player.play(track.source, volume: volume.value);
       playing.value = true;
     } catch (e) {
       debugPrint('Could not play the track: $e');
@@ -190,9 +196,15 @@ class FocusAudio {
     _shuffle = shuffle;
     _repeatOne = repeatOne;
     if (current.value.isEmpty) return;
+    final loops = _queue.any((t) => t.id == current.value && t.loops);
     await _player.setReleaseMode(
-      repeatOne ? ReleaseMode.loop : ReleaseMode.stop,
+      repeatOne || loops ? ReleaseMode.loop : ReleaseMode.stop,
     );
+  }
+
+  static Future<void> setVolume(double value) async {
+    volume.value = value.clamp(0.0, 1.0);
+    await _player.setVolume(volume.value);
   }
 
   static Future<void> pause() async {

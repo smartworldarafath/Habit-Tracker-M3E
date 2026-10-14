@@ -28,7 +28,9 @@ import 'package:streak/services/notification_service.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
 import 'package:streak/features/settings/widgets/minimal_settings_widgets.dart';
 import 'package:streak/services/backup_service.dart';
+import 'package:streak/services/auto_sync.dart';
 import 'package:streak/services/folder_sync.dart';
+import 'package:streak/services/home_widget_service.dart';
 import 'package:streak/services/import_service.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -36,6 +38,7 @@ import 'package:url_launcher/url_launcher.dart';
 const kGitHubUrl = 'https://github.com/smartworldarafath/Habit-Tracker-M3E';
 const kIssuesUrl = 'https://github.com/smartworldarafath/Habit-Tracker-M3E/issues';
 const kCoffeeUrl = 'https://www.supportkori.com/arafathrahman';
+const kSiteUrl = 'https://smartworldarafath.github.io/Habit-Tracker-M3E';
 
 class SettingsActions {
   const SettingsActions._();
@@ -83,25 +86,65 @@ class SettingsActions {
     }
   }
 
+  static List<String> planOptions(BuildContext context) => [
+        context.l10n.off,
+        context.l10n.plan_show_habits,
+        if (context.read<SettingsController>().todosEnabled) ...[
+          context.l10n.plan_show_todos,
+          context.l10n.plan_show_both,
+        ],
+      ];
+
+  static Future<void> pickPlan(BuildContext context) {
+    final settings = context.read<SettingsController>();
+    return showOptionSheet(
+      context,
+      title: context.l10n.plan_day,
+      options: planOptions(context),
+      index: settings.planChoice,
+      onSelected: settings.setPlanChoice,
+    );
+  }
+
+  static List<String> todoStyles(BuildContext context) => [
+        context.l10n.todo_view_list,
+        context.l10n.todo_view_papers,
+      ];
+
+  static Future<void> pickTodoStyle(BuildContext context) {
+    final settings = context.read<SettingsController>();
+    return showOptionSheet(
+      context,
+      title: context.l10n.todo_style,
+      options: todoStyles(context),
+      index: settings.todoPapers ? 1 : 0,
+      onSelected: (i) => settings.setTodoPapers(i == 1),
+    );
+  }
+
   static bool canRefresh(BuildContext context) {
     final settings = context.watch<SettingsController>();
     return settings.autoBackup > 0 && settings.autoBackupFolder.isNotEmpty;
   }
 
+  static Future<void> reloadAll(BuildContext context) async {
+    final habits = context.read<HabitsController>();
+    await habits.reload();
+    if (!context.mounted) return;
+    context.read<NotesController>().reload();
+    context.read<FocusController>().reload();
+    context.read<TodosController>().reload();
+    context.read<TodoTagsController>().reload();
+    context.read<CategoriesController>().reload();
+    await HomeWidgetService.sync(habits.asMap);
+  }
+
   static Future<void> refreshFolder(BuildContext context) async {
     final settings = context.read<SettingsController>();
-    final habits = context.read<HabitsController>();
     final brought = await LocalStore.guardWrites(FolderSync.pull);
     if (!context.mounted) return;
-    if (brought > 0) {
-      await habits.reload();
-      if (!context.mounted) return;
-      context.read<NotesController>().reload();
-      context.read<FocusController>().reload();
-      context.read<TodosController>().reload();
-      context.read<TodoTagsController>().reload();
-      context.read<CategoriesController>().reload();
-    }
+    if (brought > 0) await reloadAll(context);
+    if (!context.mounted) return;
     await settings.runAutoBackup(force: true);
     if (!context.mounted) return;
     brought > 0
@@ -114,6 +157,7 @@ class SettingsActions {
     try {
       final outcome = await controller.importFromApp();
       if (!context.mounted || outcome == null) return;
+      if (outcome.notes.isNotEmpty) context.read<NotesController>().reload();
       AppSnackbar.success(
         context,
         context.l10n.import_from_app_done(
@@ -192,6 +236,16 @@ class SettingsActions {
                 SheetTitle(
                   context.l10n.auto_backup,
                   subtitle: context.l10n.auto_backup_where,
+                  trailing: IconButton(
+                    icon: Icon(LucideIcons.circleHelp, color: context.tokens.muted),
+                    tooltip: context.l10n.sync_guide,
+                    onPressed: () => openUrl(
+                      context,
+                      Localizations.localeOf(context).languageCode == 'es'
+                          ? '$kSiteUrl/es/blog/sync-without-internet/'
+                          : '$kSiteUrl/blog/sync-without-internet/',
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 10),
                 for (var i = 0; i < 3; i++)
@@ -245,6 +299,25 @@ class SettingsActions {
                   subtitle: Text(context.l10n.readable_copy_sub),
                   value: s.readableCopy,
                   onChanged: settings.setReadableCopy,
+                ),
+                if (s.autoBackupFolder.isNotEmpty)
+                SwitchListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  secondary: Icon(
+                    LucideIcons.refreshCw,
+                    color: context.tokens.muted,
+                  ),
+                  title: Text(
+                    context.l10n.auto_sync,
+                    style: sheetOptionStyle(sheetContext, size: 15),
+                  ),
+                  subtitle: Text(context.l10n.auto_sync_sub),
+                  value: s.autoSync,
+                  onChanged: (value) async {
+                    await settings.setAutoSync(value);
+                    if (value) AutoSync.changed();
+                  },
                 ),
                 const SizedBox(height: 4),
                 SizedBox(
@@ -324,7 +397,7 @@ class SettingsActions {
     await context.read<SettingsController>().reloadFromStore();
     if (!context.mounted) return;
     AppSnackbar.success(context, context.l10n.wipe_data_done);
-    if (!AppPlatform.isLinux && !AppPlatform.isWeb) await openAppSettings();
+    if (isMobile) await openAppSettings();
   }
 
   static Future<void> toggleAppLock(BuildContext context, bool value) async {
@@ -571,6 +644,7 @@ class SettingsActions {
       'tr': 'Türkçe',
       'nl': 'Nederlands',
       'pl': 'Polski',
+      'ro': 'Română',
       'uk': 'Українська',
       'hi': 'हिन्दी',
       'id': 'Bahasa Indonesia',

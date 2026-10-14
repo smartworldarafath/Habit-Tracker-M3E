@@ -24,6 +24,7 @@ class WidgetActionService {
     await HomeWidgetService.prepare();
     final pending = await _read();
     if (pending.isEmpty) return false;
+    await _clear(pending.length);
 
     final today = AppClock.now();
     final quiet = {
@@ -53,7 +54,10 @@ class WidgetActionService {
       if (habit == null) continue;
       await LocalStore.writeHabit(habit);
       final before = quiet[id];
-      if (before == null || before == habit.silencesRemindersOn(today)) continue;
+      if (before == null ||
+          (!habit.fromLastDone && before == habit.silencesRemindersOn(today))) {
+        continue;
+      }
       try {
         await NotificationService().scheduleFor(habit);
       } catch (e) {
@@ -63,7 +67,6 @@ class WidgetActionService {
     for (final todo in ticked) {
       await LocalStore.writeTodo(todo);
     }
-    await _clear(pending.length);
     return touched.isNotEmpty || ticked.isNotEmpty;
   }
 

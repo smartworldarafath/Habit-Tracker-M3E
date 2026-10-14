@@ -15,6 +15,7 @@ import 'package:streak/features/habits/widgets/check_seal.dart';
 import 'package:streak/features/habits/widgets/reading_books.dart';
 import 'package:streak/features/habits/widgets/unscheduled_day_dialog.dart';
 import 'package:streak/features/habits/widgets/water_cup.dart';
+import 'package:streak/core/extensions/color_extensions.dart';
 
 class QuantitativeProgress extends StatelessWidget {
   const QuantitativeProgress({super.key, required this.habit});
@@ -34,10 +35,10 @@ class QuantitativeProgress extends StatelessWidget {
       title: context.l10n.quant_edit_title,
       value: current,
       unit: habit.unitLabel,
-      target: habit.perDayTarget,
+      target: habit.hasGoal ? habit.perDayTarget : null,
       decimals: true,
       clock: habit.isTimeAmount,
-      accent: habit.color,
+      accent: habit.color.shownIn(context),
     );
     if (result != null && result >= 0 && result != current && context.mounted) {
       context.read<HabitsController>().setProgress(habit.id, AppClock.now(), result);
@@ -66,17 +67,14 @@ class QuantitativeProgress extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
         child: Column(
           children: [
-            switch (habit.quantKind) {
+            switch (habit.hasGoal ? habit.quantKind : QuantKind.generic) {
               QuantKind.water =>
                 _WaterCups(count: count, target: habit.perDayTarget),
               QuantKind.reading =>
                 ReadingBooks(habit: habit, ratio: ratio, count: count),
               QuantKind.generic || QuantKind.time => _GenericRing(
-                  progress: QuantProgress.of(
-                    count: count,
-                    target: habit.perDayTarget,
-                  ),
-                  color: habit.color,
+                  progress: habit.progressFor(count),
+                  color: habit.color.shownIn(context),
                 ),
             },
             const SizedBox(height: 18),
@@ -90,9 +88,12 @@ class QuantitativeProgress extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '${habit.amountText(count)} / '
-                        '${habit.amountText(habit.perDayTarget)}'
-                        '${habit.isTimeAmount ? '' : ' ${habit.unitLabel}'}',
+                        habit.hasGoal
+                            ? '${habit.amountText(count)} / '
+                                '${habit.amountText(habit.perDayTarget)}'
+                                '${habit.isTimeAmount ? '' : ' ${habit.unitLabel}'}'
+                            : '${habit.amountText(count)}'
+                                '${habit.isTimeAmount ? '' : ' ${habit.unitLabel}'}',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
@@ -119,14 +120,14 @@ class QuantitativeProgress extends StatelessWidget {
                 _RoundActionButton(
                   icon: LucideIcons.minus,
                   label: context.l10n.a11y_decrease,
-                  color: habit.color,
+                  color: habit.color.shownIn(context),
                   onTap: count > 0 ? () => add(-habit.incrementAmount) : null,
                 ),
                 const SizedBox(width: 20),
                 _RoundActionButton(
                   icon: LucideIcons.plus,
                   label: context.l10n.a11y_increase,
-                  color: habit.color,
+                  color: habit.color.shownIn(context),
                   filled: true,
                   onTap: () => add(habit.incrementAmount),
                 ),
@@ -221,7 +222,7 @@ class _RoundActionButtonState extends State<_RoundActionButton> {
             color: disabled
                 ? color.withValues(alpha: 0.3)
                 : widget.filled
-                    ? Colors.white
+                    ? color.ink
                     : color,
           ),
         ),

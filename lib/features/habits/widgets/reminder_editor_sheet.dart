@@ -9,15 +9,21 @@ import 'package:streak/core/i18n/date_labels.dart';
 import 'package:streak/core/utils/app_snackbar.dart';
 import 'package:provider/provider.dart';
 import 'package:streak/core/widgets/app_text_field.dart';
+import 'package:streak/core/widgets/time_picker.dart';
 import 'package:streak/features/habits/data/reminder.dart';
 import 'package:streak/features/habits/widgets/minimal_form_fields.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
 import 'package:uuid/uuid.dart';
 
 class ReminderEditorSheet extends StatefulWidget {
-  const ReminderEditorSheet({super.key, this.initial});
+  const ReminderEditorSheet({
+    super.key,
+    this.initial,
+    this.followsHabit = false,
+  });
 
   final Reminder? initial;
+  final bool followsHabit;
 
   @override
   State<ReminderEditorSheet> createState() => _ReminderEditorSheetState();
@@ -34,6 +40,7 @@ class _ReminderEditorSheetState extends State<ReminderEditorSheet> {
   late bool _intervalMode;
   late int _everyDays;
   late int _everyHours;
+  TimeOfDay? _until;
   late int _snooze;
 
   @override
@@ -45,9 +52,11 @@ class _ReminderEditorSheetState extends State<ReminderEditorSheet> {
         : TimeOfDay.fromDateTime(DateTime.now().add(const Duration(minutes: 1)));
     _days = initial != null ? {...initial.days} : {1, 2, 3, 4, 5, 6, 7};
     _message = TextEditingController(text: initial?.message ?? '');
-    _intervalMode = initial?.isInterval ?? false;
+    _intervalMode = !widget.followsHabit && (initial?.isInterval ?? false);
     _everyDays = (initial != null && initial.isInterval) ? initial.everyDays : 2;
     _everyHours = initial?.everyHours ?? 0;
+    final until = initial?.untilMinute;
+    if (until != null) _until = TimeOfDay(hour: until ~/ 60, minute: until % 60);
     _snooze = initial?.snoozeMinutes ?? Reminder.defaultSnoozeMinutes;
   }
 
@@ -65,6 +74,8 @@ class _ReminderEditorSheetState extends State<ReminderEditorSheet> {
         ..addAll(days);
     });
   }
+
+  bool get _needsDays => !_intervalMode && !widget.followsHabit;
 
   bool get _customSnooze => !Reminder.snoozeChoices.contains(_snooze);
 
@@ -104,12 +115,20 @@ class _ReminderEditorSheetState extends State<ReminderEditorSheet> {
   }
 
   Future<void> _pickTime() async {
-    final picked = await showTimePicker(context: context, initialTime: _time);
+    final picked = await pickTime(context, _time);
     if (picked != null) setState(() => _time = picked);
   }
 
+  Future<void> _pickUntil() async {
+    final picked = await pickTime(
+      context,
+      _until ?? const TimeOfDay(hour: 23, minute: 0),
+    );
+    if (picked != null) setState(() => _until = picked);
+  }
+
   void _save() {
-    if (!_intervalMode && _days.isEmpty) {
+    if (_needsDays && _days.isEmpty) {
       AppSnackbar.error(context, context.l10n.select_one_day);
       return;
     }
@@ -140,6 +159,9 @@ class _ReminderEditorSheetState extends State<ReminderEditorSheet> {
         message: _message.text.trim(),
         everyDays: _intervalMode ? _everyDays : 1,
         everyHours: _intervalMode ? 0 : _everyHours,
+        untilMinute: _intervalMode || _everyHours == 0 || _until == null
+            ? null
+            : _until!.hour * 60 + _until!.minute,
         anchorEpochDay: anchor,
         snoozeMinutes: _snooze,
       ),
@@ -170,7 +192,9 @@ class _ReminderEditorSheetState extends State<ReminderEditorSheet> {
                 style: sheetTitleStyle(context),
               ),
               const SizedBox(height: 16),
-              if (minimal)
+              if (widget.followsHabit)
+                _HabitDaysNote(minimal: minimal)
+              else if (minimal)
                 Row(
                   children: [
                     for (final mode in [
@@ -214,6 +238,7 @@ class _ReminderEditorSheetState extends State<ReminderEditorSheet> {
                         onChanged: (v) => setState(() => _everyDays = v),
                       )
               else ...[
+                if (!widget.followsHabit)
                 Wrap(
                   spacing: minimal ? 7 : 8,
                   runSpacing: minimal ? 7 : 8,
@@ -236,11 +261,15 @@ class _ReminderEditorSheetState extends State<ReminderEditorSheet> {
                             ),
                   ],
                 ),
+                if (!widget.followsHabit) ...[
                 const SizedBox(height: 16),
                 Text(context.l10n.days,
                     style: sheetBodyStyle(context, size: 13)),
                 const SizedBox(height: 8),
-                if (minimal)
+                ],
+                if (widget.followsHabit)
+                  const SizedBox.shrink()
+                else if (minimal)
                   CompactWeekdays(
                     selected: _days.toList()..sort(),
                     onChanged: (days) => setState(() {
@@ -302,7 +331,7 @@ class _ReminderEditorSheetState extends State<ReminderEditorSheet> {
                   spacing: minimal ? 7 : 8,
                   runSpacing: minimal ? 7 : 8,
                   children: [
-                    for (final hours in const [0, 2, 3, 4, 6, 8, 12])
+                    for (final hours in const [0, 1, 2, 3, 4, 6, 8, 12])
                       CompactPill(
                         label: hours == 0
                             ? context.l10n.off
@@ -317,37 +346,22 @@ class _ReminderEditorSheetState extends State<ReminderEditorSheet> {
             Text(context.l10n.time,
                 style: sheetBodyStyle(context, size: 13)),
             const SizedBox(height: 8),
-            Semantics(
-              button: true,
-              child: InkWell(
-                onTap: _pickTime,
-                borderRadius: BorderRadius.circular(minimal ? 13 : 16),
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: minimal ? 14 : 16,
-                    vertical: minimal ? 13 : 16,
-                  ),
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(minimal ? 13 : 16),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        LucideIcons.clock,
-                        color: minimal ? context.tokens.muted : scheme.primary,
-                        size: minimal ? 17 : 20,
-                      ),
-                      SizedBox(width: minimal ? 11 : 12),
-                      Text(
-                        _time.format(context),
-                        style: sheetOptionStyle(context, selected: true),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            _TimeField(
+              label: _time.format(context),
+              minimal: minimal,
+              onTap: _pickTime,
             ),
+            if (!_intervalMode && _everyHours > 0) ...[
+              const SizedBox(height: 20),
+              Text(context.l10n.repeat_until,
+                  style: sheetBodyStyle(context, size: 13)),
+              const SizedBox(height: 8),
+              _TimeField(
+                label: _until?.format(context) ?? context.l10n.end_of_day,
+                minimal: minimal,
+                onTap: _pickUntil,
+              ),
+            ],
             const SizedBox(height: 20),
             Text(context.l10n.snooze_duration,
                 style: sheetBodyStyle(context, size: 13)),
@@ -399,7 +413,7 @@ class _ReminderEditorSheetState extends State<ReminderEditorSheet> {
               width: double.infinity,
               height: minimal ? 48 : 54,
               child: FilledButton(
-                onPressed: (!_intervalMode && _days.isEmpty) ? null : _save,
+                onPressed: (_needsDays && _days.isEmpty) ? null : _save,
                 style: FilledButton.styleFrom(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(minimal ? 13 : 16),
@@ -414,6 +428,37 @@ class _ReminderEditorSheetState extends State<ReminderEditorSheet> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _HabitDaysNote extends StatelessWidget {
+  const _HabitDaysNote({required this.minimal});
+
+  final bool minimal;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = context.colors.primary;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(minimal ? 13 : 16),
+      ),
+      child: Row(
+        children: [
+          Icon(LucideIcons.calendarCheck, size: 18, color: accent),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              context.l10n.reminder_habit_days_hint,
+              style: sheetBodyStyle(context, size: 13),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -590,6 +635,51 @@ class _PresetChip extends StatelessWidget {
               size: 12,
               color: context.colors.primary,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TimeField extends StatelessWidget {
+  const _TimeField({
+    required this.label,
+    required this.minimal,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool minimal;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return Semantics(
+      button: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(minimal ? 13 : 16),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: minimal ? 14 : 16,
+            vertical: minimal ? 13 : 16,
+          ),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(minimal ? 13 : 16),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                LucideIcons.clock,
+                color: minimal ? context.tokens.muted : scheme.primary,
+                size: minimal ? 17 : 20,
+              ),
+              SizedBox(width: minimal ? 11 : 12),
+              Text(label, style: sheetOptionStyle(context, selected: true)),
+            ],
           ),
         ),
       ),

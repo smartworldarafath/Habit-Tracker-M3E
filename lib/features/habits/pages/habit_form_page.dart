@@ -1,9 +1,11 @@
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:streak/app/theme/app_palette.dart';
 import 'package:streak/app/theme/app_tokens.dart';
+import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/core/extensions/inset_extensions.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/icons/habit_icons.dart';
@@ -39,9 +41,10 @@ import 'package:streak/features/settings/state/settings_controller.dart';
 import 'package:streak/services/notification_service.dart';
 
 class HabitFormPage extends StatefulWidget {
-  const HabitFormPage({super.key, this.habit});
+  const HabitFormPage({super.key, this.habit, this.template});
 
   final Habit? habit;
+  final Habit? template;
 
   bool get isEditing => habit != null;
 
@@ -64,6 +67,9 @@ class _HabitFormPageState extends State<HabitFormPage> {
   int _frequency = 1;
   List<int> _scheduleWeekdays = const [1, 3, 5];
   int _scheduleEvery = 2;
+  DateTime? _scheduleStart;
+  bool _fromLastDone = false;
+  bool _monthWeekday = false;
   ScheduleUnit _scheduleUnit = ScheduleUnit.days;
   String _cover = '';
   int _coverClarity = 100;
@@ -72,10 +78,14 @@ class _HabitFormPageState extends State<HabitFormPage> {
   HabitKind _kind = HabitKind.positive;
   QuantKind _quantKind = QuantKind.generic;
   double _quantTarget = 8;
+  bool _noGoal = false;
   double _quantIncrement = 1;
   String _bookCover = '';
   bool _focusOnly = false;
   bool _tracking = false;
+  bool _anyAmount = false;
+  bool _anySteps = false;
+  int _stepsNeeded = 1;
   int _difficulty = 0;
   int _focusMinutes = 25;
   bool _pomodoro = false;
@@ -83,8 +93,17 @@ class _HabitFormPageState extends State<HabitFormPage> {
   int _startMinute = -1;
   int _durationMinutes = 0;
   late List<Substep> _substeps;
+  late final String _opened;
 
   bool get _kindLocked => widget.isEditing;
+
+  DateTime get _startShown =>
+      (_scheduleStart ?? widget.habit?.createdAt ?? AppClock.today()).atMidnight;
+
+  bool get _copying => widget.template != null;
+
+  bool get _monthly =>
+      _scheduleUnit == ScheduleUnit.months && !_fromLastDone;
 
   bool get _planning => context.watch<SettingsController>().planningEnabled;
 
@@ -101,19 +120,21 @@ class _HabitFormPageState extends State<HabitFormPage> {
         _unitLabel.text.trim().isEmpty) {
       return false;
     }
-    if (_kind != HabitKind.negative &&
-        _interval == HabitInterval.weekdays &&
-        _scheduleWeekdays.isEmpty) {
-      return false;
-    }
+    if (_noDays) return false;
     return true;
   }
+
+  bool get _noDays =>
+      _kind != HabitKind.negative &&
+      _interval == HabitInterval.weekdays &&
+      _scheduleWeekdays.isEmpty;
 
   @override
   void initState() {
     super.initState();
-    final habit = widget.habit;
+    final habit = widget.habit ?? widget.template;
     _name = TextEditingController(text: habit?.name ?? '');
+    _name.selection = TextSelection.collapsed(offset: _name.text.length);
     _description = TextEditingController(text: habit?.description ?? '');
     _unitLabel = TextEditingController(text: habit?.unitLabel ?? '');
     _dailyCost = TextEditingController(
@@ -129,17 +150,27 @@ class _HabitFormPageState extends State<HabitFormPage> {
         _scheduleWeekdays = List.of(habit.scheduleWeekdays);
       }
       _scheduleEvery = habit.scheduleEvery;
+      _scheduleStart = habit.scheduleStart;
+      _fromLastDone = habit.fromLastDone;
+      _monthWeekday = habit.monthWeekday;
+      if (_copying && habit.interval == HabitInterval.everyXDays) {
+        _scheduleStart ??= habit.createdAt.atMidnight;
+      }
       _scheduleUnit = habit.scheduleUnit;
       _cover = habit.coverPath;
       _coverClarity = habit.coverClarity;
       _reminders = List.of(habit.reminders);
       _kind = habit.kind;
       _quantKind = habit.quantKind;
-      _quantTarget = habit.kind == HabitKind.quantitative ? habit.perDayTarget : 8;
+      _noGoal = habit.kind == HabitKind.quantitative && habit.perDayTarget <= 0;
+      _quantTarget = habit.kind == HabitKind.quantitative && !_noGoal ? habit.perDayTarget : 8;
       _quantIncrement = habit.incrementAmount;
       _bookCover = habit.bookCoverPath;
       _focusOnly = habit.focusOnly;
       _tracking = habit.tracking;
+      _anyAmount = habit.anyAmount;
+      _anySteps = habit.anySteps;
+      _stepsNeeded = habit.stepsNeeded;
       _difficulty = habit.difficulty;
       _focusMinutes = habit.focusMinutes;
       _pomodoro = habit.focusBreakMinutes > 0;
@@ -151,6 +182,61 @@ class _HabitFormPageState extends State<HabitFormPage> {
       _reminders = [];
       _substeps = [];
     }
+    _opened = _snapshot();
+  }
+
+  String _snapshot() => jsonEncode([
+        _name.text,
+        _description.text,
+        _unitLabel.text,
+        _dailyCost.text,
+        _icon,
+        _category,
+        _color.toARGB32(),
+        _interval.name,
+        _frequency,
+        _scheduleWeekdays,
+        _scheduleEvery,
+        _scheduleStart?.toIso8601String(),
+        _fromLastDone,
+        _monthWeekday,
+        _scheduleUnit.name,
+        _cover,
+        _coverClarity,
+        [for (final reminder in _reminders) reminder.toMap()],
+        _kind.name,
+        _quantKind.name,
+        _quantTarget,
+        _noGoal,
+        _quantIncrement,
+        _bookCover,
+        _focusOnly,
+        _tracking,
+        _anyAmount,
+        _anySteps,
+        _stepsNeeded,
+        _difficulty,
+        _focusMinutes,
+        _pomodoro,
+        _breakMinutes,
+        _startMinute,
+        _durationMinutes,
+        [for (final step in _substeps) step.toMap()],
+      ]);
+
+  Future<void> _close() async {
+    if (_snapshot() != _opened) {
+      final discard = await showAppConfirmDialog(
+        context,
+        title: context.l10n.discard_changes,
+        message: context.l10n.discard_changes_body,
+        confirmLabel: context.l10n.discard,
+        cancelLabel: context.l10n.keep_editing,
+        icon: LucideIcons.undo2,
+      );
+      if (discard != true || !mounted) return;
+    }
+    AppNavigator.pop();
   }
 
   @override
@@ -166,10 +252,17 @@ class _HabitFormPageState extends State<HabitFormPage> {
   void _pickUnit(ScheduleUnit unit) {
     setState(() {
       _scheduleUnit = unit;
-      final max = scheduleEveryMax(unit);
-      if (_scheduleEvery > max) _scheduleEvery = max;
+      _scheduleEvery = _scheduleEvery.clamp(
+        scheduleEveryMin(unit),
+        scheduleEveryMax(unit),
+      );
     });
   }
+
+  bool _sheetOpen = false;
+
+  bool get _remindersFollowHabit =>
+      _kind != HabitKind.negative && _interval == HabitInterval.everyXDays;
 
   void _applyQuantPreset(QuantKind preset) {
     setState(() {
@@ -207,6 +300,12 @@ class _HabitFormPageState extends State<HabitFormPage> {
         : 0.0;
     final interval = negative ? HabitInterval.daily : _interval;
     final frequency = negative ? 1 : _frequency;
+    final fromLastDone =
+        interval == HabitInterval.everyXDays && _fromLastDone;
+    final monthWeekday = interval == HabitInterval.everyXDays &&
+        _scheduleUnit == ScheduleUnit.months &&
+        !fromLastDone &&
+        _monthWeekday;
     final focusOnly = _kind == HabitKind.positive && _focusOnly;
     final substeps = _kind == HabitKind.positive && !focusOnly
         ? _substeps.where((s) => s.title.trim().isNotEmpty).toList()
@@ -225,11 +324,15 @@ class _HabitFormPageState extends State<HabitFormPage> {
           scheduleWeekdays: negative ? const [] : _scheduleWeekdays,
           scheduleEvery: negative ? 2 : _scheduleEvery,
           scheduleUnit: negative ? ScheduleUnit.days : _scheduleUnit,
+          scheduleStart: _scheduleStart,
+          clearScheduleStart: _scheduleStart == null,
+          fromLastDone: fromLastDone,
+          monthWeekday: monthWeekday,
           reminders: _reminders,
           coverPath: _cover,
           coverClarity: _coverClarity,
           dailyCost: dailyCost,
-          perDayTarget: quantitative ? _quantTarget : widget.habit!.perDayTarget,
+          perDayTarget: quantitative ? (_noGoal ? 0 : _quantTarget) : widget.habit!.perDayTarget,
           unitLabel: quantitative ? _quantUnit : widget.habit!.unitLabel,
           incrementAmount:
               quantitative ? _quantIncrement : widget.habit!.incrementAmount,
@@ -237,6 +340,9 @@ class _HabitFormPageState extends State<HabitFormPage> {
           bookCoverPath: quantitative ? _bookCover : widget.habit!.bookCoverPath,
           focusOnly: focusOnly,
           tracking: _tracking,
+          anyAmount: quantitative && _anyAmount,
+          anySteps: substeps.isNotEmpty && _anySteps,
+          stepsNeeded: _stepsNeeded.clamp(1, substeps.isEmpty ? 1 : substeps.length),
           difficulty: _difficulty,
           focusMinutes: _focusMinutes,
           focusBreakMinutes: _pomodoro ? _breakMinutes : 0,
@@ -246,6 +352,13 @@ class _HabitFormPageState extends State<HabitFormPage> {
         ),
       );
     } else {
+      final template = widget.template;
+      final cover = template != null && _cover == template.coverPath
+          ? await CoverStorage.clone(_cover)
+          : _cover;
+      final bookCover = template != null && _bookCover == template.bookCoverPath
+          ? await CoverStorage.clone(_bookCover)
+          : _bookCover;
       await controller.create(
         name: name,
         icon: _icon,
@@ -257,24 +370,31 @@ class _HabitFormPageState extends State<HabitFormPage> {
         scheduleWeekdays: negative ? const [] : _scheduleWeekdays,
         scheduleEvery: negative ? 2 : _scheduleEvery,
         scheduleUnit: negative ? ScheduleUnit.days : _scheduleUnit,
+        scheduleStart: _scheduleStart,
+        fromLastDone: fromLastDone,
+        monthWeekday: monthWeekday,
         reminders: _reminders,
-        coverPath: _cover,
+        coverPath: cover,
         coverClarity: _coverClarity,
         kind: _kind,
         dailyCost: dailyCost,
-        perDayTarget: quantitative ? _quantTarget : 1,
+        perDayTarget: quantitative ? (_noGoal ? 0 : _quantTarget) : 1,
         unitLabel: quantitative ? _quantUnit : '',
         incrementAmount: quantitative ? _quantIncrement : 1,
         quantKind: quantitative ? _quantKind : QuantKind.generic,
-        bookCoverPath: quantitative ? _bookCover : '',
+        bookCoverPath: quantitative ? bookCover : '',
         focusOnly: focusOnly,
         tracking: _tracking,
+        anyAmount: quantitative && _anyAmount,
+        anySteps: substeps.isNotEmpty && _anySteps,
+        stepsNeeded: _stepsNeeded.clamp(1, substeps.isEmpty ? 1 : substeps.length),
         difficulty: _difficulty,
         focusMinutes: _focusMinutes,
         focusBreakMinutes: _pomodoro ? _breakMinutes : 0,
         startMinute: negative ? -1 : _startMinute,
         durationMinutes: negative ? 0 : _durationMinutes,
         substeps: substeps,
+        restDays: template?.restDays ?? const [],
       );
     }
     AppNavigator.pop();
@@ -311,22 +431,29 @@ class _HabitFormPageState extends State<HabitFormPage> {
       return;
     }
     if (!mounted) return;
-    final reminder = await showModalBottomSheet<Reminder>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (_) => const ReminderEditorSheet(),
-    );
+    final reminder = await _reminderSheet(null);
     if (reminder != null) setState(() => _reminders.add(reminder));
   }
 
+  Future<Reminder?> _reminderSheet(Reminder? initial) async {
+    setState(() => _sheetOpen = true);
+    try {
+      return await showModalBottomSheet<Reminder>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (_) => ReminderEditorSheet(
+          initial: initial,
+          followsHabit: _remindersFollowHabit,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _sheetOpen = false);
+    }
+  }
+
   Future<void> _editReminder(Reminder reminder) async {
-    final updated = await showModalBottomSheet<Reminder>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (_) => ReminderEditorSheet(initial: reminder),
-    );
+    final updated = await _reminderSheet(reminder);
     if (updated == null) return;
     setState(() {
       final index = _reminders.indexWhere((r) => r.id == reminder.id);
@@ -341,7 +468,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
   @override
   Widget build(BuildContext context) {
     final style = context.watch<SettingsController>();
-    return GestureDetector(
+    final form = GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       excludeFromSemantics: true,
       child: style.isMinimalStyle
@@ -349,6 +476,13 @@ class _HabitFormPageState extends State<HabitFormPage> {
           : style.isExpressStyle
               ? _buildExpress(context)
               : _buildClassic(context),
+    );
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _close();
+      },
+      child: form,
     );
   }
 
@@ -373,7 +507,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
           child: Center(child: ExpressIconButton(
             icon: LucideIcons.x,
             tooltip: context.l10n.cancel,
-            onPressed: () => AppNavigator.pop(),
+            onPressed: _close,
           )),
         ),
         actions: [
@@ -381,7 +515,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
             Padding(
               padding: const EdgeInsets.only(right: 16),
               child: Center(child: ExpressIconButton(
-                icon: LucideIcons.trash2,
+                icon: LucideIcons.archive,
                 tint: context.tokens.danger,
                 background: context.tokens.danger.withValues(alpha: 0.14),
                 onPressed: _confirmDelete,
@@ -390,10 +524,12 @@ class _HabitFormPageState extends State<HabitFormPage> {
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: ExpressSaveBar(
-        label: context.l10n.save,
-        onPressed: _canSave ? _submit : null,
-      ),
+      floatingActionButton: _sheetOpen
+          ? null
+          : ExpressSaveBar(
+              label: context.l10n.save,
+              onPressed: _canSave ? _submit : null,
+            ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 760),
@@ -420,8 +556,15 @@ class _HabitFormPageState extends State<HabitFormPage> {
         cover: _cover,
         clarity: _coverClarity,
         controller: _name,
+        autofocus: _copying,
         onChanged: () => setState(() {}),
         onShuffleIcon: _revealLook,
+      ),
+      const SizedBox(height: 26),
+      SectionLabel(context.l10n.description),
+      AppTextField(
+        hint: context.l10n.description_hint,
+        controller: _description,
       ),
       const SizedBox(height: 26),
       SectionLabel(context.l10n.habit_kind),
@@ -445,6 +588,19 @@ class _HabitFormPageState extends State<HabitFormPage> {
           onUnitChanged: () => setState(() {}),
           onTargetChanged: (v) => setState(() => _quantTarget = v),
           onIncrementChanged: (v) => setState(() => _quantIncrement = v),
+          showGoal: !_noGoal,
+        ),
+        const SizedBox(height: 12),
+        NoGoalToggle(
+          value: _noGoal,
+          color: _color,
+          onChanged: (v) => setState(() => _noGoal = v),
+        ),
+        if (!_noGoal) const SizedBox(height: 12),
+        if (!_noGoal) AnyAmountToggle(
+          value: _anyAmount,
+          color: _color,
+          onChanged: (v) => setState(() => _anyAmount = v),
         ),
         if (_quantKind == QuantKind.reading) ...[
           const SizedBox(height: 20),
@@ -485,60 +641,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
             ),
           ],
         ],
-        if (!_focusOnly) ...[
-          const SizedBox(height: 26),
-          SectionLabel(context.l10n.checklist),
-          SubstepsEditor(
-            substeps: _substeps,
-            color: _color,
-            onChanged: (list) => _substeps = list,
-          ),
-        ],
       ],
-      if (_offersTracking) ...[
-        const SizedBox(height: 12),
-        TrackingToggle(
-          value: _tracking,
-          color: _color,
-          onChanged: (v) => setState(() => _tracking = v),
-        ),
-      ],
-      if (_offersDifficulty) ...[
-        const SizedBox(height: 12),
-        DifficultyPicker(
-          value: _difficulty,
-          color: _color,
-          onChanged: (v) => setState(() => _difficulty = v),
-        ),
-      ],
-      const SizedBox(height: 26),
-      SectionLabel(context.l10n.description),
-      AppTextField(
-        hint: context.l10n.description_hint,
-        controller: _description,
-      ),
-      const SizedBox(height: 26),
-      SectionLabel(context.l10n.icon, key: _lookAnchor),
-      IconPicker(
-        selected: _icon,
-        color: _color,
-        onSelected: (icon) => setState(() => _icon = icon),
-      ),
-      const SizedBox(height: 26),
-      SectionLabel(context.l10n.color),
-      ExpressCard(
-        padding: const EdgeInsets.all(16),
-        child: ColorPicker(
-          selected: _color,
-          onSelected: (c) => setState(() => _color = c),
-        ),
-      ),
-      const SizedBox(height: 26),
-      SectionLabel(context.l10n.category),
-      CategoryPicker(
-        selected: _category,
-        onSelected: (c) => setState(() => _category = c),
-      ),
       if (_kind != HabitKind.negative) ...[
         const SizedBox(height: 26),
         SectionLabel(context.l10n.frequency),
@@ -560,7 +663,27 @@ class _HabitFormPageState extends State<HabitFormPage> {
           onWeekdaysChanged: (days) => setState(() => _scheduleWeekdays = days),
           onEveryChanged: (v) => setState(() => _scheduleEvery = v),
           onUnitChanged: _pickUnit,
+          start: _startShown,
+          onStartChanged: (day) => setState(() => _scheduleStart = day),
         ),
+        if (_interval == HabitInterval.everyXDays) ...[
+          const SizedBox(height: 8),
+          FromLastDoneToggle(
+            value: _fromLastDone,
+            color: _color,
+            onChanged: (v) => setState(() => _fromLastDone = v),
+          ),
+          if (_monthly) ...[
+            const SizedBox(height: 8),
+            MonthWeekdayToggle(
+              value: _monthWeekday,
+              start: _startShown,
+              color: _color,
+              onChanged: (v) => setState(() => _monthWeekday = v),
+            ),
+          ],
+        ],
+        if (_noDays) const _NoDaysHint(),
       ],
       if (_kind != HabitKind.negative && _planning) ...[
         const SizedBox(height: 26),
@@ -582,11 +705,68 @@ class _HabitFormPageState extends State<HabitFormPage> {
           padding: const EdgeInsets.only(bottom: 8),
           child: ReminderTile(
             reminder: reminder,
+            followsHabit: _remindersFollowHabit,
             onEdit: () => _editReminder(reminder),
             onDelete: () => setState(() => _reminders.remove(reminder)),
           ),
         ),
       AddReminderButton(onTap: _addReminder),
+      if (_kind == HabitKind.positive && !_focusOnly) ...[
+        const SizedBox(height: 26),
+        SectionLabel(context.l10n.checklist),
+        SubstepsEditor(
+          substeps: _substeps,
+          color: _color,
+          onChanged: (list) => setState(() => _substeps = list),
+        ),
+        const SizedBox(height: 12),
+        AnyStepsToggle(
+          value: _anySteps,
+          color: _color,
+          onChanged: (v) => setState(() => _anySteps = v),
+          needed: _stepsNeeded,
+          total: _substeps.length,
+          onNeeded: (n) => setState(() => _stepsNeeded = n),
+        ),
+      ],
+      if (_offersTracking) ...[
+        const SizedBox(height: 12),
+        TrackingToggle(
+          value: _tracking,
+          color: _color,
+          onChanged: (v) => setState(() => _tracking = v),
+        ),
+      ],
+      if (_offersDifficulty) ...[
+        const SizedBox(height: 12),
+        DifficultyPicker(
+          value: _difficulty,
+          color: _color,
+          onChanged: (v) => setState(() => _difficulty = v),
+        ),
+      ],
+      const SizedBox(height: 26),
+      SectionLabel(context.l10n.category),
+      CategoryPicker(
+        selected: _category,
+        onSelected: (c) => setState(() => _category = c),
+      ),
+      const SizedBox(height: 26),
+      SectionLabel(context.l10n.icon, key: _lookAnchor),
+      IconPicker(
+        selected: _icon,
+        color: _color,
+        onSelected: (icon) => setState(() => _icon = icon),
+      ),
+      const SizedBox(height: 26),
+      SectionLabel(context.l10n.color),
+      ExpressCard(
+        padding: const EdgeInsets.all(16),
+        child: ColorPicker(
+          selected: _color,
+          onSelected: (c) => setState(() => _color = c),
+        ),
+      ),
       const SizedBox(height: 26),
       SectionLabel(context.l10n.cover_image),
       CoverPicker(
@@ -611,12 +791,12 @@ class _HabitFormPageState extends State<HabitFormPage> {
         toolbarHeight: 52,
         leading: IconButton(
           icon: const Icon(LucideIcons.x),
-          onPressed: () => AppNavigator.pop(),
+          onPressed: _close,
         ),
         actions: [
           if (widget.isEditing)
             IconButton(
-              icon: Icon(LucideIcons.trash2, color: context.tokens.danger),
+              icon: Icon(LucideIcons.archive, color: context.tokens.danger),
               onPressed: _confirmDelete,
             ),
           TextButton(
@@ -651,6 +831,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
       AppTextField(
         hint: context.l10n.name_hint,
         controller: _name,
+        autofocus: _copying,
         onChanged: (_) => setState(() {}),
       ),
       const SizedBox(height: 16),
@@ -710,8 +891,8 @@ class _HabitFormPageState extends State<HabitFormPage> {
                   onChanged: (_) => setState(() {}),
                 ),
               ],
-              const SizedBox(height: 10),
-              CompactStepperRow(
+              if (!_noGoal) const SizedBox(height: 10),
+              if (!_noGoal) CompactStepperRow(
                 label: context.l10n.quant_daily_goal,
                 value: _quantTarget,
                 unit: _quantUnit,
@@ -736,6 +917,20 @@ class _HabitFormPageState extends State<HabitFormPage> {
               ),
             ],
           ),
+        ),
+        const SizedBox(height: 16),
+        NoGoalToggle(
+          value: _noGoal,
+          color: _color,
+          compact: true,
+          onChanged: (v) => setState(() => _noGoal = v),
+        ),
+        if (!_noGoal) const SizedBox(height: 16),
+        if (!_noGoal) AnyAmountToggle(
+          value: _anyAmount,
+          color: _color,
+          compact: true,
+          onChanged: (v) => setState(() => _anyAmount = v),
         ),
         if (_quantKind == QuantKind.reading) ...[
           const SizedBox(height: 16),
@@ -778,67 +973,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
             ),
           ],
         ],
-        if (!_focusOnly) ...[
-          const SizedBox(height: 16),
-          SectionLabel(context.l10n.checklist),
-          CompactSubstepsEditor(
-            substeps: _substeps,
-            color: _color,
-            onChanged: (list) => _substeps = list,
-          ),
-        ],
       ],
-      if (_offersTracking) ...[
-        const SizedBox(height: 16),
-        TrackingToggle(
-          value: _tracking,
-          color: _color,
-          compact: true,
-          onChanged: (v) => setState(() => _tracking = v),
-        ),
-      ],
-      if (_offersDifficulty) ...[
-        const SizedBox(height: 16),
-        DifficultyPicker(
-          value: _difficulty,
-          color: _color,
-          compact: true,
-          onChanged: (v) => setState(() => _difficulty = v),
-        ),
-      ],
-      const SizedBox(height: 16),
-      SectionLabel(context.l10n.icon),
-      CompactIconPicker(
-        selected: _icon,
-        color: _color,
-        onSelected: (icon) => setState(() => _icon = icon),
-      ),
-      const SizedBox(height: 16),
-      SectionLabel(context.l10n.color),
-      CompactColorPicker(
-        selected: _color,
-        onSelected: (c) => setState(() => _color = c),
-      ),
-      const SizedBox(height: 16),
-      SectionLabel(context.l10n.cover_image),
-      CompactCover(
-        path: _cover,
-        clarity: _coverClarity,
-        onPick: _pickCover,
-        onRemove: () => setState(() => _cover = ''),
-      ),
-      if (_cover.isNotEmpty)
-        CoverClarity(
-          value: _coverClarity,
-          color: _color,
-          onChanged: (value) => setState(() => _coverClarity = value),
-        ),
-      const SizedBox(height: 16),
-      SectionLabel(context.l10n.category),
-      CompactCategoryPicker(
-        selected: _category,
-        onSelected: (c) => setState(() => _category = c),
-      ),
       if (_kind != HabitKind.negative) ...[
         const SizedBox(height: 16),
         SectionLabel(context.l10n.frequency),
@@ -880,16 +1015,39 @@ class _HabitFormPageState extends State<HabitFormPage> {
           CompactStepperRow(
             label: scheduleEveryLabel(context, _scheduleEvery, _scheduleUnit),
             value: _scheduleEvery.toDouble(),
-            min: 2,
+            min: scheduleEveryMin(_scheduleUnit).toDouble(),
             max: scheduleEveryMax(_scheduleUnit).toDouble(),
             onChanged: (v) => setState(() => _scheduleEvery = v.round()),
           ),
+          const SizedBox(height: 8),
+          ScheduleStartRow(
+            start: _startShown,
+            onChanged: (day) => setState(() => _scheduleStart = day),
+          ),
+          const SizedBox(height: 8),
+          FromLastDoneToggle(
+            value: _fromLastDone,
+            color: _color,
+            compact: true,
+            onChanged: (v) => setState(() => _fromLastDone = v),
+          ),
+          if (_monthly) ...[
+            const SizedBox(height: 8),
+            MonthWeekdayToggle(
+              value: _monthWeekday,
+              start: _startShown,
+              color: _color,
+              compact: true,
+              onChanged: (v) => setState(() => _monthWeekday = v),
+            ),
+          ],
         ] else if (_interval == HabitInterval.weekdays) ...[
           const SizedBox(height: 12),
           CompactWeekdays(
             selected: _scheduleWeekdays,
             onChanged: (days) => setState(() => _scheduleWeekdays = days),
           ),
+          if (_noDays) const _NoDaysHint(),
         ],
       ],
       if (_kind != HabitKind.negative && _planning) ...[
@@ -913,11 +1071,82 @@ class _HabitFormPageState extends State<HabitFormPage> {
           padding: const EdgeInsets.only(bottom: 7),
           child: CompactReminderRow(
             reminder: reminder,
+            followsHabit: _remindersFollowHabit,
             onEdit: () => _editReminder(reminder),
             onDelete: () => setState(() => _reminders.remove(reminder)),
           ),
         ),
       CompactAddButton(label: context.l10n.add_reminder, onTap: _addReminder),
+      if (_kind == HabitKind.positive && !_focusOnly) ...[
+        const SizedBox(height: 16),
+        SectionLabel(context.l10n.checklist),
+        CompactSubstepsEditor(
+          substeps: _substeps,
+          color: _color,
+          onChanged: (list) => setState(() => _substeps = list),
+        ),
+        const SizedBox(height: 16),
+        AnyStepsToggle(
+          value: _anySteps,
+          color: _color,
+          compact: true,
+          onChanged: (v) => setState(() => _anySteps = v),
+          needed: _stepsNeeded,
+          total: _substeps.length,
+          onNeeded: (n) => setState(() => _stepsNeeded = n),
+        ),
+      ],
+      if (_offersTracking) ...[
+        const SizedBox(height: 16),
+        TrackingToggle(
+          value: _tracking,
+          color: _color,
+          compact: true,
+          onChanged: (v) => setState(() => _tracking = v),
+        ),
+      ],
+      if (_offersDifficulty) ...[
+        const SizedBox(height: 16),
+        DifficultyPicker(
+          value: _difficulty,
+          color: _color,
+          compact: true,
+          onChanged: (v) => setState(() => _difficulty = v),
+        ),
+      ],
+      const SizedBox(height: 16),
+      SectionLabel(context.l10n.category),
+      CompactCategoryPicker(
+        selected: _category,
+        onSelected: (c) => setState(() => _category = c),
+      ),
+      const SizedBox(height: 16),
+      SectionLabel(context.l10n.icon),
+      CompactIconPicker(
+        selected: _icon,
+        color: _color,
+        onSelected: (icon) => setState(() => _icon = icon),
+      ),
+      const SizedBox(height: 16),
+      SectionLabel(context.l10n.color),
+      CompactColorPicker(
+        selected: _color,
+        onSelected: (c) => setState(() => _color = c),
+      ),
+      const SizedBox(height: 16),
+      SectionLabel(context.l10n.cover_image),
+      CompactCover(
+        path: _cover,
+        clarity: _coverClarity,
+        onPick: _pickCover,
+        onRemove: () => setState(() => _cover = ''),
+      ),
+      if (_cover.isNotEmpty)
+        CoverClarity(
+          value: _coverClarity,
+          color: _color,
+          onChanged: (value) => setState(() => _coverClarity = value),
+        ),
     ];
   }
 
@@ -948,12 +1177,12 @@ class _HabitFormPageState extends State<HabitFormPage> {
           title: Text(title),
           leading: IconButton(
             icon: const Icon(LucideIcons.x),
-            onPressed: () => AppNavigator.pop(),
+            onPressed: _close,
           ),
           actions: [
             if (widget.isEditing)
               IconButton(
-                icon: Icon(LucideIcons.trash2, color: context.tokens.danger),
+                icon: Icon(LucideIcons.archive, color: context.tokens.danger),
                 onPressed: _confirmDelete,
               ),
             TextButton(
@@ -980,6 +1209,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
             AppTextField(
               hint: context.l10n.name_hint,
               controller: _name,
+              autofocus: _copying,
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 20),
@@ -1006,6 +1236,19 @@ class _HabitFormPageState extends State<HabitFormPage> {
                 onUnitChanged: () => setState(() {}),
                 onTargetChanged: (v) => setState(() => _quantTarget = v),
                 onIncrementChanged: (v) => setState(() => _quantIncrement = v),
+                showGoal: !_noGoal,
+              ),
+              const SizedBox(height: 12),
+              NoGoalToggle(
+                value: _noGoal,
+                color: _color,
+                onChanged: (v) => setState(() => _noGoal = v),
+              ),
+              if (!_noGoal) const SizedBox(height: 12),
+              if (!_noGoal) AnyAmountToggle(
+                value: _anyAmount,
+                color: _color,
+                onChanged: (v) => setState(() => _anyAmount = v),
               ),
               if (_quantKind == QuantKind.reading) ...[
                 const SizedBox(height: 20),
@@ -1048,15 +1291,96 @@ class _HabitFormPageState extends State<HabitFormPage> {
                   ),
                 ],
               ],
-              if (!_focusOnly) ...[
-                const SizedBox(height: 20),
-                SectionLabel(context.l10n.checklist),
-                SubstepsEditor(
-                  substeps: _substeps,
+            ],
+            if (_kind != HabitKind.negative) ...[
+              const SizedBox(height: 20),
+              SectionLabel(context.l10n.frequency),
+              IntervalSelector(
+                interval: _interval,
+                frequency: _frequency,
+                weekdays: _scheduleWeekdays,
+                every: _scheduleEvery,
+                unit: _scheduleUnit,
+                onIntervalChanged: (interval) => setState(() {
+                  _interval = interval;
+                  _frequency = switch (interval) {
+                    HabitInterval.weekly => 3,
+                    HabitInterval.monthly => 10,
+                    _ => 1,
+                  };
+                }),
+                onFrequencyChanged: (value) =>
+                    setState(() => _frequency = value),
+                onWeekdaysChanged: (days) =>
+                    setState(() => _scheduleWeekdays = days),
+                onEveryChanged: (v) => setState(() => _scheduleEvery = v),
+                onUnitChanged: _pickUnit,
+                start: _startShown,
+                onStartChanged: (day) => setState(() => _scheduleStart = day),
+              ),
+              if (_interval == HabitInterval.everyXDays) ...[
+                const SizedBox(height: 8),
+                FromLastDoneToggle(
+                  value: _fromLastDone,
                   color: _color,
-                  onChanged: (list) => _substeps = list,
+                  onChanged: (v) => setState(() => _fromLastDone = v),
                 ),
+                if (_monthly) ...[
+                  const SizedBox(height: 8),
+                  MonthWeekdayToggle(
+                    value: _monthWeekday,
+                    start: _startShown,
+                    color: _color,
+                    onChanged: (v) => setState(() => _monthWeekday = v),
+                  ),
+                ],
               ],
+              if (_noDays) const _NoDaysHint(),
+            ],
+            if (_kind != HabitKind.negative && _planning) ...[
+              const SizedBox(height: 20),
+              SectionLabel(context.l10n.habit_time),
+              HabitTimeFields(
+                startMinute: _startMinute,
+                durationMinutes: _durationMinutes,
+                color: _color,
+                onChanged: (start, duration) => setState(() {
+                  _startMinute = start;
+                  _durationMinutes = duration;
+                }),
+              ),
+            ],
+            const SizedBox(height: 20),
+            SectionLabel(context.l10n.reminders),
+            for (final reminder in _reminders)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: ReminderTile(
+                  reminder: reminder,
+                  followsHabit: _remindersFollowHabit,
+                  onEdit: () => _editReminder(reminder),
+                  onDelete: () =>
+                      setState(() => _reminders.remove(reminder)),
+                ),
+              ),
+            AddReminderButton(onTap: _addReminder),
+            if (_kind == HabitKind.positive && !_focusOnly) ...[
+              const SizedBox(height: 20),
+              SectionLabel(context.l10n.checklist),
+              SubstepsEditor(
+                substeps: _substeps,
+                color: _color,
+                onChanged: (list) => setState(() => _substeps = list),
+              ),
+              const SizedBox(height: 12),
+              AnyStepsToggle(
+                value: _anySteps,
+                color: _color,
+                onChanged: (v) => setState(() => _anySteps = v),
+                needed: _stepsNeeded,
+                total: _substeps.length,
+                onNeeded: (n) => setState(() => _stepsNeeded = n),
+              ),
             ],
             if (_offersTracking) ...[
               const SizedBox(height: 20),
@@ -1074,6 +1398,12 @@ class _HabitFormPageState extends State<HabitFormPage> {
                 onChanged: (v) => setState(() => _difficulty = v),
               ),
             ],
+            const SizedBox(height: 20),
+            SectionLabel(context.l10n.category),
+            CategoryPicker(
+              selected: _category,
+              onSelected: (c) => setState(() => _category = c),
+            ),
             const SizedBox(height: 20),
             SectionLabel(context.l10n.icon),
             IconPicker(
@@ -1107,66 +1437,37 @@ class _HabitFormPageState extends State<HabitFormPage> {
                 color: _color,
                 onChanged: (value) => setState(() => _coverClarity = value),
               ),
-            const SizedBox(height: 20),
-            SectionLabel(context.l10n.category),
-            CategoryPicker(
-              selected: _category,
-              onSelected: (c) => setState(() => _category = c),
-            ),
-            if (_kind != HabitKind.negative) ...[
-              const SizedBox(height: 20),
-              SectionLabel(context.l10n.frequency),
-              IntervalSelector(
-                interval: _interval,
-                frequency: _frequency,
-                weekdays: _scheduleWeekdays,
-                every: _scheduleEvery,
-                unit: _scheduleUnit,
-                onIntervalChanged: (interval) => setState(() {
-                  _interval = interval;
-                  _frequency = switch (interval) {
-                    HabitInterval.weekly => 3,
-                    HabitInterval.monthly => 10,
-                    _ => 1,
-                  };
-                }),
-                onFrequencyChanged: (value) =>
-                    setState(() => _frequency = value),
-                onWeekdaysChanged: (days) =>
-                    setState(() => _scheduleWeekdays = days),
-                onEveryChanged: (v) => setState(() => _scheduleEvery = v),
-                onUnitChanged: _pickUnit,
-              ),
-            ],
-            if (_kind != HabitKind.negative && _planning) ...[
-              const SizedBox(height: 20),
-              SectionLabel(context.l10n.habit_time),
-              HabitTimeFields(
-                startMinute: _startMinute,
-                durationMinutes: _durationMinutes,
-                color: _color,
-                onChanged: (start, duration) => setState(() {
-                  _startMinute = start;
-                  _durationMinutes = duration;
-                }),
-              ),
-            ],
-            const SizedBox(height: 20),
-            SectionLabel(context.l10n.reminders),
-            for (final reminder in _reminders)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: ReminderTile(
-                  reminder: reminder,
-                  onEdit: () => _editReminder(reminder),
-                  onDelete: () =>
-                      setState(() => _reminders.remove(reminder)),
-                ),
-              ),
-            AddReminderButton(onTap: _addReminder),
             const SizedBox(height: 24),
           ],
         ),
+    );
+  }
+}
+
+class _NoDaysHint extends StatelessWidget {
+  const _NoDaysHint();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.tokens.danger;
+    return Padding(
+      padding: const EdgeInsets.only(top: 10, left: 4),
+      child: Row(
+        children: [
+          Icon(LucideIcons.circleAlert, size: 15, color: color),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              context.l10n.pick_one_day,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

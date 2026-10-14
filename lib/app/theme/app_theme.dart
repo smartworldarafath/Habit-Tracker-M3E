@@ -10,11 +10,21 @@ class AppTheme {
   const AppTheme._();
 
   static const _fontFamily = 'Figtree';
+  static const classicFont = 'GoogleSansRounded';
+
+  static bool isClassic(BuildContext context) =>
+      Theme.of(context).textTheme.bodyMedium?.fontFamily == classicFont;
 
   static ThemeData light([Color? accent, int style = 0]) =>
       _build(Brightness.light, accent ?? AppPalette.brand, style);
   static ThemeData dark([Color? accent, int style = 0]) =>
       _build(Brightness.dark, accent ?? AppPalette.brand, style);
+
+  static BorderSide cardEdge(bool isDark) => BorderSide(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.06)
+            : Colors.black.withValues(alpha: 0.05),
+      );
 
   static Color adaptAccent(Color accent, bool isDark) {
     final luminance = accent.computeLuminance();
@@ -35,7 +45,7 @@ class AppTheme {
       systemNavigationBarColor: Colors.transparent,
       systemNavigationBarDividerColor: Colors.transparent,
       systemNavigationBarIconBrightness: icons,
-      systemNavigationBarContrastEnforced: false,
+      systemNavigationBarContrastEnforced: true,
     );
   }
 
@@ -120,6 +130,7 @@ class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
+        constraints: const BoxConstraints(minWidth: 280, maxWidth: paneWidth),
         backgroundColor: scheme.surfaceContainerHigh,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(34)),
@@ -157,6 +168,7 @@ class AppTheme {
     final isDark = brightness == Brightness.dark;
     final minimal = style == 1;
     final accent = adaptAccent(seed, isDark);
+    final font = minimal ? _fontFamily : classicFont;
 
     final scheme = ColorScheme.fromSeed(
       seedColor: accent,
@@ -175,7 +187,7 @@ class AppTheme {
           : (minimal ? const Color(0xFFEFEFF2) : const Color(0xFFEDEDF2)),
       surfaceContainerHighest: isDark
           ? (minimal ? AppPalette.paperDarkRaised : AppPalette.darkElevated)
-          : (minimal ? const Color(0xFFE9E9EC) : const Color(0xFFEFEFF4)),
+          : (minimal ? const Color(0xFFE9E9EC) : const Color(0xFFE4E4EC)),
       outlineVariant: isDark
           ? (minimal ? const Color(0xFF272727) : AppPalette.darkBorder)
           : (minimal ? const Color(0xFFE4E4E8) : const Color(0xFFD9D9E0)),
@@ -191,7 +203,7 @@ class AppTheme {
       colorScheme: scheme,
 
       scaffoldBackgroundColor: Colors.transparent,
-      fontFamily: _fontFamily,
+      fontFamily: font,
       visualDensity: VisualDensity.standard,
       splashFactory: NoSplash.splashFactory,
       extensions: [isDark ? AppTokens.dark : AppTokens.light],
@@ -203,7 +215,7 @@ class AppTheme {
         systemOverlayStyle: systemBars(brightness),
         foregroundColor: scheme.onSurface,
         titleTextStyle: TextStyle(
-          fontFamily: _fontFamily,
+          fontFamily: font,
           fontSize: 26,
           fontWeight: FontWeight.w800,
           color: scheme.onSurface,
@@ -211,10 +223,13 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: cardColor,
-        elevation: 0,
+        elevation: minimal || isDark ? 0 : 1,
+        shadowColor: Colors.black.withValues(alpha: 0.35),
+        surfaceTintColor: Colors.transparent,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
+          side: minimal ? BorderSide.none : cardEdge(isDark),
         ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
@@ -228,6 +243,7 @@ class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
+        constraints: const BoxConstraints(minWidth: 280, maxWidth: paneWidth),
         backgroundColor: cardColor,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
@@ -236,7 +252,7 @@ class AppTheme {
         titleTextStyle: minimal
             ? MinimalType.display(22, color: scheme.onSurface)
             : TextStyle(
-                fontFamily: _fontFamily,
+                fontFamily: classicFont,
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
                 color: scheme.onSurface,

@@ -38,6 +38,9 @@ class BackupData {
     required this.skipped,
     this.exportedAt,
     this.settings = const {},
+    this.device = '',
+    this.changes = const {},
+    this.deleted = const {},
   });
 
   final List<Habit> habits;
@@ -49,6 +52,9 @@ class BackupData {
   final int skipped;
   final DateTime? exportedAt;
   final Map<String, Object?> settings;
+  final String device;
+  final Map<String, int> changes;
+  final Map<String, int> deleted;
 
   bool get isEmpty =>
       habits.isEmpty && notes.isEmpty && focus.isEmpty && todos.isEmpty;
@@ -61,6 +67,9 @@ class BackupService {
         'app': 'streak',
         'version': _kBackupVersion,
         'exportedAt': DateTime.now().toIso8601String(),
+        'device': LocalStore.deviceId,
+        'changes': LocalStore.changes,
+        'deleted': LocalStore.deleted,
         'habits': habits.map((h) => h.toMap()).toList(),
         'categories':
             LocalStore.readCategories().map((c) => c.toMap()).toList(),
@@ -135,6 +144,7 @@ class BackupService {
   static Future<String?> runAuto({
     String folder = '',
     bool readable = true,
+    bool archive = true,
   }) async {
     try {
       final habits = LocalStore.readHabits().values.toList();
@@ -144,7 +154,7 @@ class BackupService {
       if (!dir.existsSync()) await dir.create(recursive: true);
 
       final stamp = DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now());
-      final base = '${dir.path}/streak_backup_$stamp';
+      final base = '${dir.path}/streak_backup_${stamp}_${LocalStore.deviceId}';
       final payload = _payload(habits);
       final json = await Isolate.run(
         () => const JsonEncoder.withIndent('  ').convert(payload),
@@ -152,9 +162,11 @@ class BackupService {
       await _settle(File('$base.json.part'), '$base.json', (part) async {
         await part.writeAsString(json, flush: true);
       });
-      await _settle(File('$base.zip.part'), '$base.zip', (part) async {
-        await BackupArchive.pack(payload, part.path);
-      });
+      if (archive) {
+        await _settle(File('$base.zip.part'), '$base.zip', (part) async {
+          await BackupArchive.pack(payload, part.path);
+        });
+      }
 
       if (readable) {
         try {
@@ -327,9 +339,21 @@ class BackupService {
       settings: root['settings'] is Map
           ? Map<String, Object?>.from(root['settings'] as Map)
           : const {},
+      device: root['device'] is String ? root['device'] as String : '',
+      changes: _stamps(root['changes']),
+      deleted: _stamps(root['deleted']),
     );
 
-    if (data.isEmpty) throw Exception('No habits found in that file');
+    if (data.isEmpty && data.deleted.isEmpty) {
+      throw Exception('No habits found in that file');
+    }
     return data;
   }
+
+  static Map<String, int> _stamps(Object? source) => source is Map
+      ? {
+          for (final entry in source.entries)
+            if (entry.value is int) '${entry.key}': entry.value as int,
+        }
+      : const {};
 }

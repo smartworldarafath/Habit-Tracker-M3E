@@ -204,7 +204,7 @@
       }
     }
   },
-  "every_n_weeks": "每 {n} 周",
+  "every_n_weeks": "{n, plural, =1{每周} other{每 {n} 周}}",
   "@every_n_weeks": {
     "placeholders": {
       "n": {
@@ -212,7 +212,7 @@
       }
     }
   },
-  "every_n_months": "每 {n} 个月",
+  "every_n_months": "{n, plural, =1{每月} other{每 {n} 个月}}",
   "@every_n_months": {
     "placeholders": {
       "n": {
@@ -890,7 +890,7 @@
   "auto_backup_folder_set": "文件夹已保存",
   "widget_open_to_sync": "打开 Streak 进行同步",
   "archive_habit": "归档习惯",
-  "focus_track_limit": "最多 10 首音频",
+  "focus_track_limit": "最多 30 首音频",
   "style_minimal_desc": "习惯网格和设置被分为四个板块。",
   "focus_keep_awake": "保持屏幕常亮",
   "data_sub": "备份与导入",
@@ -900,7 +900,6 @@
   "widget_cfg_dark_color": "深色主题",
   "widget_cfg_light_color": "浅色主题",
   "focus_pause": "暂停",
-  "focus_track_rain": "雨声",
   "unit_hours": "小时",
   "focus_end_tasks": "还有 {count} 项任务未勾选。",
   "@focus_end_tasks": {
@@ -1018,7 +1017,6 @@
     "description": "Screen reader label for a colour swatch in the picker"
   },
   "report_issue": "报告问题",
-  "widget_cfg_todos_scope": "任务",
   "todo_time": "时间",
   "vacation_all_sub": "开启后，任何习惯都不会算作未完成",
   "currency_hint": "符号或代码",

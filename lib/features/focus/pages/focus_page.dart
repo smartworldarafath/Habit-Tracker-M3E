@@ -10,6 +10,7 @@ import 'package:streak/app/theme/app_tokens.dart';
 import 'package:streak/core/express/express_motion.dart';
 import 'package:streak/core/express/express_switch.dart';
 import 'package:streak/core/express/express_surface.dart';
+import 'package:streak/core/extensions/color_extensions.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/widgets/sheet_type.dart';
@@ -17,6 +18,7 @@ import 'package:streak/core/routing/app_navigator.dart';
 import 'package:streak/core/utils/app_snackbar.dart';
 import 'package:streak/core/widgets/app_confirm_dialog.dart';
 import 'package:streak/core/utils/cover_storage.dart';
+import 'package:streak/core/utils/app_dirs.dart';
 import 'package:streak/core/utils/responsive.dart';
 import 'package:streak/core/widgets/delete_sheet.dart';
 import 'package:streak/features/focus/data/focus_session.dart';
@@ -26,14 +28,16 @@ import 'package:streak/features/focus/state/focus_controller.dart';
 import 'package:streak/core/widgets/celebration_overlay.dart';
 import 'package:streak/features/focus/widgets/focus_backgrounds.dart';
 import 'package:streak/features/focus/widgets/focus_end_dialog.dart';
-import 'package:streak/features/focus/widgets/focus_island.dart';
 import 'package:streak/features/focus/widgets/focus_task_lists.dart';
 import 'package:streak/features/focus/widgets/focus_video_scene.dart';
 import 'package:streak/features/focus/widgets/music_sheet.dart';
 import 'package:streak/features/focus/widgets/timer_clocks.dart';
+import 'package:streak/core/widgets/morph_menu.dart';
 import 'package:streak/features/habits/data/habit.dart';
 import 'package:streak/features/habits/state/habits_controller.dart';
+import 'package:streak/features/settings/settings_actions.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
+import 'package:streak/services/desktop_window.dart';
 import 'package:streak/services/notification_service.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -43,11 +47,13 @@ class FocusPage extends StatefulWidget implements FullWidthPage {
     this.startHabitId,
     this.startMinutes,
     this.breakMinutes,
+    this.startLabel = '',
   });
 
   final String? startHabitId;
   final int? startMinutes;
   final int? breakMinutes;
+  final String startLabel;
 
   static const routeName = 'focus';
 
@@ -69,7 +75,6 @@ class _FocusPageState extends State<FocusPage> {
   void initState() {
     super.initState();
     _focus.completedTick.addListener(_celebrate);
-    FocusIsland.pages.value++;
     if (context.read<SettingsController>().focusKeepAwake) {
       WakelockPlus.enable();
     }
@@ -87,6 +92,7 @@ class _FocusPageState extends State<FocusPage> {
         habitId: widget.startHabitId ?? '',
         targetMinutes: widget.startMinutes!,
         breakMinutes: widget.breakMinutes ?? 0,
+        label: widget.startLabel,
       );
       unawaited(_startSavedTrack());
     });
@@ -133,11 +139,11 @@ class _FocusPageState extends State<FocusPage> {
   @override
   void dispose() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    if (_immersive) DesktopWindow.setFullscreen(false);
     WakelockPlus.disable();
     _lead?.cancel();
     _confetti.dispose();
     _focus.completedTick.removeListener(_celebrate);
-    FocusIsland.pages.value--;
     super.dispose();
   }
 
@@ -157,10 +163,15 @@ class _FocusPageState extends State<FocusPage> {
 
   void _toggleRunning() {
     if (!_focus.isActive || _leadValue > 0) return;
-    if (_focus.isAwaiting) {
+    if (_focus.isFinished) {
+      _confirmStop();
+      return;
+    }
+    if (_focus.isAwaiting || _focus.switchIn > 0) {
       _focus.continueNow();
       return;
     }
+    HapticFeedback.selectionClick();
     _focus.isRunning ? _focus.pause() : _focus.resume();
   }
 
@@ -179,6 +190,7 @@ class _FocusPageState extends State<FocusPage> {
 
   void _toggleImmersive() {
     setState(() => _immersive = !_immersive);
+    DesktopWindow.setFullscreen(_immersive);
     SystemChrome.setEnabledSystemUIMode(
       _immersive || _big ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge,
     );
@@ -192,6 +204,7 @@ class _FocusPageState extends State<FocusPage> {
   Future<void> _confirmStop() async {
     final focus = context.read<FocusController>();
     final habits = context.read<HabitsController>();
+    final settings = context.read<SettingsController>();
     final habit = focus.habitId.isEmpty ? null : habits.byId(focus.habitId);
     final reached = focus.reachedTarget || focus.isFlow;
     final checked =
@@ -208,6 +221,8 @@ class _FocusPageState extends State<FocusPage> {
       else
         context.l10n.focus_end_short(formatHoursShort(focus.remainingSeconds)),
       if (pending > 0) context.l10n.focus_end_tasks(pending),
+      if (!reached && focus.isPomodoro && !focus.isBreak && settings.focusWholeRounds)
+        context.l10n.focus_end_drop,
     ];
 
     final result = await showDialog<String>(
@@ -216,7 +231,7 @@ class _FocusPageState extends State<FocusPage> {
         reached: reached,
         addsTime: habit?.isTimeAmount ?? false,
         lines: lines,
-        accent: habit?.color ?? Theme.of(dialog).colorScheme.primary,
+        accent: habit?.color.shownIn(dialog) ?? Theme.of(dialog).colorScheme.primary,
       ),
     );
     if (result == null || !mounted) return;
@@ -257,6 +272,12 @@ class _FocusPageState extends State<FocusPage> {
     final starting = leading && !focus.isActive;
     final habitId = starting ? (widget.startHabitId ?? '') : focus.habitId;
     final habit = habitId.isEmpty ? null : habits.byId(habitId);
+    final tag = starting ? widget.startLabel : focus.label;
+    final title = tag.isEmpty
+        ? (habit?.name ?? context.l10n.focus)
+        : habit == null
+        ? tag
+        : '${habit.name} · $tag';
     final leadMinutes =
         starting ? (widget.startMinutes ?? focus.targetMinutes) : focus.targetMinutes;
     final inset = MediaQuery.viewInsetsOf(context).bottom;
@@ -270,9 +291,16 @@ class _FocusPageState extends State<FocusPage> {
 
     final style = ClockStyle
         .values[settings.focusClockStyle.clamp(0, ClockStyle.values.length - 1)];
-    final label = focus.isBreak
-        ? context.l10n.focus_break
-        : (habit?.name ?? context.l10n.focus);
+    final onBreak = context.select<FocusController, bool>((f) => f.isBreak);
+    final longBreak = context.select<FocusController, bool>((f) => f.isLongBreak);
+    final switchIn = context.select<FocusController, int>((f) => f.switchIn);
+    final label = switchIn > 0
+        ? (onBreak ? context.l10n.focus_back_in : context.l10n.focus_break_in)(
+            '$switchIn',
+          )
+        : onBreak
+        ? (longBreak ? context.l10n.focus_long_break : context.l10n.focus_break)
+        : title;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: AppTheme.systemBars(Brightness.dark),
@@ -301,7 +329,9 @@ class _FocusPageState extends State<FocusPage> {
 
                 final listHeight = typing
                     ? (constraints.maxHeight * 0.32).clamp(110.0, 240.0)
-                    : 156.0;
+                    : isMobile
+                    ? 156.0
+                    : 232.0;
                 final tasks = habit == null
                     ? FocusFreeTaskList(focus: focus, maxHeight: listHeight)
                     : FocusTaskList(habit: habit, maxHeight: listHeight);
@@ -322,17 +352,32 @@ class _FocusPageState extends State<FocusPage> {
 
                 final dial = AnimatedBuilder(
                   animation: focus,
-                  builder: (context, _) => FocusClock(
-                    style: style,
-                    row: landscape,
-                    seconds: leading
-                        ? (leadMinutes <= 0 ? 0 : leadMinutes * 60)
-                        : focus.displaySeconds,
-                    progress: leading ? 0 : focus.progress,
-                    color: habit?.color ?? context.colors.primary,
-                    label: label,
-                    size: _clockSize(constraints, landscape),
-                  ),
+                  builder: (context, _) {
+                    final paused = !leading && focus.isActive && !focus.isRunning;
+                    final accent = habit?.color.shownIn(context) ?? context.colors.primary;
+                    return AnimatedOpacity(
+                      opacity: paused ? (style == ClockStyle.ring ? 0.7 : 0.55) : 1,
+                      duration: const Duration(milliseconds: 300),
+                      child: TweenAnimationBuilder<Color?>(
+                        tween: ColorTween(
+                          end: paused ? const Color(0xFF8A8A92) : accent,
+                        ),
+                        duration: const Duration(milliseconds: 300),
+                        builder: (context, color, _) => FocusClock(
+                          style: style,
+                          row: landscape,
+                          seconds: leading
+                              ? (leadMinutes <= 0 ? 0 : leadMinutes * 60)
+                              : focus.displaySeconds,
+                          progress: leading ? 0 : focus.progress,
+                          color: color ?? accent,
+                          label: paused ? context.l10n.focus_paused : label,
+                          size: _clockSize(constraints, landscape),
+                          paused: paused,
+                        ),
+                      ),
+                    );
+                  },
                 );
 
                 final clock = GestureDetector(
@@ -347,7 +392,8 @@ class _FocusPageState extends State<FocusPage> {
                   builder: (context, _) => _Controls(
                     running: focus.isRunning,
                     onReset: _restart,
-                    awaiting: focus.isAwaiting,
+                    awaiting: focus.isAwaiting || focus.switchIn > 0,
+                    finished: focus.isFinished,
                     onSkip: focus.isBreak ? focus.skipBreak : null,
                     onAddMinute: focus.isFlow ? null : focus.addMinute,
                     onToggle: _toggleRunning,
@@ -360,7 +406,7 @@ class _FocusPageState extends State<FocusPage> {
                     children: [
                       _ZenLabel(
                         text: label,
-                        color: habit?.color ?? context.colors.primary,
+                        color: habit?.color.shownIn(context) ?? context.colors.primary,
                       ),
                       const SizedBox(height: 10),
                       Expanded(
@@ -373,7 +419,8 @@ class _FocusPageState extends State<FocusPage> {
                     builder: (context, _) => _ZenControls(
                       vertical: landscape,
                       running: focus.isRunning,
-                      awaiting: focus.isAwaiting,
+                      awaiting: focus.isAwaiting || focus.switchIn > 0,
+                      finished: focus.isFinished,
                       onToggle: _toggleRunning,
                       onSkip: focus.isBreak ? focus.skipBreak : null,
                       onAddMinute: focus.isFlow ? null : focus.addMinute,
@@ -514,7 +561,6 @@ class _TopBar extends StatelessWidget {
   final VoidCallback onImmersive;
 
   Future<void> _pickStyle(BuildContext context) async {
-    final settings = context.read<SettingsController>();
     final labels = [
       context.l10n.focus_style_digital,
       context.l10n.focus_style_flip,
@@ -526,38 +572,47 @@ class _TopBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              for (var i = 0; i < labels.length; i++) ...[
-                if (i > 0) const SizedBox(width: 10),
-                Expanded(
-                  child: ClockPreview(
-                    style: ClockStyle.values[i],
-                    label: labels[i],
-                    color: context.colors.primary,
-                    selected: settings.focusClockStyle == i,
-                    onTap: () {
-                      settings.setFocusClockStyle(i);
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 4),
-          const Divider(height: 20),
           Consumer<SettingsController>(
-            builder: (_, s, __) => ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(context.l10n.focus_countdown),
-              onTap: () => s.setFocusLeadIn(!s.focusLeadIn),
-              trailing: s.isExpressStyle
-                  ? ExpressSwitch(
-                      value: s.focusLeadIn,
-                      onChanged: s.setFocusLeadIn,
-                    )
-                  : Switch(value: s.focusLeadIn, onChanged: s.setFocusLeadIn),
+            builder: (_, s, __) => LiveSeconds(
+              builder: (context, seconds) => Row(
+                children: [
+                  for (var i = 0; i < labels.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 10),
+                    Expanded(
+                      child: ClockPreview(
+                        style: ClockStyle.values[i],
+                        label: labels[i],
+                        color: context.colors.primary,
+                        selected: s.focusClockStyle == i,
+                        seconds: seconds,
+                        onTap: () => s.setFocusClockStyle(i),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Consumer<SettingsController>(
+            builder: (_, s, __) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+              decoration: BoxDecoration(
+                color: context.colors.surfaceContainerHighest
+                    .withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(context.l10n.focus_countdown),
+                onTap: () => s.setFocusLeadIn(!s.focusLeadIn),
+                trailing: s.isExpressStyle
+                    ? ExpressSwitch(
+                        value: s.focusLeadIn,
+                        onChanged: s.setFocusLeadIn,
+                      )
+                    : Switch(value: s.focusLeadIn, onChanged: s.setFocusLeadIn),
+              ),
             ),
           ),
         ],
@@ -573,7 +628,13 @@ class _TopBar extends StatelessWidget {
         AppSnackbar.warning(context, context.l10n.focus_images_limit);
         return;
       }
-      final dest = await CoverStorage.store(folder: 'focus');
+      final dest = await CoverStorage.store(
+        folder: 'focus',
+        extensions: [
+          ...CoverStorage.imageExtensions,
+          if (hasVideoScenes) ...focusVideoExtensions,
+        ],
+      );
       if (dest == null) return;
       await settings.addFocusImage(dest);
       await settings.setFocusImage(dest);
@@ -583,19 +644,29 @@ class _TopBar extends StatelessWidget {
     await _sheet(
       context,
       title: context.l10n.app_background,
+      maxWidth: hasVideoScenes ? 1000 : phoneWidth,
       child: Consumer<SettingsController>(
         builder: (sheetContext, s, __) => LayoutBuilder(
           builder: (_, box) {
-            const columns = 4;
-            const gap = 10.0;
-            final tile =
-                ((box.maxWidth - gap * (columns - 1)) / columns).floorToDouble();
-            return Wrap(
-              spacing: gap,
-              runSpacing: gap,
-              children: [
-            for (var i = 0; i < focusSceneCount; i++)
-              if (!s.isSceneHidden(i) && (i == 0 || !hasVideoScenes))
+            final columns = ((box.maxWidth + 12) / 172).floor().clamp(3, 5);
+            final tile = hasVideoScenes
+                ? ((box.maxWidth - 12 * (columns - 1)) / columns).floorToDouble()
+                : 124.0;
+            final tiles = <Widget>[
+            SizedBox(
+              width: tile,
+              child: FocusScenePreview(
+                scene: 0,
+                imagePath: '',
+                selected: s.focusScene == 0 && s.focusImage.isEmpty,
+                onTap: () {
+                  s.setFocusScene(0);
+                  s.setFocusImage('');
+                },
+              ),
+            ),
+            for (var i = 1; i < focusSceneCount; i++)
+              if (!s.isSceneHidden(i) && !hasVideoScenes)
                 SizedBox(
                   width: tile,
                   child: FocusScenePreview(
@@ -606,9 +677,7 @@ class _TopBar extends StatelessWidget {
                       s.setFocusScene(i);
                       s.setFocusImage('');
                     },
-                    onLongPress: i == 0
-                        ? null
-                        : () async {
+                    onLongPress: () async {
                             if (await showDeleteSheet(sheetContext)) {
                               await s.hideScene(i);
                             }
@@ -657,7 +726,11 @@ class _TopBar extends StatelessWidget {
                                 await s.removeFocusImage(path);
                               }
                             },
-                            child: Container(
+                            child: AnimatedScale(
+                              scale: s.focusImage == path ? 1 : 0.94,
+                              duration: const Duration(milliseconds: 320),
+                              curve: Curves.easeOutBack,
+                              child: Container(
                               padding: EdgeInsets.all(
                                 s.focusImage == path ? 2.5 : 0,
                               ),
@@ -674,7 +747,9 @@ class _TopBar extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(
                                   s.focusImage == path ? 12 : 14,
                                 ),
-                                child: File(path).existsSync()
+                                child: isFocusVideo(path)
+                                    ? const FocusVideoTile()
+                                    : File(path).existsSync()
                                     ? Image.file(File(path), fit: BoxFit.cover)
                                     : ColoredBox(
                                         color: sheetContext
@@ -682,6 +757,7 @@ class _TopBar extends StatelessWidget {
                                         child: const SizedBox.expand(),
                                       ),
                               ),
+                            ),
                             ),
                           ),
                         ),
@@ -700,6 +776,10 @@ class _TopBar extends StatelessWidget {
                   child: GestureDetector(
                     onTap: pickImage,
                     child: Container(
+                      margin: EdgeInsets.symmetric(
+                        horizontal: tile * 0.03,
+                        vertical: tile / 0.78 * 0.03,
+                      ),
                       decoration: BoxDecoration(
                         color: sheetContext.colors.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(14),
@@ -714,17 +794,33 @@ class _TopBar extends StatelessWidget {
                 ),
               ),
             ),
-            if (s.hiddenScenes.isNotEmpty)
-              SizedBox(
-                width: double.infinity,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
+            ];
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (hasVideoScenes)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Wrap(spacing: 12, runSpacing: 12, children: tiles),
+                  )
+                else
+                SizedBox(
+                  height: tile / 0.78 + 12,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    clipBehavior: Clip.none,
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    itemCount: tiles.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 12),
+                    itemBuilder: (_, index) => tiles[index],
+                  ),
+                ),
+                if (s.hiddenScenes.isNotEmpty)
+                  TextButton(
                     onPressed: s.restoreScenes,
                     child: Text(sheetContext.l10n.restore),
                   ),
-                ),
-              ),
               ],
             );
           },
@@ -737,13 +833,14 @@ class _TopBar extends StatelessWidget {
     BuildContext context, {
     required String title,
     required Widget child,
+    double maxWidth = phoneWidth,
   }) {
     return showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
       constraints: BoxConstraints(
-        maxWidth: phoneWidth,
+        maxWidth: maxWidth,
         maxHeight: MediaQuery.sizeOf(context).height * 0.85,
       ),
       builder: (sheet) => SafeArea(
@@ -799,21 +896,42 @@ class _TopBar extends StatelessWidget {
               ],
             ),
           ),
-          _TopIcon(
-            icon: immersive ? LucideIcons.minimize2 : LucideIcons.maximize2,
-            onTap: onImmersive,
+          IconButton(
+            icon: Icon(LucideIcons.circleHelp, color: Colors.white.withValues(alpha: 0.8)),
+            tooltip: context.l10n.focus_resources,
+            onPressed: () => SettingsActions.openUrl(context, '$kSiteUrl/resources/'),
           ),
-          _TopIcon(
-            icon: LucideIcons.music,
-            onTap: () => showMusicSheet(context),
-          ),
-          _TopIcon(
-            icon: LucideIcons.layoutPanelTop,
-            onTap: () => _pickStyle(context),
-          ),
-          _TopIcon(
-            icon: LucideIcons.image,
-            onTap: () => _pickScene(context),
+          Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: MorphMenu(
+              icon: LucideIcons.slidersHorizontal,
+              tooltip: context.l10n.focus_options,
+              style: MorphMenuStyle.glass(),
+              items: [
+                (
+                  icon: LucideIcons.music,
+                  label: context.l10n.focus_sound,
+                  onTap: () => showMusicSheet(context),
+                ),
+                (
+                  icon: LucideIcons.image,
+                  label: context.l10n.app_background,
+                  onTap: () => _pickScene(context),
+                ),
+                (
+                  icon: LucideIcons.layoutPanelTop,
+                  label: context.l10n.focus_style,
+                  onTap: () => _pickStyle(context),
+                ),
+                (
+                  icon: immersive ? LucideIcons.minimize2 : LucideIcons.maximize2,
+                  label: immersive
+                      ? context.l10n.focus_exit_fullscreen
+                      : context.l10n.focus_fullscreen,
+                  onTap: onImmersive,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -821,23 +939,31 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-class _TopIcon extends StatelessWidget {
-  const _TopIcon({required this.icon, required this.onTap});
+IconData _toggleIcon({
+  required bool running,
+  required bool awaiting,
+  required bool finished,
+}) {
+  if (finished) return LucideIcons.check;
+  return running && !awaiting ? LucideIcons.pause : LucideIcons.play;
+}
 
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => IconButton(
-        onPressed: onTap,
-        icon: Icon(icon, size: 19, color: Colors.white.withValues(alpha: 0.85)),
-      );
+String _toggleLabel(
+  BuildContext context, {
+  required bool running,
+  required bool awaiting,
+  required bool finished,
+}) {
+  if (finished) return context.l10n.focus_end;
+  if (awaiting) return context.l10n.focus_continue;
+  return running ? context.l10n.focus_pause : context.l10n.focus_resume;
 }
 
 class _Controls extends StatelessWidget {
   const _Controls({
     required this.running,
     required this.awaiting,
+    required this.finished,
     required this.onReset,
     required this.onSkip,
     required this.onAddMinute,
@@ -847,6 +973,7 @@ class _Controls extends StatelessWidget {
 
   final bool running;
   final bool awaiting;
+  final bool finished;
   final VoidCallback onReset;
   final VoidCallback? onSkip;
   final VoidCallback? onAddMinute;
@@ -856,6 +983,7 @@ class _Controls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skip = onSkip;
+    final icon = _toggleIcon(running: running, awaiting: awaiting, finished: finished);
     final buttons = Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -889,19 +1017,15 @@ class _Controls extends StatelessWidget {
                       child: FadeTransition(opacity: animation, child: child),
                     ),
                     child: Icon(
-                      running ? LucideIcons.pause : LucideIcons.play,
-                      key: ValueKey(running || awaiting),
+                      icon,
+                      key: ValueKey(icon),
                       size: 18,
                       color: Colors.white,
                     ),
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    awaiting
-                        ? context.l10n.focus_continue
-                        : running
-                            ? context.l10n.focus_pause
-                            : context.l10n.focus_resume,
+                    _toggleLabel(context, running: running, awaiting: awaiting, finished: finished),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -988,6 +1112,7 @@ class _ZenControls extends StatelessWidget {
     required this.vertical,
     required this.running,
     required this.awaiting,
+    required this.finished,
     required this.onToggle,
     required this.onSkip,
     required this.onAddMinute,
@@ -997,6 +1122,7 @@ class _ZenControls extends StatelessWidget {
   final bool vertical;
   final bool running;
   final bool awaiting;
+  final bool finished;
   final VoidCallback onToggle;
   final VoidCallback? onSkip;
   final VoidCallback? onAddMinute;
@@ -1008,12 +1134,8 @@ class _ZenControls extends StatelessWidget {
     final minute = onAddMinute;
     final items = <Widget>[
       _ZenButton(
-        icon: running ? LucideIcons.pause : LucideIcons.play,
-        label: awaiting
-            ? context.l10n.focus_continue
-            : running
-                ? context.l10n.focus_pause
-                : context.l10n.focus_resume,
+        icon: _toggleIcon(running: running, awaiting: awaiting, finished: finished),
+        label: _toggleLabel(context, running: running, awaiting: awaiting, finished: finished),
         onTap: onToggle,
       ),
       if (skip != null)

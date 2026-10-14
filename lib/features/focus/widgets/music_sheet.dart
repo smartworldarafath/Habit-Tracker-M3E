@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:streak/features/settings/widgets/minimal_settings_widgets.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +13,27 @@ import 'package:streak/core/widgets/delete_sheet.dart';
 import 'package:streak/core/utils/app_snackbar.dart';
 import 'package:streak/core/utils/cover_storage.dart';
 import 'package:streak/features/focus/state/focus_audio.dart';
+import 'package:streak/features/focus/widgets/focus_backgrounds.dart';
+import 'package:streak/features/focus/widgets/focus_video_scene.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
+import 'package:streak/core/widgets/glass.dart';
+
+class _SceneArt extends StatelessWidget {
+  const _SceneArt();
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsController>();
+    final video = videoSceneIndex(settings.focusScene);
+    if (video >= 0) return FocusVideoPoster(name: focusVideoScenes[video]);
+    return FocusBackground(
+      scene: settings.focusScene,
+      imagePath: settings.focusImage,
+      thumbnail: true,
+      child: const SizedBox.expand(),
+    );
+  }
+}
 
 List<FocusTrack> focusTracksOf(BuildContext context, SettingsController s) => [
       for (final entry in builtInTracks.entries)
@@ -19,9 +41,9 @@ List<FocusTrack> focusTracksOf(BuildContext context, SettingsController s) => [
           FocusTrack(
             id: entry.key,
             name: switch (entry.key) {
-              'rain.mp3' => context.l10n.focus_track_rain,
               'brown_noise.mp3' => context.l10n.focus_track_brown,
               'fire.mp3' => context.l10n.focus_track_fire,
+              'ticking.mp3' => context.l10n.focus_track_ticking,
               _ => entry.value,
             },
             asset: true,
@@ -80,11 +102,14 @@ class _MusicSheet extends StatelessWidget {
 
     return SafeArea(
       top: false,
+      bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 2, 20, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.fromLTRB(20, 2, 20, 0),
+        child: ListView(
+          shrinkWrap: true,
+          padding: EdgeInsets.only(
+            bottom: 16 + MediaQuery.paddingOf(context).bottom,
+          ),
           children: [
             Row(
               children: [
@@ -115,9 +140,10 @@ class _MusicSheet extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             _NowPlaying(tracks: tracks),
-            Flexible(
-              child: ListView(
-                shrinkWrap: true,
+            _VolumeRow(onDone: settings.setFocusVolume),
+            const SizedBox(height: 10),
+            _TrackList(
+                count: tracks.length,
                 children: [
                   for (final track in tracks)
                     _TrackRow(
@@ -133,7 +159,6 @@ class _MusicSheet extends StatelessWidget {
                     ),
                 ],
               ),
-            ),
             if (settings.hiddenTracks.isNotEmpty)
               Align(
                 alignment: Alignment.centerLeft,
@@ -142,30 +167,125 @@ class _MusicSheet extends StatelessWidget {
                   child: Text(context.l10n.restore),
                 ),
               ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: FilledButton.icon(
+            const SizedBox(height: 10),
+            Center(
+              child: TextButton.icon(
                 onPressed: userCount >= FocusAudio.maxTracks
                     ? null
                     : () => _import(context),
-                icon: const Icon(LucideIcons.plus, size: 17),
+                icon: const Icon(LucideIcons.plus, size: 16),
                 label: Text(
                   '${context.l10n.focus_add_track}  '
                   '($userCount/${FocusAudio.maxTracks})',
-                  style: sheetActionStyle(context, size: 14.5),
+                  style: sheetActionStyle(context, size: 14),
                 ),
-                style: FilledButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 12,
                   ),
+                  backgroundColor:
+                      context.colors.primary.withValues(alpha: 0.12),
+                  shape: const StadiumBorder(),
                 ),
               ),
             ),
-            const Divider(height: 28),
-            _AlertRow(settings: settings),
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+              decoration: BoxDecoration(
+                color: context.colors.surfaceContainerHighest
+                    .withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: _AlertRow(settings: settings),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VolumeRow extends StatelessWidget {
+  const _VolumeRow({required this.onDone});
+
+  final ValueChanged<double> onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 4, 6, 4),
+      decoration: BoxDecoration(
+        color: context.colors.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: ValueListenableBuilder<double>(
+        valueListenable: FocusAudio.volume,
+        builder: (context, volume, _) => Row(
+          children: [
+            Icon(
+              volume == 0
+                  ? LucideIcons.volumeX
+                  : volume < 0.5
+                      ? LucideIcons.volume1
+                      : LucideIcons.volume2,
+              size: 19,
+              color: context.colors.onSurface,
+            ),
+            Expanded(
+              child: Semantics(
+                label: context.l10n.focus_volume,
+                child: Slider(
+                  value: volume,
+                  onChanged: FocusAudio.setVolume,
+                  onChangeEnd: onDone,
+                ),
+              ),
+            ),
+            ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 38),
+              child: Text(
+                '${(volume * 100).round()}%',
+                textAlign: TextAlign.end,
+                maxLines: 1,
+                softWrap: false,
+                style: sheetLabelStyle(context, size: 12),
+              ),
+            ),
+            const SizedBox(width: 10),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TrackList extends StatelessWidget {
+  const _TrackList({required this.count, required this.children});
+
+  static const _row = 62.0;
+  static const _shown = 4.5;
+
+  final int count;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    if (count <= 4) return Column(children: children);
+    return SizedBox(
+      height: _row * _shown,
+      child: ShaderMask(
+        blendMode: BlendMode.dstIn,
+        shaderCallback: (bounds) => const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.white, Colors.white, Colors.transparent],
+          stops: [0, 0.86, 1],
+        ).createShader(bounds),
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: _row / 2),
+          children: children,
         ),
       ),
     );
@@ -317,8 +437,18 @@ class _TrackRow extends StatelessWidget {
             final isPlaying = active && playing;
             return Semantics(
               button: true,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(14),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                margin: const EdgeInsets.symmetric(vertical: 2),
+                decoration: BoxDecoration(
+                  color: active
+                      ? context.colors.primary.withValues(alpha: 0.08)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: InkWell(
+                borderRadius: BorderRadius.circular(18),
                 onLongPress: onDelete == null
                     ? null
                     : () async {
@@ -343,21 +473,26 @@ class _TrackRow extends StatelessWidget {
                   }
                 },
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  padding: const EdgeInsets.fromLTRB(8, 9, 8, 9),
                   child: Row(
                     children: [
-                      Container(
-                        width: 36,
-                        height: 36,
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 260),
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
                           color: active
                               ? context.colors.primary.withValues(alpha: 0.16)
                               : context.colors.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          isPlaying ? LucideIcons.pause : LucideIcons.play,
-                          size: 15,
+                          !active
+                              ? LucideIcons.music
+                              : isPlaying
+                                  ? LucideIcons.pause
+                                  : LucideIcons.play,
+                          size: 17,
                           color: active
                               ? context.colors.primary
                               : context.tokens.muted,
@@ -388,6 +523,7 @@ class _TrackRow extends StatelessWidget {
                     ],
                   ),
                 ),
+              ),
               ),
             );
           },
@@ -442,86 +578,141 @@ class _PlayerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colors;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 10),
-      decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Column(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(28),
+      child: Stack(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(LucideIcons.music, size: 20, color: scheme.primary),
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
+                child: const _SceneArt(),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      track.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: sheetOptionStyle(context, selected: true),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      track.asset
-                          ? context.l10n.focus_built_in
-                          : context.l10n.focus_sound,
-                      style: sheetLabelStyle(context, size: 12),
-                    ),
+            ),
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.28),
+                    Colors.black.withValues(alpha: 0.55),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: 8),
-          const _Scrubber(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                onPressed: () => FocusAudio.skip(-1),
-                icon: const Icon(LucideIcons.skipBack, size: 22),
-              ),
-              const SizedBox(width: 14),
-              ValueListenableBuilder<bool>(
-                valueListenable: FocusAudio.playing,
-                builder: (context, playing, _) => IconButton.filled(
-                  iconSize: 26,
-                  style: IconButton.styleFrom(
-                    fixedSize: const Size(58, 58),
-                    backgroundColor: scheme.primary,
-                    foregroundColor: scheme.onPrimary,
-                  ),
-                  onPressed: () => _toggle(context, playing),
-                  icon: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    transitionBuilder: (child, animation) =>
-                        ScaleTransition(scale: animation, child: child),
-                    child: Icon(
-                      playing ? LucideIcons.pause : LucideIcons.play,
-                      key: ValueKey(playing),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: const SizedBox.square(
+                          dimension: 62,
+                          child: _SceneArt(),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            track.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: sheetOptionStyle(
+                              context,
+                              size: 17,
+                              selected: true,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            track.asset
+                                ? context.l10n.focus_built_in
+                                : context.l10n.focus_sound,
+                            style: sheetLabelStyle(
+                              context,
+                              size: 12.5,
+                              color: Colors.white.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 14),
-              IconButton(
-                onPressed: () => FocusAudio.skip(1),
-                icon: const Icon(LucideIcons.skipForward, size: 22),
-              ),
-            ],
+                const SizedBox(height: 10),
+                const _Scrubber(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: () => FocusAudio.skip(-1),
+                      icon: const Icon(
+                        LucideIcons.skipBack,
+                        size: 22,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 18),
+                    ValueListenableBuilder<bool>(
+                      valueListenable: FocusAudio.playing,
+                      builder: (context, playing, _) => Pressable(
+                        onTap: () => _toggle(context, playing),
+                        child: Container(
+                          width: 56,
+                          height: 56,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 180),
+                            transitionBuilder: (child, animation) =>
+                                ScaleTransition(scale: animation, child: child),
+                            child: Icon(
+                              playing ? LucideIcons.pause : LucideIcons.play,
+                              key: ValueKey(playing),
+                              size: 24,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 18),
+                    IconButton(
+                      onPressed: () => FocusAudio.skip(1),
+                      icon: const Icon(
+                        LucideIcons.skipForward,
+                        size: 22,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -551,8 +742,11 @@ class _ScrubberState extends State<_Scrubber> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colors;
-    final label = sheetLabelStyle(context, size: 11.5);
+    final label = sheetLabelStyle(
+      context,
+      size: 11.5,
+      color: Colors.white.withValues(alpha: 0.7),
+    );
     return ValueListenableBuilder<Duration>(
       valueListenable: FocusAudio.length,
       builder: (context, length, _) => ValueListenableBuilder<Duration>(
@@ -566,9 +760,9 @@ class _ScrubberState extends State<_Scrubber> {
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   trackHeight: 4,
-                  activeTrackColor: scheme.primary,
-                  inactiveTrackColor: scheme.primary.withValues(alpha: 0.18),
-                  thumbColor: scheme.primary,
+                  activeTrackColor: Colors.white,
+                  inactiveTrackColor: Colors.white.withValues(alpha: 0.25),
+                  thumbColor: Colors.white,
                   overlayShape: SliderComponentShape.noOverlay,
                   thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
                 ),
@@ -598,3 +792,4 @@ class _ScrubberState extends State<_Scrubber> {
     );
   }
 }
+
