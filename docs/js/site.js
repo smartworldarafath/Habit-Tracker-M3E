@@ -19,6 +19,9 @@ if (themeBtn) {
     const nextTheme = isLight ? 'dark' : 'light';
     root.dataset.theme = nextTheme;
     store('m3e-theme', nextTheme);
+    if (typeof setShelfMode === 'function') {
+      setShelfMode(nextTheme, true);
+    }
   });
 }
 
@@ -147,8 +150,37 @@ if (heat) {
   }
 }
 
-// Horizontal screenshot shelf
+// Horizontal screenshot shelf & theme mode switcher
 const shelf = document.getElementById('shelf');
+const shelfModeBtns = document.querySelectorAll('[data-shelf-mode]');
+
+function setShelfMode(mode, save = true) {
+  if (shelf) {
+    shelf.dataset.mode = mode;
+  }
+  shelfModeBtns.forEach((btn) => {
+    const active = btn.dataset.shelfMode === mode;
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+  if (save) {
+    store('m3e-shelf-mode', mode);
+  }
+}
+
+shelfModeBtns.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    setShelfMode(btn.dataset.shelfMode, true);
+  });
+});
+
+const savedShelfMode = store('m3e-shelf-mode');
+if (savedShelfMode) {
+  setShelfMode(savedShelfMode, false);
+} else {
+  setShelfMode(root.dataset.theme === 'light' ? 'light' : 'dark', false);
+}
+
 if (shelf) {
   const [back, next] = document.querySelectorAll('[data-shelf]');
   const step = () => {
@@ -193,9 +225,15 @@ if (lb) {
     const el = lbList[lbAt];
     lbStage.innerHTML = '';
     const media = document.createElement('img');
-    const thumb = el.querySelector('img');
-    media.src = el.dataset.src || (thumb ? thumb.currentSrc || thumb.src : '');
-    media.alt = thumb ? thumb.alt : '';
+    const isLight = shelf && shelf.dataset.mode === 'light';
+    const activeImg = isLight
+      ? (el.querySelector('.shot__img--light') || el.querySelector('img'))
+      : (el.querySelector('.shot__img--dark') || el.querySelector('img'));
+    const src = isLight
+      ? (el.dataset.srcLight || (activeImg ? activeImg.src : ''))
+      : (el.dataset.srcDark || (activeImg ? activeImg.src : ''));
+    media.src = src || el.dataset.src || (activeImg ? activeImg.currentSrc || activeImg.src : '');
+    media.alt = activeImg ? activeImg.alt : '';
     media.className = 'is-phone';
     lbStage.appendChild(media);
     lbCap.textContent = captionOf(el);

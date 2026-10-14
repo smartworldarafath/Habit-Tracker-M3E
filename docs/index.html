@@ -177,75 +177,117 @@
     <!-- A LOOK INSIDE (CAROUSEL SHELF) -->
     <section class="sec sec--wide">
       <div class="shelf-head">
-        <h2 class="h2"><span class="en">A look inside</span><span class="es">Por dentro</span></h2>
-        <p class="shelf-hint"><span class="en">Scroll sideways, tap to zoom</span><span class="es">Desliza de lado, toca para ampliar</span></p>
+        <div class="shelf-head__main">
+          <h2 class="h2"><span class="en">A look inside</span><span class="es">Por dentro</span></h2>
+          <p class="shelf-hint"><span class="en">Scroll sideways, tap to zoom</span><span class="es">Desliza de lado, toca para ampliar</span></p>
+        </div>
+        <div class="shelf-toggle" id="shelf-mode-toggle" role="group" aria-label="Screens theme mode">
+          <span class="shelf-toggle__label"><span class="en">Theme:</span><span class="es">Tema:</span></span>
+          <div class="shelf-toggle__pill">
+            <button type="button" class="shelf-toggle__btn is-active" data-shelf-mode="dark" aria-pressed="true">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+              <span>Dark</span>
+            </button>
+            <button type="button" class="shelf-toggle__btn" data-shelf-mode="light" aria-pressed="false">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+              <span>Light</span>
+            </button>
+          </div>
+        </div>
       </div>
       <div class="shelf-wrap">
         <button class="nudge nudge--prev" type="button" data-shelf="-1" aria-label="Previous">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg>
         </button>
-        <div class="shelf" id="shelf" tabindex="0" aria-label="Screens">
+        <div class="shelf" id="shelf" data-mode="dark" tabindex="0" aria-label="Screens">
           <figure class="shot">
-            <button class="zoom" type="button" data-group="screens" aria-label="Zoom: An amount habit">
-              <img src="assets/phones/water.webp" width="640" height="1346" alt="An amount habit" loading="lazy">
+            <button class="zoom" type="button" data-group="screens" data-src-light="assets/screens/light/today.webp" data-src-dark="assets/screens/dark/today.webp" aria-label="Zoom: Today and streaks">
+              <div class="shot__frame">
+                <img class="shot__img shot__img--dark" src="assets/screens/dark/today.webp" width="1080" height="2400" alt="Today and streaks dark mode" loading="lazy">
+                <img class="shot__img shot__img--light" src="assets/screens/light/today.webp" width="1080" height="2400" alt="Today and streaks light mode" loading="lazy">
+              </div>
             </button>
-            <figcaption><span class="en">An amount habit</span><span class="es">Hábito de cantidad</span></figcaption>
+            <figcaption><span class="en">Today & streaks</span><span class="es">Hoy y rachas</span></figcaption>
           </figure>
 
           <figure class="shot">
-            <button class="zoom" type="button" data-group="screens" aria-label="Zoom: Calendar and notes">
-              <img src="assets/phones/calendar.webp" width="640" height="1346" alt="Calendar and notes" loading="lazy">
+            <button class="zoom" type="button" data-group="screens" data-src-light="assets/screens/light/todos.webp" data-src-dark="assets/screens/dark/todos.webp" aria-label="Zoom: To-do lists">
+              <div class="shot__frame">
+                <img class="shot__img shot__img--dark" src="assets/screens/dark/todos.webp" width="1080" height="2400" alt="To-do lists dark mode" loading="lazy">
+                <img class="shot__img shot__img--light" src="assets/screens/light/todos.webp" width="1080" height="2400" alt="To-do lists light mode" loading="lazy">
+              </div>
             </button>
-            <figcaption><span class="en">Calendar and notes</span><span class="es">Calendario y notas</span></figcaption>
+            <figcaption><span class="en">To-do lists</span><span class="es">Listas de tareas</span></figcaption>
           </figure>
 
           <figure class="shot">
-            <button class="zoom" type="button" data-group="screens" aria-label="Zoom: Flip clock">
-              <img src="assets/phones/flip.webp" width="640" height="1346" alt="Flip clock" loading="lazy">
+            <button class="zoom" type="button" data-group="screens" data-src-light="assets/screens/light/plan.webp" data-src-dark="assets/screens/dark/plan.webp" aria-label="Zoom: Plan and calendar">
+              <div class="shot__frame">
+                <img class="shot__img shot__img--dark" src="assets/screens/dark/plan.webp" width="1080" height="2400" alt="Plan and calendar dark mode" loading="lazy">
+                <img class="shot__img shot__img--light" src="assets/screens/light/plan.webp" width="1080" height="2400" alt="Plan and calendar light mode" loading="lazy">
+              </div>
             </button>
-            <figcaption><span class="en">Flip clock</span><span class="es">Reloj de tarjetas</span></figcaption>
+            <figcaption><span class="en">Plan & calendar</span><span class="es">Plan y calendario</span></figcaption>
           </figure>
 
           <figure class="shot">
-            <button class="zoom" type="button" data-group="screens" aria-label="Zoom: Habits compared">
-              <img src="assets/phones/insights.webp" width="640" height="1346" alt="Habits compared" loading="lazy">
+            <button class="zoom" type="button" data-group="screens" data-src-light="assets/screens/light/stats.webp" data-src-dark="assets/screens/dark/stats.webp" aria-label="Zoom: Statistics and overview">
+              <div class="shot__frame">
+                <img class="shot__img shot__img--dark" src="assets/screens/dark/stats.webp" width="1080" height="2400" alt="Statistics and overview dark mode" loading="lazy">
+                <img class="shot__img shot__img--light" src="assets/screens/light/stats.webp" width="1080" height="2400" alt="Statistics and overview light mode" loading="lazy">
+              </div>
             </button>
-            <figcaption><span class="en">Habits compared</span><span class="es">Hábitos comparados</span></figcaption>
+            <figcaption><span class="en">Statistics & overview</span><span class="es">Estadísticas y resumen</span></figcaption>
           </figure>
 
           <figure class="shot">
-            <button class="zoom" type="button" data-group="screens" aria-label="Zoom: Month by month">
-              <img src="assets/phones/charts.webp" width="640" height="1346" alt="Month by month" loading="lazy">
+            <button class="zoom" type="button" data-group="screens" data-src-light="assets/screens/light/settings.webp" data-src-dark="assets/screens/dark/settings.webp" aria-label="Zoom: Settings and preferences">
+              <div class="shot__frame">
+                <img class="shot__img shot__img--dark" src="assets/screens/dark/settings.webp" width="1080" height="2400" alt="Settings and preferences dark mode" loading="lazy">
+                <img class="shot__img shot__img--light" src="assets/screens/light/settings.webp" width="1080" height="2400" alt="Settings and preferences light mode" loading="lazy">
+              </div>
             </button>
-            <figcaption><span class="en">Month by month</span><span class="es">Mes a mes</span></figcaption>
+            <figcaption><span class="en">Preferences & data</span><span class="es">Preferencias y datos</span></figcaption>
           </figure>
 
           <figure class="shot">
-            <button class="zoom" type="button" data-group="screens" aria-label="Zoom: Minimal style">
-              <img src="assets/phones/minimal.webp" width="640" height="1346" alt="Minimal style" loading="lazy">
+            <button class="zoom" type="button" data-group="screens" data-src-light="assets/screens/light/about.webp" data-src-dark="assets/screens/dark/about.webp" aria-label="Zoom: About M3E">
+              <div class="shot__frame">
+                <img class="shot__img shot__img--dark" src="assets/screens/dark/about.webp" width="1080" height="2400" alt="About M3E dark mode" loading="lazy">
+                <img class="shot__img shot__img--light" src="assets/screens/light/about.webp" width="1080" height="2400" alt="About M3E light mode" loading="lazy">
+              </div>
             </button>
-            <figcaption><span class="en">Minimal style</span><span class="es">Estilo Minimal</span></figcaption>
+            <figcaption><span class="en">About M3E</span><span class="es">Acerca de M3E</span></figcaption>
           </figure>
 
           <figure class="shot">
-            <button class="zoom" type="button" data-group="screens" aria-label="Zoom: A day note">
-              <img src="assets/phones/note.webp" width="640" height="1346" alt="A day note" loading="lazy">
+            <button class="zoom" type="button" data-group="screens" data-src-light="assets/screens/light/styles.webp" data-src-dark="assets/screens/dark/styles.webp" aria-label="Zoom: Three app styles">
+              <div class="shot__frame">
+                <img class="shot__img shot__img--dark" src="assets/screens/dark/styles.webp" width="1080" height="2400" alt="Three app styles dark mode" loading="lazy">
+                <img class="shot__img shot__img--light" src="assets/screens/light/styles.webp" width="1080" height="2400" alt="Three app styles light mode" loading="lazy">
+              </div>
             </button>
-            <figcaption><span class="en">A day note</span><span class="es">Una nota del día</span></figcaption>
+            <figcaption><span class="en">Three app styles</span><span class="es">Tres estilos de app</span></figcaption>
           </figure>
 
           <figure class="shot">
-            <button class="zoom" type="button" data-group="screens" aria-label="Zoom: Ring clock">
-              <img src="assets/phones/cabin.webp" width="640" height="1346" alt="Ring clock" loading="lazy">
+            <button class="zoom" type="button" data-group="screens" data-src-light="assets/screens/light/habit.webp" data-src-dark="assets/screens/dark/habit.webp" aria-label="Zoom: Create habit and targets">
+              <div class="shot__frame">
+                <img class="shot__img shot__img--dark" src="assets/screens/dark/habit.webp" width="1080" height="2400" alt="Create habit and targets dark mode" loading="lazy">
+                <img class="shot__img shot__img--light" src="assets/screens/light/habit.webp" width="1080" height="2400" alt="Create habit and targets light mode" loading="lazy">
+              </div>
             </button>
-            <figcaption><span class="en">Ring clock</span><span class="es">Reloj de anillo</span></figcaption>
+            <figcaption><span class="en">Create habit & targets</span><span class="es">Crear hábito y metas</span></figcaption>
           </figure>
 
           <figure class="shot">
-            <button class="zoom" type="button" data-group="screens" aria-label="Zoom: Settings">
-              <img src="assets/phones/settings.webp" width="640" height="1346" alt="Settings" loading="lazy">
+            <button class="zoom" type="button" data-group="screens" data-src-light="assets/screens/light/focus.webp" data-src-dark="assets/screens/dark/focus.webp" aria-label="Zoom: Focus timer">
+              <div class="shot__frame">
+                <img class="shot__img shot__img--dark" src="assets/screens/dark/focus.webp" width="1080" height="2400" alt="Focus timer dark mode" loading="lazy">
+                <img class="shot__img shot__img--light" src="assets/screens/light/focus.webp" width="1080" height="2400" alt="Focus timer light mode" loading="lazy">
+              </div>
             </button>
-            <figcaption><span class="en">Settings</span><span class="es">Ajustes</span></figcaption>
+            <figcaption><span class="en">Focus timer</span><span class="es">Temporizador Focus</span></figcaption>
           </figure>
         </div>
         <button class="nudge nudge--next" type="button" data-shelf="1" aria-label="Next">
