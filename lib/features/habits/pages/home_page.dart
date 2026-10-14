@@ -8,6 +8,7 @@ import 'package:streak/core/express/express_surface.dart';
 import 'package:streak/core/extensions/inset_extensions.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/minimal/minimal_kit.dart';
+import 'package:streak/core/widgets/fold_header.dart';
 import 'package:streak/core/widgets/sheet_action.dart';
 import 'package:streak/core/widgets/sheet_type.dart';
 import 'package:streak/core/routing/app_navigator.dart';
@@ -24,6 +25,7 @@ import 'package:streak/features/habits/pages/all_notes_page.dart';
 import 'package:streak/features/habits/pages/day_timeline_page.dart';
 import 'package:streak/features/habits/pages/habit_details_page.dart';
 import 'package:streak/features/habits/pages/habit_form_page.dart';
+import 'package:streak/features/habits/pages/note_editor_page.dart';
 import 'package:streak/features/focus/widgets/focus_pill.dart';
 import 'package:streak/features/habits/state/categories_controller.dart';
 import 'package:streak/features/habits/widgets/category_editor_sheet.dart';
@@ -34,6 +36,7 @@ import 'package:streak/features/habits/widgets/classic_habit_list.dart';
 import 'package:streak/features/habits/widgets/daily_quote.dart';
 import 'package:streak/features/habits/widgets/express_habit_list.dart';
 import 'package:streak/features/habits/widgets/express_today_hero.dart';
+import 'package:streak/features/habits/widgets/today_filter_sheet.dart';
 import 'package:streak/features/habits/widgets/grid_habit_cards.dart';
 import 'package:streak/features/habits/widgets/relapse_dialog.dart';
 import 'package:streak/features/habits/widgets/habit_heatmap.dart';
@@ -44,10 +47,15 @@ import 'package:streak/features/habits/widgets/focus_only_dialog.dart';
 import 'package:streak/features/habits/widgets/unscheduled_day_dialog.dart';
 import 'package:streak/features/habits/widgets/vacation_sheet.dart';
 import 'package:streak/features/settings/pages/settings_page.dart';
+import 'package:streak/features/habits/widgets/day_actions_sheet.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
 import 'package:streak/features/statistics/pages/statistics_page.dart';
 import 'package:streak/features/todos/pages/todos_page.dart';
+import 'package:streak/features/focus/state/focus_controller.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
+import 'package:streak/core/widgets/glass.dart';
+import 'package:streak/core/widgets/morph_menu.dart';
+import 'package:streak/core/extensions/color_extensions.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -60,6 +68,7 @@ const _sinkDelay = Duration(milliseconds: 2500);
 
 class _HomePageState extends State<HomePage> {
   final _confetti = ValueNotifier(0);
+  final _scrolled = ValueNotifier(false);
   String? _category;
   late HeatmapMode _mode;
   bool _reordering = false;
@@ -67,13 +76,16 @@ class _HomePageState extends State<HomePage> {
   final Map<String, bool> _frozen = {};
   final Set<String> _leaving = {};
   List<Habit> _visible = const [];
+  bool _peek = false;
+  Set<String> _peeked = const {};
   final Map<String, Timer> _timers = {};
 
   @override
   void initState() {
     super.initState();
-    final saved = context.read<SettingsController>().openingMode;
-    _mode = HeatmapMode.values[saved.clamp(0, 2)];
+    final settings = context.read<SettingsController>();
+    _mode = HeatmapMode.values[settings.openingMode.clamp(0, 2)];
+    if (settings.todayCategory.isNotEmpty) _category = settings.todayCategory;
     BackHandlers.add(_backOut);
   }
 
@@ -84,6 +96,7 @@ class _HomePageState extends State<HomePage> {
       timer.cancel();
     }
     _confetti.dispose();
+    _scrolled.dispose();
     super.dispose();
   }
 
@@ -95,6 +108,11 @@ class _HomePageState extends State<HomePage> {
 
   final _coins = ValueNotifier<int>(0);
   int _coinAmount = 0;
+
+  void _pickCategory(String? category) {
+    setState(() => _category = category);
+    context.read<SettingsController>().setTodayCategory(category ?? '');
+  }
 
   void _changeMode(HeatmapMode mode) {
     setState(() => _mode = mode);
@@ -116,6 +134,7 @@ class _HomePageState extends State<HomePage> {
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
       builder: (sheetContext) {
         void run(VoidCallback action) {
           Navigator.of(sheetContext).pop();
@@ -142,6 +161,18 @@ class _HomePageState extends State<HomePage> {
             false,
           ),
           (
+            LucideIcons.notebookPen,
+            context.l10n.add_note,
+            () => run(() => AppNavigator.push(
+                  NoteEditorPage(
+                    habitId: habit.id,
+                    dayKey: AppClock.today().dayKey,
+                    accent: habit.color.shownIn(context),
+                  ),
+                )),
+            false,
+          ),
+          (
             LucideIcons.palmtree,
             context.l10n.vacation_mode,
             () => run(() => showVacationSheet(context, habit: habit)),
@@ -150,16 +181,19 @@ class _HomePageState extends State<HomePage> {
           (
             LucideIcons.arrowUpDown,
             context.l10n.reorder,
-            () => run(() => setState(() {
-                  _category = null;
-                  _reordering = true;
-                })),
+            () => run(() {
+                  _pickCategory(null);
+                  setState(() => _reordering = true);
+                }),
             false,
           ),
           (
             LucideIcons.copy,
             context.l10n.duplicate_habit,
-            () => run(() => _duplicate(controller, habit)),
+            () => run(() => AppNavigator.push(
+                  HabitFormPage(template: habit),
+                  fullscreenDialog: true,
+                )),
             false,
           ),
           (
@@ -171,7 +205,7 @@ class _HomePageState extends State<HomePage> {
         ];
 
         return SafeArea(
-          child: switch (sheetStyle(sheetContext)) {
+          child: SingleChildScrollView(child: switch (sheetStyle(sheetContext)) {
             1 => Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
                 child: Column(
@@ -238,20 +272,9 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 8),
                 ],
               ),
-          },
+          }),
         );
       },
-    );
-  }
-
-  Future<void> _duplicate(HabitsController controller, Habit habit) async {
-    final copy = await controller.duplicate(habit);
-    if (!mounted) return;
-    AppSnackbar.action(
-      context,
-      context.l10n.habit_duplicated(copy.name),
-      label: context.l10n.undo,
-      onPressed: () => controller.remove(copy.id),
     );
   }
 
@@ -285,7 +308,9 @@ class _HomePageState extends State<HomePage> {
     final wide = hasSideRail(context);
     final railed = minimal && wide;
     final bigText = MediaQuery.textScalerOf(context).scale(14) > 20;
+    final classic = !minimal && !express;
     return Scaffold(
+      extendBodyBehindAppBar: classic,
       floatingActionButton: express && !_reordering
           ? Padding(
               padding: EdgeInsets.only(bottom: wide ? 0 : 74),
@@ -302,7 +327,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: _reordering
             ? Text(context.l10n.reorder)
-            : minimal || express
+            : minimal || express || stackedRows(context)
                 ? null
                 : FittedBox(
                     fit: BoxFit.scaleDown,
@@ -310,13 +335,148 @@ class _HomePageState extends State<HomePage> {
                     child: Text(context.l10n.today),
                   ),
 
+        leadingWidth: minimal && !railed && !_reordering ? 64 : null,
         leading: minimal && !railed && !_reordering
-            ? IconButton(
-                icon: const Icon(LucideIcons.settings),
-                onPressed: () => AppNavigator.push(const SettingsPage()),
+            ? Padding(
+                padding: const EdgeInsetsDirectional.only(start: 16),
+                child: Center(
+                  child: MorphMenu(
+                    icon: LucideIcons.ellipsis,
+                    tooltip: context.l10n.focus_options,
+                    style: MorphMenuStyle.paper(context),
+                    anchor: Alignment.topLeft,
+                    items: [
+                      if (settings.focusEnabled)
+                        (
+                          icon: LucideIcons.timer,
+                          label: context.l10n.focus,
+                          onTap: () => openFocus(context),
+                        ),
+                      if (settings.planningEnabled)
+                        (
+                          icon: LucideIcons.calendarClock,
+                          label: context.l10n.day_timeline,
+                          onTap: () => AppNavigator.push(const DayTimelinePage()),
+                        ),
+                      if (settings.notesEnabled)
+                        (
+                          icon: LucideIcons.notebookPen,
+                          label: context.l10n.notes_all,
+                          onTap: () => AppNavigator.push(const AllNotesPage()),
+                        ),
+                      if (settings.todosEnabled)
+                        (
+                          icon: LucideIcons.listChecks,
+                          label: context.l10n.todos,
+                          onTap: () => AppNavigator.push(const TodosPage()),
+                        ),
+                      (
+                        icon: LucideIcons.chartColumn,
+                        label: context.l10n.stats,
+                        onTap: () => AppNavigator.push(const StatisticsPage()),
+                      ),
+                      (
+                        icon: LucideIcons.settings,
+                        label: context.l10n.settings,
+                        onTap: () => AppNavigator.push(const SettingsPage()),
+                      ),
+                    ],
+                  ),
+                ),
               )
             : null,
-        actions: [
+        actions: minimal && !railed && !_reordering
+            ? [
+                if (settings.focusEnabled &&
+                    context.select<FocusController, bool>((f) => f.isActive)) ...[
+                  const FocusPill(compact: true),
+                  const SizedBox(width: 6),
+                ],
+                MorphMenuButton(
+                  icon: LucideIcons.listFilter,
+                  tooltip: context.l10n.today_filter,
+                  style: MorphMenuStyle.paper(context),
+                  active: todayFiltered(settings),
+                  onTap: () => showTodayFilterSheet(context),
+                ),
+                const SizedBox(width: 10),
+                Builder(
+                  builder: (button) => MorphMenuButton(
+                    icon: LucideIcons.plus,
+                    tooltip: context.l10n.add_habit,
+                    style: MorphMenuStyle.paper(context),
+                    onTap: () => AppNavigator.morph(
+                      const HabitFormPage(),
+                      from: button,
+                      icon: LucideIcons.plus,
+                      ink: context.colors.onSurface,
+                      edge: context.colors.outlineVariant,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+              ]
+            : classic && !_reordering
+            ? [
+                if (settings.notesEnabled) ...[
+                  GlassIconButton(
+                    icon: LucideIcons.notebookPen,
+                    tooltip: context.l10n.notes_all,
+                    onTap: () => AppNavigator.push(const AllNotesPage()),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                GlassIconButton(
+                  icon: settings.compactCards
+                      ? LucideIcons.chevronsUpDown
+                      : LucideIcons.chevronsDownUp,
+                  tooltip: settings.compactCards
+                      ? context.l10n.expand_cards
+                      : context.l10n.collapse_cards,
+                  onTap: () => settings.setCompactCards(!settings.compactCards),
+                ),
+                const SizedBox(width: 8),
+                const FocusPill(glass: true),
+                const SizedBox(width: 8),
+                if (bigText)
+                  GlassIconButton(
+                    icon: LucideIcons.plus,
+                    tooltip: context.l10n.add_habit,
+                    onTap: () => AppNavigator.push(
+                      const HabitFormPage(),
+                      fullscreenDialog: true,
+                    ),
+                  )
+                else
+                  GlassPill(
+                    tint: context.colors.primary,
+                    onTap: () => AppNavigator.push(
+                      const HabitFormPage(),
+                      fullscreenDialog: true,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          LucideIcons.plus,
+                          size: 16,
+                          color: context.colors.onPrimary,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          context.l10n.new_label,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: context.colors.onPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(width: 16),
+              ]
+            : [
           if (minimal && !railed && !_reordering && settings.planningEnabled)
             IconButton(
               tooltip: context.l10n.day_timeline,
@@ -415,7 +575,14 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Stack(
         children: [
-          Consumer<HabitsController>(
+          NotificationListener<ScrollUpdateNotification>(
+            onNotification: (note) {
+              if (note.depth == 0 && note.metrics.axis == Axis.vertical) {
+                _scrolled.value = note.metrics.pixels > 2;
+              }
+              return false;
+            },
+            child: Consumer<HabitsController>(
             builder: (context, controller, _) {
               if (controller.isEmpty) return const _EmptyState();
 
@@ -441,17 +608,43 @@ class _HomePageState extends State<HomePage> {
               if (_category != null && !categories.contains(_category)) {
                 _category = null;
               }
-              final listed = settings.todayOnly
+              final scheduled = settings.todayOnly
                   ? all.where((h) => h.isScheduledOn(today)).toList()
                   : all;
+              final listed = settings.hideTracking
+                  ? scheduled.where((h) => !h.tracking).toList()
+                  : scheduled;
               final filtered = _category == null
                   ? listed
                   : listed.where((h) => h.category == _category).toList();
 
-              final visible = _reordering || !sortCompletedLast
+              final hidingDone = settings.hideDone && !_reordering;
+              final shown = hidingDone
                   ? filtered
-                  : _completedLast(filtered);
+                      .where((h) => !(_frozen[h.id] ?? h.isDoneForNow))
+                      .where((h) => !h.isPausedOn(today))
+                      .toList()
+                  : filtered;
+              final visible = _reordering || !sortCompletedLast
+                  ? shown
+                  : _completedLast(shown);
               _visible = visible;
+              final hidden = _reordering || !todayFiltered(settings)
+                  ? const <Habit>[]
+                  : _hiddenFrom(all, visible, settings.hideTracking);
+              if (hidden.isEmpty) _peek = false;
+              final more = _peek ? hidden : const <Habit>[];
+              _peeked = {for (final habit in more) habit.id};
+              final fold = hidden.isEmpty
+                  ? null
+                  : FoldHeader(
+                      label: _foldLabel(hidden, today),
+                      expanded: _peek,
+                      onTap: () => setState(() => _peek = !_peek),
+                    );
+              final allDone =
+                  hidingDone && visible.isEmpty && filtered.isNotEmpty;
+              void openFilter() => showTodayFilterSheet(context);
 
               final header = _reordering
                   ? _ReorderBanner(text: context.l10n.reorder_hint)
@@ -468,7 +661,10 @@ class _HomePageState extends State<HomePage> {
                           settings.cardActivity && settings.viewSwitcher,
                       categories: categories,
                       category: _category,
-                      onCategory: (c) => setState(() => _category = c),
+                      onCategory: _pickCategory,
+                      filtered: todayFiltered(settings),
+                      onFilter: openFilter,
+                      allDone: allDone,
                     )
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -483,15 +679,18 @@ class _HomePageState extends State<HomePage> {
                           SizedBox(height: settings.showTodayProgress ? 20 : 6),
                           _ViewSelector(mode: _mode, onChanged: _changeMode),
                         ],
-                        if (categories.isNotEmpty) ...[
+                        if (!minimal || categories.isNotEmpty) ...[
                           const SizedBox(height: 14),
                           _CategoryBar(
                             categories: categories,
                             selected: _category,
-                            onSelected: (c) => setState(() => _category = c),
+                            onSelected: _pickCategory,
+                            filtered: todayFiltered(settings),
+                            onFilter: minimal ? null : openFilter,
                           ),
                         ],
                         const SizedBox(height: 14),
+                        if (allDone) const TodayAllDone(),
                       ],
                     );
 
@@ -508,6 +707,7 @@ class _HomePageState extends State<HomePage> {
                         ? context.colors.surfaceContainerHighest
                         : null,
                 strokeWidth: express ? 3.4 : (minimal ? 2 : 2.5),
+                edgeOffset: classic ? MediaQuery.paddingOf(context).top : 0,
                 displacement: express ? 58 : (minimal ? 32 : 40),
                 onRefresh: () async {
                   await Future<void>.delayed(
@@ -520,6 +720,8 @@ class _HomePageState extends State<HomePage> {
                         mode: _mode,
                         reordering: _reordering,
                         header: header,
+                        fold: fold,
+                        more: more,
                         onReorder: (oldIndex, newIndex) =>
                             controller.reorder(visible, oldIndex, newIndex),
                         onOpen: _openDetails,
@@ -535,6 +737,8 @@ class _HomePageState extends State<HomePage> {
                         habits: visible,
                         mode: _mode,
                         header: header,
+                        fold: fold,
+                        more: more,
                         onOpen: _openDetails,
                         onToggleToday: (habit) => _toggle(habit, today),
                         onToggleDay: _toggle,
@@ -548,6 +752,8 @@ class _HomePageState extends State<HomePage> {
                         mode: _mode,
                         reordering: _reordering,
                         header: header,
+                        fold: fold,
+                        more: more,
                         onReorder: (oldIndex, newIndex) =>
                             controller.reorder(visible, oldIndex, newIndex),
                         onOpen: _openDetails,
@@ -561,6 +767,8 @@ class _HomePageState extends State<HomePage> {
               );
             },
           ),
+          ),
+          if (classic) HeaderBlur(scrolled: _scrolled),
           if (minimal && !_reordering && settings.viewSwitcher)
             Positioned(
               left: 0,
@@ -601,6 +809,16 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _toggle(Habit habit, DateTime date) async {
     final controller = context.read<HabitsController>();
+    final settings = context.read<SettingsController>();
+    if (settings.pastFirst && date.atMidnight.isBefore(AppClock.today())) {
+      await showDayActionsSheet(
+        context,
+        habit: habit,
+        date: date,
+        notesEnabled: settings.notesEnabled,
+      );
+      return;
+    }
     if (habit.kind == HabitKind.negative && !isRelapse(habit, date)) {
       if (date.atMidnight.isAfter(AppClock.today())) return;
       if (!await confirmRelapse(context, habit)) return;
@@ -673,11 +891,40 @@ class _HomePageState extends State<HomePage> {
   }
 
   bool _changesSlot(String id, bool settled) {
-    if (!context.read<SettingsController>().sortCompletedLast) return false;
+    if (_peeked.contains(id)) return false;
+    final settings = context.read<SettingsController>();
+    if (settings.hideDone) return true;
+    if (!settings.sortCompletedLast) return false;
     final before = _completedLast(_visible);
     final after = _completedLast(_visible, id: id, settled: settled);
     return before.indexWhere((h) => h.id == id) !=
         after.indexWhere((h) => h.id == id);
+  }
+
+  List<Habit> _hiddenFrom(
+    List<Habit> all,
+    List<Habit> shown,
+    bool hideTracking,
+  ) {
+    final ids = {for (final habit in shown) habit.id};
+    return [
+      for (final habit in all)
+        if (!ids.contains(habit.id) &&
+            !(hideTracking && habit.tracking) &&
+            (_category == null || habit.category == _category))
+          habit,
+    ];
+  }
+
+  String _foldLabel(List<Habit> hidden, DateTime today) {
+    final count = hidden.length;
+    if (hidden.every((habit) => habit.isDoneForNow)) {
+      return context.l10n.today_fold_done(count);
+    }
+    if (hidden.every((habit) => !habit.isScheduledOn(today))) {
+      return context.l10n.today_fold_other(count);
+    }
+    return context.l10n.today_fold_hidden(count);
   }
 
   List<String> _categoriesOf(List<Habit> habits, List<Category> order) {
@@ -767,53 +1014,68 @@ class _ViewSelector extends StatelessWidget {
       (HeatmapMode.month, context.l10n.month),
       (HeatmapMode.year, context.l10n.year),
     ];
+    final index = options.indexWhere((option) => option.$1 == mode);
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(14),
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
+      child: Stack(
         children: [
-          for (final (value, label) in options)
-            Expanded(
-              child: Semantics(
-                button: true,
-                selected: value == mode,
-                child: GestureDetector(
-                  onTap: () {
-                    onChanged(value);
-                  },
-                  child: AnimatedScale(
-                    scale: value == mode ? 1 : 0.94,
-                    duration: const Duration(milliseconds: 260),
-                    curve: Curves.easeOutBack,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeOutCubic,
-                      padding: const EdgeInsets.symmetric(vertical: 9),
-                      decoration: BoxDecoration(
-                        color: value == mode
-                            ? scheme.primary
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
+          Positioned.fill(
+            child: AnimatedAlign(
+              alignment: Alignment(-1 + index.toDouble(), 0),
+              duration: const Duration(milliseconds: 380),
+              curve: Curves.easeOutBack,
+              child: FractionallySizedBox(
+                widthFactor: 1 / options.length,
+                heightFactor: 1,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: scheme.primary.withValues(alpha: 0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
                       ),
-                      child: AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 220),
-                        style: DefaultTextStyle.of(context).style.copyWith(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: value == mode
-                              ? scheme.onPrimary
-                              : context.tokens.muted,
-                        ),
-                        child: Text(label, textAlign: TextAlign.center),
-                      ),
-                    ),
+                    ],
                   ),
                 ),
               ),
             ),
+          ),
+          Row(
+            children: [
+              for (final (value, label) in options)
+                Expanded(
+                  child: Semantics(
+                    button: true,
+                    selected: value == mode,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => onChanged(value),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 9),
+                        child: AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 220),
+                          style: DefaultTextStyle.of(context).style.copyWith(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: value == mode
+                                ? scheme.onPrimary
+                                : context.tokens.muted,
+                          ),
+                          child: Text(label, textAlign: TextAlign.center),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );
@@ -825,19 +1087,28 @@ class _CategoryBar extends StatelessWidget {
     required this.categories,
     required this.selected,
     required this.onSelected,
+    required this.filtered,
+    required this.onFilter,
   });
 
   final List<String> categories;
   final String? selected;
   final ValueChanged<String?> onSelected;
+  final bool filtered;
+  final VoidCallback? onFilter;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    final scheme = context.colors;
+    final filter = onFilter;
+    return Row(
+      children: [
+        Expanded(child: SizedBox(
       height: 36,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
+          if (categories.isNotEmpty)
           _Chip(
             label: context.l10n.all,
             active: selected == null,
@@ -853,6 +1124,34 @@ class _CategoryBar extends StatelessWidget {
             ),
         ],
       ),
+        )),
+        if (filter != null) ...[
+        const SizedBox(width: 8),
+        Semantics(
+          button: true,
+          selected: filtered,
+          label: context.l10n.today_filter,
+          child: GestureDetector(
+            onTap: filter,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: filtered ? scheme.primary : scheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                LucideIcons.listFilter,
+                size: 16,
+                color: filtered ? scheme.onPrimary : context.tokens.muted,
+              ),
+            ),
+          ),
+        ),
+        ],
+      ],
     );
   }
 }

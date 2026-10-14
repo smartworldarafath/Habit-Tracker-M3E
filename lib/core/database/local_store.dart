@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:streak/core/database/data_location.dart';
 import 'package:streak/core/utils/app_dirs.dart';
 import 'package:streak/features/habits/data/category.dart';
 import 'package:streak/features/habits/data/habit.dart';
@@ -20,6 +22,9 @@ class LocalStore {
   static const _focusBox = 'focus';
   static const _todosBox = 'todos';
   static const _todoTagsBox = 'todo_tags';
+  static const _changesKey = 'syncChanges';
+  static const _deletedKey = 'syncDeleted';
+  static const _deviceKey = 'deviceId';
 
   static late Box _habits;
   static late Box _settings;
@@ -31,8 +36,86 @@ class LocalStore {
 
   static int _writing = 0;
   static String _habitsStamp = '';
+  static String _todosStamp = '';
 
   static bool get isWriting => _writing > 0;
+
+  static void Function()? onChanged;
+  static Map<String, int>? _changes;
+  static Map<String, int>? _deleted;
+  static int _quiet = 0;
+
+  static Map<String, int> get changes => _changes ??= {
+        for (final entry in settingMap(_changesKey).entries)
+          if (entry.value is int) entry.key: entry.value as int,
+      };
+
+  static Map<String, int> get deleted => _deleted ??= {
+        for (final entry in settingMap(_deletedKey).entries)
+          if (entry.value is int) entry.key: entry.value as int,
+      };
+
+  static int? changedAt(String id) => changes[id];
+
+  static int? deletedAt(String id) => deleted[id];
+
+  static Future<void> stampChange(String id, int at) async {
+    changes[id] = at;
+    await _settings.put(_changesKey, Map<String, int>.of(changes));
+    if (deleted.remove(id) != null) {
+      await _settings.put(_deletedKey, Map<String, int>.of(deleted));
+    }
+  }
+
+  static Future<void> stampDeleted(String id, int at) async {
+    deleted[id] = at;
+    changes.remove(id);
+    await _settings.put(_deletedKey, Map<String, int>.of(deleted));
+    await _settings.put(_changesKey, Map<String, int>.of(changes));
+  }
+
+  static Future<void> _touch(Iterable<String> ids) async {
+    if (_quiet > 0) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    var revived = false;
+    for (final id in ids) {
+      changes[id] = now;
+      revived = deleted.remove(id) != null || revived;
+    }
+    await _settings.put(_changesKey, Map<String, int>.of(changes));
+    if (revived) await _settings.put(_deletedKey, Map<String, int>.of(deleted));
+    onChanged?.call();
+  }
+
+  static Future<void> _removed(Iterable<String> ids) async {
+    if (_quiet > 0 || ids.isEmpty) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final id in ids) {
+      deleted[id] = now;
+      changes.remove(id);
+    }
+    await _settings.put(_deletedKey, Map<String, int>.of(deleted));
+    await _settings.put(_changesKey, Map<String, int>.of(changes));
+    onChanged?.call();
+  }
+
+  static Future<T> quietly<T>(Future<T> Function() action) async {
+    _quiet++;
+    try {
+      return await action();
+    } finally {
+      _quiet--;
+    }
+  }
+
+  static String get deviceId {
+    final saved = setting(_deviceKey, '');
+    if (saved.isNotEmpty) return saved;
+    final random = Random.secure();
+    final made = List.generate(8, (_) => random.nextInt(16).toRadixString(16)).join();
+    _settings.put(_deviceKey, made);
+    return made;
+  }
 
   static Future<T> guardWrites<T>(Future<T> Function() action) async {
     _writing++;
@@ -52,11 +135,37 @@ class LocalStore {
     _habits = await Hive.openBox(_habitsBox);
     _habitsStamp = _stampOf(_habits);
     _settings = await Hive.openBox(_settingsBox);
+    _changes = null;
+    _deleted = null;
     _categories = await Hive.openBox(_categoriesBox);
     _notes = await Hive.openBox(_notesBox);
     _focus = await Hive.openBox(_focusBox);
     _todos = await Hive.openBox(_todosBox);
+    _todosStamp = _stampOf(_todos);
     _todoTags = await Hive.openBox(_todoTagsBox);
+    final movedFrom = DataLocation.rewriteFrom;
+    if (movedFrom != null) await _followMove(movedFrom);
+  }
+
+  static Future<void> _followMove(String from) async {
+    final to = (await appDataDir()).path;
+    for (final box in [
+      _habits,
+      _settings,
+      _categories,
+      _notes,
+      _focus,
+      _todos,
+      _todoTags,
+    ]) {
+      for (final key in box.keys.toList()) {
+        final value = box.get(key);
+        final moved = DataLocation.rewrite(value, from, to);
+        if (!identical(moved, value)) await box.put(key, moved);
+      }
+      await box.flush();
+    }
+    DataLocation.finish();
   }
 
   static List<Todo> readTodos() {
@@ -71,14 +180,47 @@ class LocalStore {
     return result;
   }
 
-  static Future<void> writeTodo(Todo todo) => _todos.put(todo.id, todo.toMap());
+  static Future<void> writeTodo(Todo todo) async {
+    await _todos.put(todo.id, todo.toMap());
+    _todosStamp = _stampOf(_todos);
+    await _touch([todo.id]);
+  }
 
-  static Future<void> writeTodos(Iterable<Todo> todos) =>
-      _todos.putAll({for (final todo in todos) todo.id: todo.toMap()});
+  static Todo? todo(String id) {
+    try {
+      final raw = _todos.get(id);
+      return raw is Map ? Todo.fromMap(Map<String, dynamic>.from(raw)) : null;
+    } catch (_) {
+      return null;
+    }
+  }
 
-  static Future<void> removeTodo(String id) => _todos.delete(id);
+  static bool get todosChangedElsewhere {
+    final stamp = _stampOf(_todos);
+    return stamp.isEmpty || stamp != _todosStamp;
+  }
 
-  static Future<void> removeTodos(Iterable<String> ids) => _todos.deleteAll(ids);
+  static Future<void> reloadTodos() async {
+    if (_writing > 0) return;
+    if (_todos.isOpen) await _todos.close();
+    _todos = await Hive.openBox(_todosBox);
+    _todosStamp = _stampOf(_todos);
+  }
+
+  static Future<void> writeTodos(Iterable<Todo> todos) async {
+    await _todos.putAll({for (final todo in todos) todo.id: todo.toMap()});
+    await _touch(todos.map((todo) => todo.id));
+  }
+
+  static Future<void> removeTodo(String id) async {
+    await _todos.delete(id);
+    await _removed([id]);
+  }
+
+  static Future<void> removeTodos(Iterable<String> ids) async {
+    await _todos.deleteAll(ids);
+    await _removed(ids);
+  }
 
   static List<TodoTag> readTodoTags() {
     final result = <TodoTag>[];
@@ -92,10 +234,24 @@ class LocalStore {
     return result;
   }
 
-  static Future<void> writeTodoTag(TodoTag tag) =>
-      _todoTags.put(tag.id, tag.toJson());
+  static Future<void> writeTodoTag(TodoTag tag) async {
+    await _todoTags.put(tag.id, tag.toJson());
+    await _touch([tag.id]);
+  }
 
-  static Future<void> removeTodoTag(String id) => _todoTags.delete(id);
+  static TodoTag? todoTag(String id) {
+    try {
+      final raw = _todoTags.get(id);
+      return raw is String ? TodoTag.fromJson(raw) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> removeTodoTag(String id) async {
+    await _todoTags.delete(id);
+    await _removed([id]);
+  }
 
   static List<FocusSession> readFocusSessions() {
     final result = <FocusSession>[];
@@ -105,13 +261,25 @@ class LocalStore {
     return result;
   }
 
-  static Future<void> writeFocusSession(FocusSession session) =>
-      _focus.put(session.id, session.toMap());
+  static Future<void> writeFocusSession(FocusSession session) async {
+    await _focus.put(session.id, session.toMap());
+    await _touch([session.id]);
+  }
+
+  static FocusSession? focusSession(String id) {
+    try {
+      final raw = _focus.get(id);
+      return raw is Map ? FocusSession.fromMap(Map<String, dynamic>.from(raw)) : null;
+    } catch (_) {
+      return null;
+    }
+  }
 
   static Future<void> removeFocusSessions(Iterable<String> ids) async {
     for (final id in ids) {
       await _focus.delete(id);
     }
+    await _removed(ids);
   }
 
   static Future<void> removeFocusFor(String habitId) async {
@@ -122,6 +290,7 @@ class LocalStore {
     for (final id in ids) {
       await _focus.delete(id);
     }
+    await _removed(ids);
   }
 
   static List<HabitNote> readNotes() {
@@ -132,10 +301,24 @@ class LocalStore {
     return result;
   }
 
-  static Future<void> writeNote(HabitNote note) =>
-      _notes.put(note.id, note.toMap());
+  static Future<void> writeNote(HabitNote note) async {
+    await _notes.put(note.id, note.toMap());
+    await _touch([note.id]);
+  }
 
-  static Future<void> removeNote(String id) => _notes.delete(id);
+  static HabitNote? note(String id) {
+    try {
+      final raw = _notes.get(id);
+      return raw is Map ? HabitNote.fromMap(Map<String, dynamic>.from(raw)) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> removeNote(String id) async {
+    await _notes.delete(id);
+    await _removed([id]);
+  }
 
   static Future<void> removeNotesFor(String habitId) async {
     final ids = readNotes()
@@ -145,6 +328,7 @@ class LocalStore {
     for (final id in ids) {
       await _notes.delete(id);
     }
+    await _removed(ids);
   }
 
   static Map<String, Habit> readHabits() {
@@ -160,18 +344,21 @@ class LocalStore {
     return result;
   }
 
-  static String? habitName(String id) {
+  static Habit? habit(String id) {
     try {
       final raw = _habits.get(id);
-      return raw is String ? Habit.fromJson(raw).name : null;
+      return raw is String ? Habit.fromJson(raw) : null;
     } catch (_) {
       return null;
     }
   }
 
+  static String? habitName(String id) => habit(id)?.name;
+
   static Future<void> writeHabit(Habit habit) async {
     await _habits.put(habit.id, habit.toJson());
     _habitsStamp = _stampOf(_habits);
+    await _touch([habit.id]);
   }
 
   static String _stampOf(Box box) {
@@ -190,7 +377,10 @@ class LocalStore {
     return stamp.isEmpty || stamp != _habitsStamp;
   }
 
-  static Future<void> removeHabit(String id) => _habits.delete(id);
+  static Future<void> removeHabit(String id) async {
+    await _habits.delete(id);
+    await _removed([id]);
+  }
 
   static Future<void> reloadHabits() async {
     if (_writing > 0) return;
@@ -215,6 +405,33 @@ class LocalStore {
       _categories.put(category.id, category.toJson());
 
   static Future<void> removeCategory(String id) => _categories.delete(id);
+
+  static String categoryKey(String name) => name.trim().toLowerCase();
+
+  static Future<void> mergeCategory(Category category) async {
+    final key = categoryKey(category.name);
+    final taken = readCategories()
+        .any((c) => c.id != category.id && categoryKey(c.name) == key);
+    if (!taken) await writeCategory(category);
+  }
+
+  static Future<List<Category>> readCategoriesOnce() async {
+    final kept = <String, Category>{};
+    final all = readCategories()
+      ..sort((a, b) {
+        final byOrder = a.order.compareTo(b.order);
+        return byOrder != 0 ? byOrder : a.id.compareTo(b.id);
+      });
+    for (final category in all) {
+      final key = categoryKey(category.name);
+      if (kept.containsKey(key)) {
+        await removeCategory(category.id);
+      } else {
+        kept[key] = category;
+      }
+    }
+    return kept.values.toList();
+  }
 
   static bool get hasCategories => _categories.isNotEmpty;
 
@@ -256,5 +473,7 @@ class LocalStore {
     await _todoTags.clear();
     await _categories.clear();
     await _settings.clear();
+    _changes = null;
+    _deleted = null;
   }
 }

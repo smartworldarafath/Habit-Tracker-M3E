@@ -10,7 +10,7 @@ import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/routing/app_navigator.dart';
 import 'package:streak/core/utils/app_dirs.dart';
 import 'package:streak/core/widgets/section_label.dart';
-import 'package:streak/features/habits/widgets/category_editor_sheet.dart';
+import 'package:streak/features/settings/data_folder_actions.dart';
 import 'package:streak/features/settings/pages/about_page.dart';
 import 'package:streak/features/settings/pages/app_updates_page.dart';
 import 'package:streak/features/settings/pages/app_style_page.dart';
@@ -22,6 +22,7 @@ import 'package:streak/features/settings/widgets/settings_rows.dart';
 import 'package:streak/core/widgets/verified_badge.dart';
 import 'package:streak/features/settings/widgets/settings_sheets.dart';
 import 'package:streak/features/settings/widgets/profile_avatar_view.dart';
+import 'package:streak/features/settings/widgets/widget_style_list.dart';
 
 class MinimalSettingsPage extends StatelessWidget {
   const MinimalSettingsPage({super.key});
@@ -353,11 +354,29 @@ class _AppearancePage extends StatelessWidget {
                 ),
               ),
             ],
+            if (Platform.isAndroid)
+              SoftRow(
+                icon: LucideIcons.layoutDashboard,
+                title: context.l10n.widgets,
+                subtitle: context.l10n.widgets_sub,
+                onTap: () => AppNavigator.push(const _WidgetsPage()),
+              ),
           ],
         ),
       ],
     );
   }
+}
+
+class _WidgetsPage extends StatelessWidget {
+  const _WidgetsPage();
+
+  @override
+  Widget build(BuildContext context) => MinimalPage(
+    title: context.l10n.widgets,
+    subtitle: context.l10n.widgets_hint,
+    children: const [WidgetStyleList()],
+  );
 }
 
 class _PreferencesPage extends StatelessWidget {
@@ -454,12 +473,6 @@ class _PreferencesPage extends StatelessWidget {
               ),
             ),
             SoftRow(
-              icon: LucideIcons.tags,
-              title: context.l10n.category_order,
-              subtitle: context.l10n.category_order_sub,
-              onTap: () => showCategoryOrderSheet(context),
-            ),
-            SoftRow(
               icon: LucideIcons.layoutList,
               title: context.l10n.view_switcher,
               subtitle: context.l10n.view_switcher_sub,
@@ -513,6 +526,24 @@ class _PreferencesPage extends StatelessWidget {
                 onChanged: settings.setTodayOnly,
               ),
             ),
+            SoftRow(
+              icon: LucideIcons.listChecks,
+              title: context.l10n.hide_done,
+              subtitle: context.l10n.hide_done_sub,
+              trailing: _SoftSwitch(
+                value: settings.hideDone,
+                onChanged: settings.setHideDone,
+              ),
+            ),
+            SoftRow(
+              icon: LucideIcons.history,
+              title: context.l10n.past_first,
+              subtitle: context.l10n.past_first_sub,
+              trailing: _SoftSwitch(
+                value: settings.pastFirst,
+                onChanged: settings.setPastFirst,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 22),
@@ -546,6 +577,15 @@ class _PreferencesPage extends StatelessWidget {
                 onChanged: settings.setTodosEnabled,
               ),
             ),
+            if (settings.todosEnabled)
+              SoftRow(
+                icon: LucideIcons.stickyNote,
+                title: context.l10n.todo_style,
+                subtitle: context.l10n.todo_style_sub,
+                value: SettingsActions.todoStyles(context)[
+                    settings.todoPapers ? 1 : 0],
+                onTap: () => SettingsActions.pickTodoStyle(context),
+              ),
             SoftRow(
               icon: LucideIcons.palmtree,
               title: context.l10n.gamification_beta,
@@ -559,21 +599,9 @@ class _PreferencesPage extends StatelessWidget {
               icon: LucideIcons.calendarClock,
               title: context.l10n.plan_day,
               subtitle: context.l10n.plan_day_sub,
-              trailing: _SoftSwitch(
-                value: settings.planningEnabled,
-                onChanged: settings.setPlanningEnabled,
-              ),
+              value: SettingsActions.planOptions(context)[settings.planChoice],
+              onTap: () => SettingsActions.pickPlan(context),
             ),
-            if (settings.planningEnabled && settings.todosEnabled)
-              SoftRow(
-                icon: LucideIcons.listTodo,
-                title: context.l10n.plan_todos,
-                subtitle: context.l10n.plan_todos_sub,
-                trailing: _SoftSwitch(
-                  value: settings.planTodos,
-                  onChanged: settings.setPlanTodos,
-                ),
-              ),
             SoftRow(
               icon: LucideIcons.moveHorizontal,
               title: context.l10n.swipe_cards,
@@ -734,6 +762,13 @@ class _DataPage extends StatelessWidget {
                 title: context.l10n.refresh_now,
                 subtitle: context.l10n.refresh_now_sub,
                 onTap: () => SettingsActions.refreshFolder(context),
+              ),
+            if (DataFolderActions.available)
+              SoftRow(
+                icon: LucideIcons.folderInput,
+                title: context.l10n.data_folder,
+                subtitle: dataPath,
+                onTap: () => DataFolderActions.pick(context),
               ),
             SoftRow(
               icon: LucideIcons.archive,

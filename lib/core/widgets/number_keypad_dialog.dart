@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:streak/app/theme/app_tokens.dart';
 import 'package:streak/core/i18n/l10n.dart';
@@ -15,6 +16,7 @@ Future<double?> showNumberKeypadDialog(
   bool decimals = false,
   bool clock = false,
   Color? accent,
+  ValueNotifier<bool>? replacing,
 }) {
   return showDialog<double>(
     context: context,
@@ -27,6 +29,7 @@ Future<double?> showNumberKeypadDialog(
       decimals: decimals,
       clock: clock,
       accent: accent,
+      replacing: replacing,
     ),
   );
 }
@@ -41,6 +44,7 @@ class _NumberKeypadDialog extends StatefulWidget {
     required this.decimals,
     required this.clock,
     required this.accent,
+    required this.replacing,
   });
 
   final String title;
@@ -51,6 +55,7 @@ class _NumberKeypadDialog extends StatefulWidget {
   final bool decimals;
   final bool clock;
   final Color? accent;
+  final ValueNotifier<bool>? replacing;
 
   @override
   State<_NumberKeypadDialog> createState() => _NumberKeypadDialogState();
@@ -70,10 +75,7 @@ class _NumberKeypadDialogState extends State<_NumberKeypadDialog> {
     return hours == 0 ? '$rest' : '$hours${rest.toString().padLeft(2, '0')}';
   }
 
-  double get _clockMinutes {
-    final digits = int.tryParse(_text) ?? 0;
-    return (digits ~/ 100 * 60 + digits % 100).toDouble();
-  }
+  double get _clockMinutes => clockMinutes(_text);
 
   double get _value {
     final parsed =
@@ -102,6 +104,29 @@ class _NumberKeypadDialogState extends State<_NumberKeypadDialog> {
   void _clear() {
     if (_text.isEmpty) return;
     setState(() => _text = '');
+  }
+
+  KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+    final char = event.character ?? '';
+    if (RegExp(r'^\d$').hasMatch(char)) {
+      _type(char);
+    } else if ((char == '.' || char == ',') &&
+        widget.decimals &&
+        !widget.clock) {
+      _dot();
+    } else if (key == LogicalKeyboardKey.backspace) {
+      _backspace();
+    } else if (key == LogicalKeyboardKey.delete) {
+      _clear();
+    } else if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      Navigator.of(context).pop(_value);
+    } else {
+      return KeyEventResult.ignored;
+    }
+    return KeyEventResult.handled;
   }
 
   Widget _key(Widget child, {VoidCallback? onTap, VoidCallback? onLongPress}) {
@@ -152,7 +177,10 @@ class _NumberKeypadDialogState extends State<_NumberKeypadDialog> {
         : _text.isEmpty
             ? '0'
             : _text;
-    return Dialog(
+    return Focus(
+      autofocus: true,
+      onKeyEvent: _onKeyEvent,
+      child: Dialog(
       backgroundColor: scheme.surface,
       insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -166,6 +194,53 @@ class _NumberKeypadDialogState extends State<_NumberKeypadDialog> {
               textAlign: TextAlign.center,
               style: sheetTitleStyle(context, size: 17),
             ),
+            if (widget.replacing case final replacing?) ...[
+              const SizedBox(height: 12),
+              ValueListenableBuilder<bool>(
+                valueListenable: replacing,
+                builder: (context, replace, _) => Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      for (final (index, label) in [
+                        context.l10n.quant_mode_add,
+                        context.l10n.quant_mode_replace,
+                      ].indexed)
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => replacing.value = index == 1,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              padding: const EdgeInsets.symmetric(vertical: 9),
+                              decoration: BoxDecoration(
+                                color: replace == (index == 1)
+                                    ? accent.withValues(alpha: 0.18)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(11),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                label,
+                                style: sheetActionStyle(
+                                  context,
+                                  size: 14,
+                                  color: replace == (index == 1)
+                                      ? accent
+                                      : context.tokens.muted,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 14),
             FittedBox(
               fit: BoxFit.scaleDown,
@@ -272,6 +347,7 @@ class _NumberKeypadDialogState extends State<_NumberKeypadDialog> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

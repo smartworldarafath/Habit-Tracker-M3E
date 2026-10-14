@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' show AppExitResponse;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ import 'package:streak/features/focus/state/focus_controller.dart';
 import 'package:streak/features/habits/pages/habit_details_page.dart';
 import 'package:streak/features/habits/state/categories_controller.dart';
 import 'package:streak/features/habits/state/habits_controller.dart';
+import 'package:streak/features/habits/widgets/day_actions_sheet.dart';
 import 'package:streak/features/island/state/island_controller.dart';
 import 'package:streak/features/habits/state/notes_controller.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
@@ -30,6 +32,7 @@ import 'package:streak/services/folder_sync.dart';
 import 'package:streak/services/home_widget_service.dart';
 import 'package:streak/services/image_cleanup_service.dart';
 import 'package:streak/services/notification_service.dart';
+import 'package:streak/services/portable_traces.dart';
 import 'package:streak/services/todos_widget_service.dart';
 import 'package:streak/services/widget_action_service.dart';
 
@@ -40,11 +43,32 @@ Future<void> main() async {
   } catch (e, s) {
     debugPrint('Streak could not start: $e');
     debugPrintStack(stackTrace: s);
-    runApp(StartupFailure(error: '$e', logPath: _writeStartupLog(e, s)));
+    runApp(
+      StartupFailure(
+        error: '$e',
+        logPath: _writeStartupLog(e, s),
+        blocked: _blockedByWindows(e),
+      ),
+    );
     return;
   }
   _run();
 }
+
+Future<AppExitResponse> _leaveNoTrace() async {
+  try {
+    await NotificationService().cancelAll();
+    await PortableTraces.clear(NotificationService.windowsAppId);
+  } catch (e) {
+    debugPrint('Could not clear what the portable app left: $e');
+  }
+  return AppExitResponse.exit;
+}
+
+bool _blockedByWindows(Object error) =>
+    Platform.isWindows &&
+    error is FileSystemException &&
+    error.osError?.errorCode == 5;
 
 String? _writeStartupLog(Object error, StackTrace stack) {
   if (kIsWeb || isMobile) return null;
@@ -74,6 +98,8 @@ Future<void> _startup() async {
 
   NotificationService.onOpenHabit = _openHabit;
   NotificationService.onOpenTodos = _openTodos;
+  NotificationService.onHabitsChanged = _reloadHabits;
+  NotificationService.onTodosChanged = _reloadTodos;
   FocusService.onPending = drainFocusActions;
   FocusService.listen();
   try {
@@ -81,6 +107,7 @@ Future<void> _startup() async {
   } catch (e, s) {
     debugPrint('Startup init (notifications/widget) failed: $e\n$s');
   }
+  if (isPortable) AppLifecycleListener(onExitRequested: _leaveNoTrace);
 
   _appChannel.setMethodCallHandler((call) async {
     if (call.method == 'openHabit') {
@@ -99,6 +126,7 @@ Future<void> _startup() async {
   });
 
   WidgetsBinding.instance.addPostFrameCallback((_) async {
+    await drainFocusActions();
     final pending = NotificationService().pendingHabitId;
     if (pending != null) {
       NotificationService().pendingHabitId = null;
@@ -113,7 +141,6 @@ Future<void> _startup() async {
       final page = await _appChannel.invokeMethod<String>('consumeLaunchPage');
       if (page != null) _openPage(page);
     }
-    await drainFocusActions();
   });
 }
 
@@ -156,6 +183,14 @@ void _openHabit(String habitId) {
   AppNavigator.push(HabitDetailsPage(habitId: habitId), fade: true);
 }
 
+void _reloadHabits() {
+  AppNavigator.key.currentContext?.read<HabitsController>().reload();
+}
+
+void _reloadTodos() {
+  AppNavigator.key.currentContext?.read<TodosController>().reload();
+}
+
 void _openTodos() {
   AppNavigator.push(const TodosPage(), fade: true);
 }
@@ -163,6 +198,29 @@ void _openTodos() {
 void _openPage(String page) {
   if (page == 'todos') _openTodos();
   if (page == 'stats') AppNavigator.push(const StatisticsPage(), fade: true);
+  if (page == 'focus') _openFocus();
+  if (page.startsWith('day:')) _openDay(page.substring(4));
+}
+
+void _openDay(String target) {
+  final split = target.lastIndexOf(':');
+  final context = AppNavigator.key.currentContext;
+  if (split <= 0 || context == null) return;
+  final habit = context.read<HabitsController>().byId(target.substring(0, split));
+  if (habit == null) return;
+  showDayActionsSheet(
+    context,
+    habit: habit,
+    date: parseDayKey(target.substring(split + 1)),
+    notesEnabled: context.read<SettingsController>().notesEnabled,
+  );
+}
+
+void _openFocus() {
+  final context = AppNavigator.key.currentContext;
+  if (context == null || !context.read<FocusController>().isActive) return;
+  if (AppNavigator.isShowing(FocusPage.routeName)) return;
+  AppNavigator.push(const FocusPage(), fade: true, name: FocusPage.routeName);
 }
 
 void _startFocus(String habitId) {

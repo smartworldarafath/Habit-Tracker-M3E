@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:streak/app/theme/app_tokens.dart';
+import 'package:streak/core/extensions/color_extensions.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/icons/habit_glyph.dart';
@@ -27,6 +28,8 @@ import 'package:streak/features/habits/widgets/strength_bar.dart';
 import 'package:streak/features/habits/widgets/unscheduled_day_dialog.dart';
 import 'package:streak/features/habits/widgets/water_cup.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
+import 'package:streak/app/theme/app_theme.dart';
+import 'package:streak/core/widgets/glass.dart';
 
 class HabitCard extends StatelessWidget {
   const HabitCard({
@@ -60,9 +63,14 @@ class HabitCard extends StatelessWidget {
 
     return _HoverRing(
       corners: corners,
+      child: Pressable(
+      scale: 0.98,
       child: Card(
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: corners),
+      shape: RoundedRectangleBorder(
+        borderRadius: corners,
+        side: AppTheme.cardEdge(Theme.of(context).brightness == Brightness.dark),
+      ),
       child: Semantics(
         button: true,
         child: InkWell(
@@ -103,12 +111,12 @@ class HabitCard extends StatelessWidget {
                           width: compact ? 34 : 46,
                           height: compact ? 34 : 46,
                           decoration: BoxDecoration(
-                            color: habit.color.withValues(alpha: 0.18),
+                            color: habit.color.shownIn(context).withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(compact ? 11 : 14),
                           ),
                           child: HabitGlyph(
                             glyph: habit.icon,
-                            color: habit.color,
+                            color: habit.color.shownIn(context),
                             size: compact ? 18 : 24,
                           ),
                         ),
@@ -150,11 +158,11 @@ class HabitCard extends StatelessWidget {
                                     Icon(
                                       habitMarkIcon(habit),
                                       size: 14,
-                                      color: habit.color,
+                                      color: habit.color.shownIn(context),
                                     ),
                                     const SizedBox(width: 3),
                                     Text(
-                                      habitMarkLabel(context, habit),
+                                      habitMarkLabel(context, habit, mode),
                                       style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
@@ -214,7 +222,7 @@ class HabitCard extends StatelessWidget {
                                     Expanded(
                                       child: StrengthBar(
                                         value: habit.strength,
-                                        color: habit.color,
+                                        color: habit.color.shownIn(context),
                                         track: scheme.surfaceContainerHighest,
                                       ),
                                     ),
@@ -328,6 +336,7 @@ class HabitCard extends StatelessWidget {
         ),
       ),
       ),
+      ),
     );
   }
 }
@@ -375,18 +384,20 @@ class _AmountLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = habit.completions[AppClock.now().dayKey]?.count ?? 0;
-    final progress = QuantProgress.of(count: count, target: habit.perDayTarget);
+    final progress = habit.progressFor(count);
     final unit = habit.isTimeAmount || habit.unitLabel.isEmpty
         ? ''
         : ' ${habit.unitLabel}';
     return Text(
-      '·  ${habit.amountText(count)}/'
-      '${habit.amountText(habit.perDayTarget)}$unit',
+      habit.hasGoal
+          ? '·  ${habit.amountText(count)}/'
+              '${habit.amountText(habit.perDayTarget)}$unit'
+          : '·  ${habit.amountText(count)}$unit',
       style: TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w700,
         color: progress.reachedGoal
-            ? progress.solidColor(habit.color)
+            ? progress.solidColor(habit.color.shownIn(context))
             : context.tokens.muted,
       ),
     );
@@ -453,7 +464,7 @@ class _ActionButton extends StatelessWidget {
     switch (habit.kind) {
       case HabitKind.positive:
         return _TodayButton(
-          color: habit.color,
+          color: habit.color.shownIn(context),
           done: doneToday,
           circle: circle,
           onTap: () {
@@ -463,7 +474,7 @@ class _ActionButton extends StatelessWidget {
       case HabitKind.negative:
         final relapsed = !doneToday;
         return _RelapseButton(
-          color: habit.color,
+          color: habit.color.shownIn(context),
           relapsed: relapsed,
           circle: circle,
           onTap: () => _handleRelapseTap(context, relapsed),
@@ -472,7 +483,7 @@ class _ActionButton extends StatelessWidget {
         final today = AppClock.now();
         final count = habit.completions[today.dayKey]?.count ?? 0;
         final ratio = habit.perDayTarget <= 0
-            ? 0.0
+            ? (count > 0 ? 1.0 : 0.0)
             : count / habit.perDayTarget;
         Future<void> addProgress() async {
           final controller = context.read<HabitsController>();
@@ -482,10 +493,7 @@ class _ActionButton extends StatelessWidget {
           await controller.addProgress(habit.id, today, habit.incrementAmount);
         }
 
-        final progress = QuantProgress.of(
-          count: count,
-          target: habit.perDayTarget,
-        );
+        final progress = habit.progressFor(count);
 
         void addCustom() => unawaited(addCustomAmount(context, habit));
 
@@ -498,7 +506,7 @@ class _ActionButton extends StatelessWidget {
             );
           case QuantKind.reading:
             return _BookButton(
-              color: progress.solidColor(habit.color),
+              color: progress.solidColor(habit.color.shownIn(context)),
               ratio: ratio.clamp(0.0, 1.0),
               done: doneToday,
               onTap: addProgress,
@@ -507,7 +515,7 @@ class _ActionButton extends StatelessWidget {
           case QuantKind.generic:
           case QuantKind.time:
             return _QuantityButton(
-              color: habit.color,
+              color: habit.color.shownIn(context),
               progress: progress,
               done: doneToday,
               circle: circle,
@@ -594,10 +602,10 @@ class _BookButton extends StatelessWidget {
                     painter: BookPainter(fill: t, color: color),
                   ),
                   if (done)
-                    const Icon(
+                    Icon(
                       LucideIcons.check,
                       size: 15,
-                      color: Colors.white,
+                      color: color.ink,
                     ),
                 ],
               ),
@@ -678,7 +686,9 @@ class _TodayButtonState extends State<_TodayButton>
           child: Icon(
             LucideIcons.check,
             size: 22,
-            color: widget.done ? Colors.white : widget.color,
+            color: widget.done
+                ? widget.color.ink
+                : widget.color.withValues(alpha: 0.3),
           ),
         ),
       ),
@@ -853,7 +863,7 @@ class _QuantityButtonState extends State<_QuantityButton>
                 child: Icon(
                   widget.done ? LucideIcons.check : LucideIcons.plus,
                   size: 15,
-                  color: widget.done ? Colors.white : widget.color,
+                  color: widget.done ? reachedColor.ink : widget.color,
                 ),
               ),
             ],

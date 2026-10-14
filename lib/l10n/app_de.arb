@@ -138,7 +138,7 @@
   "save_reminder": "Erinnerung gespeichert",
   "app_icon": "App-Symbol",
   "export_backup_sub": "Alle Gewohnheiten als Datei speichern",
-  "preferences": "Preferenzen",
+  "preferences": "Präferenzen",
   "icon_neutral": "Grün",
   "off": "Aus",
   "widget_cfg_color": "Farbe",
@@ -668,14 +668,13 @@
   "app_lock_unavailable": "Biometrie-Sperre nicht verfügbar",
   "auto_backup_folder_set": "Ordner gespeichert",
   "archive_habit": "Aktive Gewohnheit",
-  "focus_track_limit": "Bis zu 10 Titel",
+  "focus_track_limit": "Bis zu 30 Titel",
   "check_style": "Stil prüfen",
   "style_minimal_desc": "Gewohnheiten-Raster und Einstellungen in vier Bereiche unterteilt.",
   "focus_keep_awake": "Bildschirm eingeschaltet lassen",
   "data_sub": "Backups und Import",
   "note_time_optional": "Zeit (optional)",
   "focus_pause": "Pause",
-  "focus_track_rain": "Regen",
   "unit_hours": "Stunden",
   "focus_end_tasks": "{count} Aufgaben sind noch offen.",
   "@focus_end_tasks": {
@@ -785,7 +784,6 @@
   "clear_progress_sub": "Verlauf, Notizen und Fokus-Sessions",
   "clear_progress_confirm": "Fortschritt zurücksetzen",
   "clear_progress_done": "Fortschritt zurückgesetzt",
-  "widget_cfg_todos_scope": "Aufgaben",
   "todo_time": "Zeit",
   "vacation_all_sub": "Nichts zählt als verfehlt, solange es eingeschaltet ist",
   "currency_hint": "Symbol oder Code",
@@ -1146,7 +1144,7 @@
   "island_p_stone_pile": "Steinhaufen",
   "island_p_bench": "Bank",
   "island_reset_sub": "Alles wird abgerissen und jeder Punkt geht zurück auf dein Konto.",
-  "last_check": "Letzter Aufruf",
+  "last_check": "Zuletzt eingetragen",
   "heatmap_rolling_sub": "Das jährliche Raster endet heut anstatt am 31. Dezember",
   "app_background_sub": "Was du hinter den Karten siehst",
   "island_reset_go": "Neu starten",
@@ -1263,7 +1261,7 @@
       }
     }
   },
-  "every_n_weeks": "Alle {n} Wochen",
+  "every_n_weeks": "{n, plural, =1{Jede Woche} other{Alle {n} Wochen}}",
   "@every_n_weeks": {
     "placeholders": {
       "n": {
@@ -1271,7 +1269,7 @@
       }
     }
   },
-  "every_n_months": "Alle {n} Monate",
+  "every_n_months": "{n, plural, =1{Jeden Monat} other{Alle {n} Monate}}",
   "@every_n_months": {
     "placeholders": {
       "n": {
@@ -1332,8 +1330,6 @@
   "focus_repeat_one": "Einen wiederholen",
   "pin_paste": "Code einfügen",
   "todo_add_subtask": "Unteraufgabe hinzufügen",
-  "category_order": "Kategorie-Reihenfolge",
-  "category_order_sub": "Ziehe die Kategorien an die gewünschte Position",
   "category_order_empty": "Ordne einer Gewohnheit eine Kategorie zu, um sie hier zu sehen",
   "notif_streak_week": "🔥 {streak} Wochenserie",
   "@notif_streak_week": {

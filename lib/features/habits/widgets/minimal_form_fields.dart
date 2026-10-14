@@ -370,6 +370,10 @@ class CompactWeekdays extends StatelessWidget {
                   ),
                   child: Text(
                     labels[i],
+                    maxLines: 1,
+                    softWrap: false,
+                    textScaler: MediaQuery.textScalerOf(context)
+                        .clamp(maxScaleFactor: 1.3),
                     style: TextStyle(
                       color: active ? accent : context.tokens.muted,
                       fontWeight: FontWeight.w700,
@@ -392,13 +396,22 @@ class CompactReminderRow extends StatelessWidget {
     required this.reminder,
     required this.onEdit,
     required this.onDelete,
+    this.followsHabit = false,
   });
 
   final Reminder reminder;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final bool followsHabit;
 
   String _daysLabel(BuildContext context) {
+    final days = _dayNames(context);
+    if (!reminder.isHourly) return days;
+    return '$days · ${context.l10n.every_n_hours('${reminder.everyHours}')}';
+  }
+
+  String _dayNames(BuildContext context) {
+    if (followsHabit) return context.l10n.reminder_habit_days;
     if (reminder.isInterval) {
       return context.l10n.every_n_days(reminder.everyDays);
     }
@@ -432,7 +445,7 @@ class CompactReminderRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      reminder.timeLabel,
+                      reminder.spanLabel,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,

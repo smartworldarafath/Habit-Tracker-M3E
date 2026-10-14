@@ -29,6 +29,7 @@ class FocusClock extends StatelessWidget {
     required this.label,
     required this.size,
     this.row = false,
+    this.paused = false,
   });
 
   final ClockStyle style;
@@ -38,6 +39,7 @@ class FocusClock extends StatelessWidget {
   final String label;
   final double size;
   final bool row;
+  final bool paused;
 
   static String clockText(int seconds) => formatDuration(seconds);
 
@@ -50,6 +52,7 @@ class FocusClock extends StatelessWidget {
           color: color,
           label: label,
           size: size,
+          paused: paused,
         ),
       ClockStyle.flip => _FlipClock(seconds: seconds, size: size, row: row),
       ClockStyle.dots => _DotsClock(seconds: seconds, size: size),
@@ -64,6 +67,7 @@ class _RingClock extends StatelessWidget {
     required this.color,
     required this.label,
     required this.size,
+    required this.paused,
   });
 
   final int seconds;
@@ -71,10 +75,23 @@ class _RingClock extends StatelessWidget {
   final Color color;
   final String label;
   final double size;
+  final bool paused;
 
   @override
   Widget build(BuildContext context) {
     final text = FocusClock.clockText(seconds);
+    final caption = Text(
+      label.toUpperCase(),
+      maxLines: 1,
+      textAlign: TextAlign.center,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: size * 0.048,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 3,
+        color: Colors.white.withValues(alpha: paused ? 0.9 : 0.55),
+      ),
+    );
     final stroke = size * 0.052;
 
     return SizedBox(
@@ -114,18 +131,7 @@ class _RingClock extends StatelessWidget {
               SizedBox(height: size * 0.045),
               SizedBox(
                 width: size * 0.6,
-                child: Text(
-                  label.toUpperCase(),
-                  maxLines: 1,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: size * 0.048,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 3,
-                    color: Colors.white.withValues(alpha: 0.55),
-                  ),
-                ),
+                child: paused ? _Pulse(child: caption) : caption,
               ),
             ],
           ),
@@ -133,6 +139,33 @@ class _RingClock extends StatelessWidget {
       ),
     );
   }
+}
+
+class _Pulse extends StatefulWidget {
+  const _Pulse({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_Pulse> createState() => _PulseState();
+}
+
+class _PulseState extends State<_Pulse> with SingleTickerProviderStateMixin {
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+    lowerBound: 0.35,
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      FadeTransition(opacity: _controller, child: widget.child);
 }
 
 class _RingPainter extends CustomPainter {
@@ -472,6 +505,7 @@ class ClockPreview extends StatelessWidget {
     required this.color,
     required this.selected,
     required this.onTap,
+    this.seconds = 25 * 60,
   });
 
   final ClockStyle style;
@@ -479,56 +513,103 @@ class ClockPreview extends StatelessWidget {
   final Color color;
   final bool selected;
   final VoidCallback onTap;
+  final int seconds;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: double.infinity,
-            height: 104,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF111114),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: selected ? color : Colors.white.withValues(alpha: 0.08),
-                width: selected ? 2.5 : 1,
+      child: AnimatedScale(
+        scale: selected ? 1 : 0.94,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutBack,
+        child: Column(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutCubic,
+              width: double.infinity,
+              height: 108,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF1B1B20), Color(0xFF0E0E11)],
+                ),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: selected ? color : Colors.white.withValues(alpha: 0.08),
+                  width: selected ? 2 : 1,
+                ),
+                boxShadow: [
+                  if (selected)
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.35),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
+                    ),
+                ],
               ),
-            ),
-            child: IgnorePointer(
-              child: FittedBox(
-                child: FocusClock(
-                  style: style,
-                  seconds: 25 * 60,
-                  progress: 0.35,
-                  color: color,
-                  label: '',
-                  size: 220,
-                  row: true,
+              child: IgnorePointer(
+                child: FittedBox(
+                  child: FocusClock(
+                    style: style,
+                    seconds: seconds,
+                    progress: 1 - seconds / (25 * 60),
+                    color: color,
+                    label: '',
+                    size: 220,
+                    row: true,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-              color: selected
-                  ? color
-                  : Theme.of(context).colorScheme.onSurface,
+            const SizedBox(height: 9),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 220),
+              style: DefaultTextStyle.of(context).style.copyWith(
+                fontSize: 13,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                color: selected ? color : Theme.of(context).colorScheme.onSurface,
+              ),
+              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+}
+
+class LiveSeconds extends StatefulWidget {
+  const LiveSeconds({super.key, required this.builder});
+
+  final Widget Function(BuildContext context, int seconds) builder;
+
+  @override
+  State<LiveSeconds> createState() => _LiveSecondsState();
+}
+
+class _LiveSecondsState extends State<LiveSeconds> {
+  int _seconds = 25 * 60;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() => _seconds = _seconds <= 0 ? 25 * 60 : _seconds - 1);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context, _seconds);
 }

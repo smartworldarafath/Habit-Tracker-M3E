@@ -111,6 +111,9 @@ class HabitsController extends ChangeNotifier {
     List<int> scheduleWeekdays = const [],
     int scheduleEvery = 2,
     ScheduleUnit scheduleUnit = ScheduleUnit.days,
+    DateTime? scheduleStart,
+    bool fromLastDone = false,
+    bool monthWeekday = false,
     required List<Reminder> reminders,
     String coverPath = '',
     int coverClarity = 100,
@@ -123,12 +126,16 @@ class HabitsController extends ChangeNotifier {
     String bookCoverPath = '',
     bool focusOnly = false,
     bool tracking = false,
+    bool anyAmount = false,
+    bool anySteps = false,
+    int stepsNeeded = 1,
     int difficulty = 0,
     int focusMinutes = 25,
     int focusBreakMinutes = 0,
     int startMinute = -1,
     int durationMinutes = 0,
     List<Substep> substeps = const [],
+    List<int> restDays = const [],
   }) async {
     final id = _uuid.v4();
     final habit = Habit(
@@ -144,6 +151,9 @@ class HabitsController extends ChangeNotifier {
       scheduleWeekdays: scheduleWeekdays,
       scheduleEvery: scheduleEvery,
       scheduleUnit: scheduleUnit,
+      scheduleStart: scheduleStart,
+      fromLastDone: fromLastDone,
+      monthWeekday: monthWeekday,
       reminders: reminders,
       coverPath: coverPath,
       coverClarity: coverClarity,
@@ -156,17 +166,27 @@ class HabitsController extends ChangeNotifier {
       bookCoverPath: bookCoverPath,
       focusOnly: focusOnly,
       tracking: tracking,
+      anyAmount: anyAmount,
+      anySteps: anySteps,
+      stepsNeeded: stepsNeeded,
       difficulty: difficulty,
       focusMinutes: focusMinutes,
       focusBreakMinutes: focusBreakMinutes,
       startMinute: startMinute,
       durationMinutes: durationMinutes,
       substeps: substeps,
+      restDays: restDays,
     );
     _habits[id] = habit;
     await LocalStore.writeHabit(habit);
     notifyListeners();
-    if (reminders.isNotEmpty) await _notifications.scheduleFor(habit);
+    if (reminders.isNotEmpty) {
+      try {
+        await _notifications.scheduleFor(habit);
+      } catch (e) {
+        debugPrint('Scheduling ${habit.name} failed: $e');
+      }
+    }
     HomeWidgetService.syncSoon(() => asMap);
   }
 
@@ -176,46 +196,6 @@ class HabitsController extends ChangeNotifier {
     notifyListeners();
     await _notifications.scheduleFor(habit);
     HomeWidgetService.syncSoon(() => asMap);
-  }
-
-  Future<Habit> duplicate(Habit source) async {
-    final copy = source
-        .copyWith(
-          name: _duplicateName(source.name),
-          completions: const {},
-          vacations: const [],
-          clearArchived: true,
-          createdAt: AppClock.now(),
-          coverPath: await CoverStorage.clone(source.coverPath),
-          bookCoverPath: await CoverStorage.clone(source.bookCoverPath),
-        )
-        .rebuildId(_uuid.v4(), order: habits.length);
-
-    _habits[copy.id] = copy;
-    await LocalStore.writeHabit(copy);
-    notifyListeners();
-    try {
-      await _notifications.scheduleFor(copy);
-    } catch (e) {
-      debugPrint('Scheduling ${copy.name} failed: $e');
-    }
-    HomeWidgetService.syncSoon(() => asMap);
-    return copy;
-  }
-
-  static final _copySuffix = RegExp(r'^(.*) \((\d+)\)$');
-
-  String _duplicateName(String name) {
-    final match = _copySuffix.firstMatch(name);
-    final base = match?.group(1) ?? name;
-    var next = match == null ? 1 : int.parse(match.group(2)!);
-
-    final taken = {for (final habit in _habits.values) habit.name};
-    String candidate(int n) => '$base ($n)';
-    while (taken.contains(candidate(next + 1))) {
-      next++;
-    }
-    return candidate(next + 1);
   }
 
   Future<void> toggle(String id, DateTime date, {bool fromFocus = false}) async {
@@ -229,6 +209,36 @@ class HabitsController extends ChangeNotifier {
     final habit = _habits[id];
     if (habit == null) return;
     await _apply(habit, CompletionOps.logRelapse(habit, date));
+  }
+
+  Future<void> addRelapse(String id, DateTime date) async {
+    final habit = _habits[id];
+    if (habit == null) return;
+    await _apply(habit, CompletionOps.addRelapse(habit, date));
+  }
+
+  Future<void> dropRelapse(String id, DateTime date) async {
+    final habit = _habits[id];
+    if (habit == null) return;
+    await _apply(habit, CompletionOps.dropRelapse(habit, date));
+  }
+
+  Future<void> retime(String id, String dayKey, int? from, int to) async {
+    final habit = _habits[id];
+    if (habit == null) return;
+    await _apply(habit, CompletionOps.retime(habit, dayKey, from, to));
+  }
+
+  Future<void> setMissReason(String id, String dayKey, String? reason) async {
+    final habit = _habits[id];
+    if (habit == null) return;
+    final reasons = {...habit.missReasons};
+    if (reason == null || reason.trim().isEmpty) {
+      reasons.remove(dayKey);
+    } else {
+      reasons[dayKey] = reason.trim();
+    }
+    await update(habit.copyWith(missReasons: reasons));
   }
 
   Future<void> clearRelapse(String id, DateTime date) async {
@@ -270,8 +280,7 @@ class HabitsController extends ChangeNotifier {
         periods.add(VacationPeriod(start: AppClock.now(), bulk: bulk));
       }
     } else {
-      final yesterday =
-          AppClock.today().subtract(const Duration(days: 1));
+      final yesterday = AppClock.today().addDays(-1);
       final next = <VacationPeriod>[];
       for (final p in periods) {
         if (!p.isOngoing) {
@@ -316,8 +325,8 @@ class HabitsController extends ChangeNotifier {
     final habit = _habits[id];
     if (habit == null) return;
     final day = date.atMidnight;
-    final previous = day.subtract(const Duration(days: 1));
-    final next = day.add(const Duration(days: 1));
+    final previous = day.addDays(-1);
+    final next = day.addDays(1);
 
     if (!habit.isPausedOn(day)) {
       await update(
@@ -357,7 +366,9 @@ class HabitsController extends ChangeNotifier {
     await LocalStore.guardWrites(() => LocalStore.writeHabit(updated));
     final today = AppClock.now();
     if (habit.reminders.isNotEmpty &&
-        habit.silencesRemindersOn(today) != updated.silencesRemindersOn(today)) {
+        (habit.fromLastDone ||
+            habit.silencesRemindersOn(today) !=
+                updated.silencesRemindersOn(today))) {
       _refreshReminders(habit.id);
     }
   }
@@ -478,18 +489,52 @@ class HabitsController extends ChangeNotifier {
     if (outcome == null) return null;
     await LocalStore.guardWrites(() async {
       var order = habits.length;
+      final into = <String, String>{};
       for (final habit in outcome.habits) {
-        final placed = habit.copyWith(order: order++);
+        final same = _namedLike(habit);
+        final placed = same == null
+            ? habit.copyWith(order: order++)
+            : same.copyWith(
+                completions: FolderSync.mergeCompletions(
+                  same.completions,
+                  habit.completions,
+                ),
+                createdAt: habit.createdAt.isBefore(same.createdAt)
+                    ? habit.createdAt
+                    : same.createdAt,
+              );
+        into[habit.id] = placed.id;
         _habits[placed.id] = placed;
         await LocalStore.writeHabit(placed);
         if (placed.reminders.isNotEmpty) {
           await _notifications.scheduleFor(placed);
         }
       }
+      final known = {
+        for (final note in LocalStore.readNotes())
+          (note.habitId, note.date, note.text),
+      };
+      for (final note in outcome.notes) {
+        final moved = note.copyWith(habitId: into[note.habitId]);
+        if (known.contains((moved.habitId, moved.date, moved.text))) continue;
+        await LocalStore.writeNote(moved);
+      }
     });
     notifyListeners();
     await HomeWidgetService.sync(asMap);
     return outcome;
+  }
+
+  Habit? _namedLike(Habit imported) {
+    final name = imported.name.trim().toLowerCase();
+    for (final habit in habits) {
+      if (habit.id != imported.id &&
+          habit.kind == imported.kind &&
+          habit.name.trim().toLowerCase() == name) {
+        return habit;
+      }
+    }
+    return null;
   }
 
   Future<String?> importBackup({bool replace = false}) async {
@@ -520,6 +565,7 @@ class HabitsController extends ChangeNotifier {
           : ours.copyWith(
               completions:
                   FolderSync.mergeCompletions(ours.completions, theirs.completions),
+              missReasons: {...theirs.missReasons, ...ours.missReasons},
             );
       _habits[habit.id] = habit;
       await LocalStore.writeHabit(habit);
@@ -532,7 +578,10 @@ class HabitsController extends ChangeNotifier {
     final todos = known(LocalStore.readTodos(), (t) => t.id);
     final tags = known(LocalStore.readTodoTags(), (t) => t.id);
     for (final category in data.categories) {
-      if (!categories.contains(category.id)) await LocalStore.writeCategory(category);
+      if (categories.contains(category.id)) continue;
+      replace
+          ? await LocalStore.writeCategory(category)
+          : await LocalStore.mergeCategory(category);
     }
     for (final note in data.notes) {
       if (!notes.contains(note.id)) await LocalStore.writeNote(note);

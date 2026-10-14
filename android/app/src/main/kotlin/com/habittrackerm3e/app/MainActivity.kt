@@ -106,6 +106,14 @@ class MainActivity : FlutterFragmentActivity() {
                     "consumeLaunchHabit" -> result.success(takeHabitId(intent))
                     "consumeLaunchFocus" -> result.success(takeFocusId(intent))
                     "consumeLaunchPage" -> result.success(takePage(intent))
+                    "openWidgetEditor" -> {
+                        startActivity(
+                            Intent(this@MainActivity, WidgetConfigActivity::class.java)
+                                .putExtra(WidgetConfigActivity.EXTRA_TEMPLATE, call.argument<String>("kind")),
+                        )
+                        result.success(true)
+                    }
+                    "widgetPreview" -> result.success(widgetPreview(call.argument<String>("kind")))
                     else -> result.notImplemented()
                 }
             }
@@ -166,6 +174,17 @@ class MainActivity : FlutterFragmentActivity() {
         val habitId = intent?.getStringExtra(key) ?: return null
         intent.removeExtra(key)
         return habitId
+    }
+
+    private fun widgetPreview(kind: String?): ByteArray? {
+        val shot = when (kind) {
+            "today" -> R.drawable.widget_preview_shot_today
+            "stats" -> R.drawable.widget_preview_shot_stats
+            "heatmap" -> R.drawable.widget_preview_shot_heatmap
+            "todos" -> R.drawable.widget_preview_shot_todos
+            else -> R.drawable.widget_preview_shot_week
+        }
+        return resources.openRawResource(shot).use { it.readBytes() }
     }
 
     private fun setIcon(key: String) {

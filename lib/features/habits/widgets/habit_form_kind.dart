@@ -11,6 +11,7 @@ import 'package:streak/core/widgets/hold_repeat_button.dart';
 import 'package:streak/core/widgets/number_keypad_dialog.dart';
 import 'package:streak/features/habits/data/habit.dart';
 import 'package:streak/features/habits/data/substep.dart';
+import 'package:streak/features/habits/widgets/habit_form_schedule.dart';
 import 'package:streak/features/habits/widgets/minimal_form_fields.dart';
 import 'package:streak/features/habits/widgets/saved_money.dart';
 import 'package:streak/features/habits/widgets/substep_draft.dart';
@@ -261,6 +262,171 @@ class TrackingToggle extends StatelessWidget {
         icon: LucideIcons.activity,
         title: context.l10n.just_tracking,
         hint: context.l10n.just_tracking_sub,
+        value: value,
+        color: color,
+        onChanged: onChanged,
+        compact: compact,
+      );
+}
+
+class NoGoalToggle extends StatelessWidget {
+  const NoGoalToggle({
+    super.key,
+    required this.value,
+    required this.color,
+    required this.onChanged,
+    this.compact = false,
+  });
+
+  final bool value;
+  final Color color;
+  final ValueChanged<bool> onChanged;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) => HabitFlagToggle(
+        icon: LucideIcons.chartLine,
+        title: context.l10n.no_goal,
+        hint: context.l10n.no_goal_sub,
+        value: value,
+        color: color,
+        onChanged: onChanged,
+        compact: compact,
+      );
+}
+
+class AnyAmountToggle extends StatelessWidget {
+  const AnyAmountToggle({
+    super.key,
+    required this.value,
+    required this.color,
+    required this.onChanged,
+    this.compact = false,
+  });
+
+  final bool value;
+  final Color color;
+  final ValueChanged<bool> onChanged;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) => HabitFlagToggle(
+        icon: LucideIcons.circleCheck,
+        title: context.l10n.any_amount,
+        hint: context.l10n.any_amount_sub,
+        value: value,
+        color: color,
+        onChanged: onChanged,
+        compact: compact,
+      );
+}
+
+class AnyStepsToggle extends StatelessWidget {
+  const AnyStepsToggle({
+    super.key,
+    required this.value,
+    required this.color,
+    required this.onChanged,
+    required this.needed,
+    required this.total,
+    required this.onNeeded,
+    this.compact = false,
+  });
+
+  final bool value;
+  final Color color;
+  final ValueChanged<bool> onChanged;
+  final int needed;
+  final int total;
+  final ValueChanged<int> onNeeded;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = needed.clamp(1, total < 1 ? 1 : total);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        HabitFlagToggle(
+          icon: LucideIcons.listChecks,
+          title: context.l10n.any_step,
+          hint: value && total > 1
+              ? context.l10n.steps_needed_sub(shown, total)
+              : context.l10n.any_step_sub,
+          value: value,
+          color: color,
+          onChanged: onChanged,
+          compact: compact,
+        ),
+        if (value && total > 2) ...[
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (var n = 1; n < total; n++)
+                ChoiceChip(
+                  label: Text('$n'),
+                  selected: n == shown,
+                  showCheckmark: false,
+                  selectedColor: color.withValues(alpha: 0.22),
+                  onSelected: (_) => onNeeded(n),
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class FromLastDoneToggle extends StatelessWidget {
+  const FromLastDoneToggle({
+    super.key,
+    required this.value,
+    required this.color,
+    required this.onChanged,
+    this.compact = false,
+  });
+
+  final bool value;
+  final Color color;
+  final ValueChanged<bool> onChanged;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) => HabitFlagToggle(
+        icon: LucideIcons.history,
+        title: context.l10n.from_last_done,
+        hint: context.l10n.from_last_done_sub,
+        value: value,
+        color: color,
+        onChanged: onChanged,
+        compact: compact,
+      );
+}
+
+class MonthWeekdayToggle extends StatelessWidget {
+  const MonthWeekdayToggle({
+    super.key,
+    required this.value,
+    required this.start,
+    required this.color,
+    required this.onChanged,
+    this.compact = false,
+  });
+
+  final bool value;
+  final DateTime start;
+  final Color color;
+  final ValueChanged<bool> onChanged;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) => HabitFlagToggle(
+        icon: LucideIcons.calendarDays,
+        title: context.l10n.month_weekday,
+        hint: context.l10n.month_weekday_sub(monthWeekdayLabel(context, start)),
         value: value,
         color: color,
         onChanged: onChanged,
@@ -567,6 +733,7 @@ class QuantitativeFields extends StatelessWidget {
     required this.onUnitChanged,
     required this.onTargetChanged,
     required this.onIncrementChanged,
+    this.showGoal = true,
   });
 
   final QuantKind quantKind;
@@ -577,6 +744,7 @@ class QuantitativeFields extends StatelessWidget {
   final VoidCallback onUnitChanged;
   final ValueChanged<double> onTargetChanged;
   final ValueChanged<double> onIncrementChanged;
+  final bool showGoal;
 
   double get _step => switch (quantKind) {
         QuantKind.water => 50,
@@ -642,8 +810,8 @@ class QuantitativeFields extends StatelessWidget {
                 onChanged: (_) => onUnitChanged(),
               ),
             ],
-            const SizedBox(height: 12),
-            _QuantityStepperRow(
+            if (showGoal) const SizedBox(height: 12),
+            if (showGoal) _QuantityStepperRow(
               label: context.l10n.quant_daily_goal,
               value: target,
               unit: unit,
@@ -704,13 +872,19 @@ class _PresetChip extends StatelessWidget {
             children: [
               Icon(icon, size: 17, color: selected ? scheme.primary : context.tokens.muted),
               const SizedBox(height: 4),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: selected ? scheme.primary : context.tokens.muted,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: selected ? scheme.primary : context.tokens.muted,
+                    ),
+                  ),
                 ),
               ),
             ],

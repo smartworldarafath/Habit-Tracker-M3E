@@ -37,13 +37,13 @@ data class WidgetStyle(
     val cell: Color,
     val imagePath: String?,
     val scrim: Color,
-    val round: Boolean = false,
 ) {
-    companion object {
-        fun loadFor(context: Context, id: Int): WidgetStyle =
-            base(context, id).copy(round = WidgetConfig.round(context, id))
+    val dark: Boolean get() = content == Color.White
 
-        private fun base(context: Context, id: Int): WidgetStyle {
+    fun shown(color: Color): Color = Color(CardBitmaps.shown(color.toArgb(), dark))
+
+    companion object {
+        fun loadFor(context: Context, id: Int): WidgetStyle {
             val opacity = WidgetConfig.opacity(context, id)
             val border = WidgetConfig.border(context, id)
             val bw = WidgetConfig.borderWidth(context, id)

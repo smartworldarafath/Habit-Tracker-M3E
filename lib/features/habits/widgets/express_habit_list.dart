@@ -13,6 +13,7 @@ import 'package:streak/features/habits/widgets/habit_entrance.dart';
 import 'package:streak/features/habits/widgets/habit_heatmap.dart';
 import 'package:streak/features/habits/widgets/slot_transition.dart';
 import 'package:streak/features/habits/widgets/swipe_check.dart';
+import 'package:streak/core/extensions/color_extensions.dart';
 
 class ExpressHabitList extends StatelessWidget {
   const ExpressHabitList({
@@ -28,12 +29,16 @@ class ExpressHabitList extends StatelessWidget {
     required this.onLongPress,
     this.onSwipe,
     this.leaving = const {},
+    this.fold,
+    this.more = const [],
   });
 
   final List<Habit> habits;
   final HeatmapMode mode;
   final bool reordering;
   final Widget header;
+  final Widget? fold;
+  final List<Habit> more;
   final void Function(int oldIndex, int newIndex) onReorder;
   final ValueChanged<Habit> onOpen;
   final ValueChanged<Habit> onToggleToday;
@@ -46,7 +51,7 @@ class ExpressHabitList extends StatelessWidget {
   Widget build(BuildContext context) {
     return ReorderableListView.builder(
       padding: context.pagePadding(16, 4, 16, 128),
-      itemCount: habits.length,
+      itemCount: habits.length + (fold == null ? 0 : 1 + more.length),
       buildDefaultDragHandles: false,
       header: header,
       onReorder: (oldIndex, newIndex) {
@@ -60,8 +65,14 @@ class ExpressHabitList extends StatelessWidget {
         ),
       ),
       itemBuilder: (context, index) {
-        final habit = habits[index];
-        final radius = expressSlotRadius(index, habits.length);
+        if (index == habits.length) {
+          return KeyedSubtree(key: const ValueKey('fold'), child: fold!);
+        }
+        final extra = index > habits.length;
+        final group = extra ? more : habits;
+        final slot = extra ? index - habits.length - 1 : index;
+        final habit = group[slot];
+        final radius = expressSlotRadius(slot, group.length);
 
         if (reordering) {
           return ReorderableDelayedDragStartListener(
@@ -102,15 +113,15 @@ class ExpressHabitList extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: Express.groupGap),
               child: PaneMark(
                 id: habit.id,
-                tint: habit.color,
+                tint: habit.color.shownIn(context),
                 corners: radius,
                 child: SwipeCheck(
                   done: habit.isCompletedOn(AppClock.today()),
-                  tint: habit.color,
+                  tint: habit.color.shownIn(context),
                   corners: radius,
                   onSwipe: onSwipe == null ? null : () => onSwipe!(habit),
                   child: KeepBuilt(
-                  keys: [habit, mode, index, habits.length, AppClock.today()],
+                  keys: [habit, mode, slot, group.length, AppClock.today()],
                   build: () => ExpressHabitCard(
                     habit: habit,
                     mode: mode,

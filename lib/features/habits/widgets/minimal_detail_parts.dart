@@ -16,9 +16,12 @@ import 'package:streak/features/focus/pages/focus_stats_page.dart';
 import 'package:streak/features/focus/state/focus_controller.dart';
 import 'package:streak/features/habits/data/day_plan.dart';
 import 'package:streak/features/habits/data/habit.dart';
+import 'package:streak/features/habits/widgets/check_history.dart';
 import 'package:streak/features/habits/widgets/frequency_chip.dart';
+import 'package:streak/features/habits/widgets/habit_heatmap.dart';
 import 'package:streak/features/habits/widgets/saved_money.dart';
 import 'package:streak/features/habits/widgets/vacation_sheet.dart';
+import 'package:streak/core/extensions/color_extensions.dart';
 
 class MinimalDetailHeader extends StatelessWidget {
   const MinimalDetailHeader({super.key, required this.habit});
@@ -40,7 +43,7 @@ class MinimalDetailHeader extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: HabitGlyph(glyph: habit.icon, color: habit.color, size: 24),
+            child: HabitGlyph(glyph: habit.icon, color: habit.color.shownIn(context), size: 24),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -73,9 +76,10 @@ class MinimalDetailHeader extends StatelessWidget {
 }
 
 class MinimalStreakTiles extends StatelessWidget {
-  const MinimalStreakTiles({super.key, required this.habit});
+  const MinimalStreakTiles({super.key, required this.habit, required this.mode});
 
   final Habit habit;
+  final HeatmapMode mode;
 
   String _format(BuildContext context, int value) => switch (habit.interval) {
     HabitInterval.weekly => context.l10n.count_weeks(value),
@@ -86,8 +90,16 @@ class MinimalStreakTiles extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final negative = habit.kind == HabitKind.negative;
+    final (period, count) = periodTotal(context, habit, mode);
     return MinimalGrid(
       children: [
+        if (habit.tracking)
+          MinimalTile(
+            icon: LucideIcons.history,
+            label: context.l10n.last_check,
+            value: lastCheckLabel(context, habit, withTime: false),
+          )
+        else ...[
         MinimalTile(
           icon: LucideIcons.flame,
           label: context.l10n.current_streak,
@@ -98,16 +110,18 @@ class MinimalStreakTiles extends StatelessWidget {
           label: context.l10n.best_streak,
           value: _format(context, habit.longestStreak),
         ),
+        ],
         MinimalTile(
           icon: negative ? LucideIcons.triangleAlert : LucideIcons.check,
-          label: negative ? context.l10n.relapses : context.l10n.total,
-          value: '${habit.totalCompletions}',
+          label: period,
+          value: '$count',
         ),
-        MinimalTile(
-          icon: LucideIcons.target,
-          label: context.l10n.completion_rate_short,
-          value: '${habit.consistency}%',
-        ),
+        if (!habit.tracking)
+          MinimalTile(
+            icon: LucideIcons.target,
+            label: context.l10n.completion_rate_short,
+            value: '${habit.consistency}%',
+          ),
       ],
     );
   }
@@ -202,7 +216,7 @@ class _PlayButton extends StatelessWidget {
             color: minimalRaised(context),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(LucideIcons.play, size: 15, color: habit.color),
+          child: Icon(LucideIcons.play, size: 15, color: habit.color.shownIn(context)),
         ),
       ),
     );

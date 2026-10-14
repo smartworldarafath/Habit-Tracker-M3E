@@ -387,7 +387,7 @@
       }
     }
   },
-  "every_n_weeks": "La fiecare {n} săptămâni",
+  "every_n_weeks": "{n, plural, =1{În fiecare săptămână} other{La fiecare {n} săptămâni}}",
   "@every_n_weeks": {
     "placeholders": {
       "n": {
@@ -395,7 +395,7 @@
       }
     }
   },
-  "every_n_months": "La fiecare {n} luni",
+  "every_n_months": "{n, plural, =1{În fiecare lună} other{La fiecare {n} luni}}",
   "@every_n_months": {
     "placeholders": {
       "n": {
@@ -734,7 +734,6 @@
     }
   },
   "focus_personalize": "Personalizat",
-  "focus_track_rain": "Ploaie",
   "focus_track_brown": "Zgomot maro",
   "focus_track_pad": "Sunet cald",
   "focus_add_track": "Adaugă melodie",
@@ -742,7 +741,7 @@
   "focus_loop": "În ordine",
   "focus_repeat_one": "Repetă una",
   "focus_track_too_long": "Melodiile trebuie să fie sub 20 de minute",
-  "focus_track_limit": "Până la 10 melodii",
+  "focus_track_limit": "Până la 30 melodii",
   "focus_done_title": "Sesiune finalizată",
   "focus_your_tracks": "Melodiile tale",
   "focus_built_in": "Incluse",
@@ -907,8 +906,6 @@
   "colors_tab": "Culori",
   "reorder": "Reordonează",
   "reorder_hint": "Trage obiceiurile pentru a le reordona",
-  "category_order": "Ordinea categoriilor",
-  "category_order_sub": "Trage-le în ordinea dorită",
   "category_order_empty": "Atribuie unui obicei o categorie și va apărea aici",
   "done": "Gata",
   "accent_color": "Culoare de accent",
@@ -1062,7 +1059,6 @@
       }
     }
   },
-  "widget_cfg_todos_scope": "Sarcini",
   "widget_cfg_todos_all": "Afișează toate sarcinile",
   "widget_cfg_todos_hint": "Dezactivat: doar sarcinile de azi, întârziate și fără dată",
   "widget_cfg_show_activity": "Afișează activitatea pentru",

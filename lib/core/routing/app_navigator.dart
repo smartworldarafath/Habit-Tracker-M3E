@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:streak/app/app_background.dart';
+import 'package:streak/core/routing/morph_route.dart';
 import 'package:streak/core/widgets/page_motion.dart';
 
 abstract interface class FullWidthPage {}
@@ -29,6 +30,25 @@ class AppNavigator {
     final target = pane ?? key.currentState!;
     return target.push<T>(
       route(page, fullscreenDialog: fullscreenDialog, fade: fade, name: name),
+    );
+  }
+
+  static Future<T?> morph<T>(
+    Widget page, {
+    required BuildContext from,
+    required IconData icon,
+    required Color ink,
+    required Color edge,
+  }) {
+    final box = from.findRenderObject()! as RenderBox;
+    return key.currentState!.push<T>(
+      MorphRoute<T>(
+        page: page,
+        origin: box.localToGlobal(Offset.zero) & box.size,
+        icon: icon,
+        ink: ink,
+        edge: edge,
+      ),
     );
   }
 

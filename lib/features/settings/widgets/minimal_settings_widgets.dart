@@ -77,6 +77,8 @@ class SoftRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final muted = context.tokens.muted;
+    final stacked = stackedRows(context) && value != null;
+    final bare = bareRows(context);
 
     return Semantics(
       button: true,
@@ -86,8 +88,8 @@ class SoftRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
           child: Row(
             children: [
-              Icon(icon, size: 19, color: muted),
-              const SizedBox(width: 16),
+              if (!bare) Icon(icon, size: 19, color: muted),
+              if (!bare) const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,10 +110,21 @@ class SoftRow extends StatelessWidget {
                         style: TextStyle(fontSize: 12.5, color: muted),
                       ),
                     ],
+                    if (stacked) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        value!,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: muted,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
-              if (value != null)
+              if (value != null && !stacked)
                 Padding(
                   padding: const EdgeInsets.only(left: 10),
                   child: ConstrainedBox(

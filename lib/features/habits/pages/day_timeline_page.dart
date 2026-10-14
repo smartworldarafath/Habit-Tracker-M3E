@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:streak/core/utils/amount_format.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +16,7 @@ import 'package:streak/core/widgets/app_empty_state.dart';
 import 'package:streak/core/widgets/celebration_overlay.dart';
 import 'package:streak/core/widgets/entrance.dart';
 import 'package:streak/core/widgets/section_label.dart';
+import 'package:streak/core/widgets/glass.dart';
 import 'package:streak/features/habits/data/day_plan.dart';
 import 'package:streak/features/habits/data/habit.dart';
 import 'package:streak/features/habits/pages/habit_details_page.dart';
@@ -29,7 +31,10 @@ import 'package:streak/features/todos/data/todo.dart';
 import 'package:streak/features/todos/pages/todo_editor_page.dart';
 import 'package:streak/features/todos/state/todos_controller.dart';
 import 'package:streak/features/todos/widgets/todo_paper.dart';
+import 'package:streak/features/todos/widgets/todo_tile.dart';
+import 'package:streak/features/todos/widgets/todos_page_parts.dart';
 import 'package:streak/features/todos/widgets/todo_trash.dart';
+import 'package:streak/core/extensions/color_extensions.dart';
 
 const _entrance = Duration(milliseconds: 60);
 
@@ -43,24 +48,41 @@ class DayTimelinePage extends StatefulWidget {
 class _DayTimelinePageState extends State<DayTimelinePage> {
   late DateTime _day = AppClock.today();
   final _celebration = ValueNotifier(0);
+  final _scrolled = ValueNotifier(false);
   final _completing = <String>{};
   int _direction = 0;
+  int _flip = 0;
   Widget? _page;
 
   @override
   void dispose() {
     _celebration.dispose();
+    _scrolled.dispose();
     super.dispose();
   }
 
   bool get _isToday => _day.isSameDay(AppClock.today());
 
+  DateTime _anchor(DateTime day) {
+    final settings = context.read<SettingsController>();
+    return settings.planMonth
+        ? DateTime(day.year, day.month)
+        : day.startOfWeek(settings.weekStart);
+  }
+
   void _select(DateTime day) => setState(() {
         _direction = day.atMidnight.compareTo(_day).sign;
+        if (_anchor(day) != _anchor(_day)) _flip++;
         _day = day.atMidnight;
       });
 
-  void _shiftWeek(int weeks) => _select(_day.addDays(weeks * 7));
+  void _shift(int by) {
+    if (!context.read<SettingsController>().planMonth) {
+      return _select(_day.addDays(by * 7));
+    }
+    final last = DateTime(_day.year, _day.month + by + 1, 0).day;
+    _select(DateTime(_day.year, _day.month + by, _day.day.clamp(1, last)));
+  }
 
   Future<void> _toggleTodo(Todo todo) async {
     final todos = context.read<TodosController>();
@@ -73,6 +95,8 @@ class _DayTimelinePageState extends State<DayTimelinePage> {
     if (mounted) setState(() => _completing.remove(todo.id));
   }
 
+  Future<void> _newTodo() => openTodoEditor(context, date: _day.dayKey);
+
   Future<void> _openTodo(Todo todo) async {
     final deleted = await openTodoEditor(context, todo: todo);
     if (deleted == true && mounted) discardTodo(context, todo);
@@ -82,7 +106,7 @@ class _DayTimelinePageState extends State<DayTimelinePage> {
         NoteEditorPage(
           habitId: habit.id,
           dayKey: _day.dayKey,
-          accent: habit.color,
+          accent: habit.color.shownIn(context),
         ),
       );
 
@@ -108,15 +132,18 @@ class _DayTimelinePageState extends State<DayTimelinePage> {
 
   Color _neighbourColor(DayPlan plan, int from, int step) {
     for (var i = from; i >= 0 && i < plan.slots.length; i += step) {
-      final habit = plan.slots[i].habit;
-      if (habit != null) return habit.color;
+      final slot = plan.slots[i];
+      final habit = slot.habit;
+      if (habit != null) return habit.color.shownIn(context);
+      final todo = slot.todo;
+      if (todo != null) return timelineTodoColor(context, todo);
     }
     return context.colors.primary;
   }
 
   List<Todo> _todosOf(BuildContext context) {
     final settings = context.watch<SettingsController>();
-    if (!settings.todosEnabled || !settings.planTodos) return const [];
+    if (!settings.planTodos) return const [];
     return context.select<TodosController, List<Todo>>(
       (todos) => todos.dueOn(_day),
     ).toList()
@@ -127,7 +154,36 @@ class _DayTimelinePageState extends State<DayTimelinePage> {
             ));
   }
 
-  Widget _todos(List<Todo> todos, int from) => PaperLanes(
+  Widget _todos(List<Todo> todos, int from) =>
+      context.read<SettingsController>().todoPapers
+          ? _papers(todos, from)
+          : _tiles(todos, from);
+
+  Widget _tiles(List<Todo> todos, int from) {
+    final express = context.read<SettingsController>().isExpressStyle;
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      sliver: SliverList.builder(
+        itemCount: todos.length,
+        itemBuilder: (context, i) => Entrance(
+          key: ValueKey(todos[i].id),
+          index: from + i,
+          delay: _entrance,
+          child: TodoTile(
+            todo: todos[i],
+            overdue: false,
+            corners: todoCorners(express, i, todos.length),
+            showProject: true,
+            checking: _completing.contains(todos[i].id),
+            onToggle: () => _toggleTodo(todos[i]),
+            onEdit: () => _openTodo(todos[i]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _papers(List<Todo> todos, int from) => PaperLanes(
         notes: [
           for (final (i, todo) in todos.indexed)
             (
@@ -139,6 +195,7 @@ class _DayTimelinePageState extends State<DayTimelinePage> {
                 child: TodoPaper(
                   todo: todo,
                   overdue: false,
+                  showProject: true,
                   checking: _completing.contains(todo.id),
                   onToggle: () => _toggleTodo(todo),
                   onEdit: () => _openTodo(todo),
@@ -154,12 +211,23 @@ class _DayTimelinePageState extends State<DayTimelinePage> {
     for (var i = 0; i < plan.slots.length; i++) {
       final slot = plan.slots[i];
       final habit = slot.habit;
+      final todo = slot.todo;
       final at = index;
       rows.add(
         () => Entrance(
           index: at,
           delay: _entrance,
-          child: habit == null
+          child: todo != null
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: TimelineTodo(
+                    todo: todo,
+                    checking: _completing.contains(todo.id),
+                    onToggle: () => _toggleTodo(todo),
+                    onOpen: () => _openTodo(todo),
+                  ),
+                )
+              : habit == null
               ? TimelineGap(
                   minutes: slot.minutes,
                   from: _neighbourColor(plan, i - 1, -1),
@@ -221,9 +289,14 @@ class _DayTimelinePageState extends State<DayTimelinePage> {
     if (page != null && !TickerMode.valuesOf(context).enabled) return page;
     final habits = context.watch<HabitsController>().habits;
     final weekStart = context.watch<SettingsController>().weekStart;
-    final plan = DayPlan.of(habits, _day);
+    final dueTodos = _todosOf(context);
+    final plan = DayPlan.of(
+      context.watch<SettingsController>().planHabits ? habits : const [],
+      _day,
+      todos: dueTodos,
+    );
     final rows = _rows(context, plan);
-    final todos = _todosOf(context);
+    final todos = dueTodos.where((t) => t.minutes == null).toList();
     final locale = Localizations.localeOf(context).toString();
     final first = _day.startOfWeek(weekStart);
 
@@ -254,6 +327,30 @@ class _DayTimelinePageState extends State<DayTimelinePage> {
             ? null
             : Text(DateFormat.yMMMM(locale).format(_day)),
         actions: [
+          if (style.planTodos)
+            express
+                ? Padding(
+                    padding: EdgeInsets.only(right: _isToday ? 16 : 8),
+                    child: Center(child: ExpressIconButton(
+                      icon: LucideIcons.listPlus,
+                      tooltip: context.l10n.todo_new,
+                      onPressed: _newTodo,
+                    )),
+                  )
+                : minimal
+                ? IconButton(
+                    tooltip: context.l10n.todo_new,
+                    icon: const Icon(LucideIcons.listPlus),
+                    onPressed: _newTodo,
+                  )
+                : Padding(
+                    padding: EdgeInsets.only(right: _isToday ? 16 : 8),
+                    child: GlassIconButton(
+                      icon: LucideIcons.listPlus,
+                      tooltip: context.l10n.todo_new,
+                      onTap: _newTodo,
+                    ),
+                  ),
           if (!_isToday)
             express
                 ? Padding(
@@ -264,10 +361,19 @@ class _DayTimelinePageState extends State<DayTimelinePage> {
                       onPressed: () => _select(AppClock.now()),
                     )),
                   )
-                : IconButton(
+                : minimal
+                ? IconButton(
                     tooltip: context.l10n.today,
                     icon: const Icon(LucideIcons.calendarCheck),
                     onPressed: () => _select(AppClock.now()),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: GlassIconButton(
+                      icon: LucideIcons.calendarCheck,
+                      tooltip: context.l10n.today,
+                      onTap: () => _select(AppClock.now()),
+                    ),
                   ),
         ],
       ),
@@ -296,15 +402,29 @@ class _DayTimelinePageState extends State<DayTimelinePage> {
                 habits: habits,
                 style: style.appStyle,
                 direction: _direction,
+                page: _flip,
+                month: style.planMonth,
                 onSelected: _select,
-                onShift: _shiftWeek,
+                onShift: _shift,
+                onFold: () => style.setPlanMonth(!style.planMonth),
               ),
               Expanded(
-                child: plan.isEmpty && todos.isEmpty
+                child: NotificationListener<ScrollUpdateNotification>(
+                  onNotification: (note) {
+                    if (note.depth == 0 && note.metrics.axis == Axis.vertical) {
+                      _scrolled.value = note.metrics.pixels > 2;
+                    }
+                    return false;
+                  },
+                  child: Stack(
+                    children: [
+                plan.isEmpty && todos.isEmpty
                     ? AppEmptyState(
                         icon: LucideIcons.calendarClock,
                         title: context.l10n.day_timeline_empty,
-                        message: context.l10n.day_timeline_empty_sub,
+                        message: style.planHabits
+                            ? context.l10n.day_timeline_empty_sub
+                            : context.l10n.day_timeline_empty_todos,
                       )
                     : CustomScrollView(
                         key: ValueKey(_day.epochDay),
@@ -328,7 +448,10 @@ class _DayTimelinePageState extends State<DayTimelinePage> {
                                       padding: EdgeInsets.only(
                                         top: plan.isEmpty ? 0 : 22,
                                       ),
-                                      child: SectionLabel(context.l10n.todos),
+                                      child: SectionLabel(
+                                        context.l10n.todos,
+                                        trailing: _EstimateTotal(todos: todos),
+                                      ),
                                     ),
                                   ),
                                   _todos(todos, rows.length),
@@ -338,6 +461,11 @@ class _DayTimelinePageState extends State<DayTimelinePage> {
                           ),
                         ],
                       ),
+                      if (!express && !minimal)
+                        HeaderBlur(scrolled: _scrolled, height: 30),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -399,12 +527,12 @@ class _AnytimeRow extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: habit.color.withValues(alpha: done ? 0.5 : 0.18),
+                  color: habit.color.shownIn(context).withValues(alpha: done ? 0.5 : 0.18),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: HabitGlyph(
                   glyph: habit.icon,
-                  color: done ? scheme.surface : habit.color,
+                  color: done ? scheme.surface : habit.color.shownIn(context),
                   size: 18,
                 ),
               ),
@@ -437,6 +565,36 @@ class _AnytimeRow extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _EstimateTotal extends StatelessWidget {
+  const _EstimateTotal({required this.todos});
+
+  final List<Todo> todos;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = todos
+        .where((todo) => !todo.done)
+        .fold<int>(0, (sum, todo) => sum + (todo.estimate ?? 0));
+    if (total == 0) return const SizedBox.shrink();
+    final muted = context.tokens.muted;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(LucideIcons.hourglass, size: 13, color: muted),
+        const SizedBox(width: 4),
+        Text(
+          formatMinutes(total.toDouble()),
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+            color: muted,
+          ),
+        ),
+      ],
     );
   }
 }

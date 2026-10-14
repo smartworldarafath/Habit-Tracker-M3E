@@ -9,6 +9,7 @@ import 'package:streak/app/theme/app_palette.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/features/habits/data/completion.dart';
 import 'package:streak/features/habits/data/habit.dart';
+import 'package:streak/features/habits/data/habit_note.dart';
 import 'package:uuid/uuid.dart';
 
 const _kDatabaseHint =
@@ -21,9 +22,11 @@ class ImportOutcome {
     required this.source,
     required this.entries,
     required this.skipped,
+    this.notes = const [],
   });
 
   final List<Habit> habits;
+  final List<HabitNote> notes;
   final String source;
   final int entries;
   final int skipped;
@@ -37,6 +40,10 @@ class _RawHabit {
     this.target = 1,
     this.unit = '',
     this.archived = false,
+    this.description = '',
+    this.interval = HabitInterval.daily,
+    this.frequency = 1,
+    this.every = 2,
   });
   final String name;
   final int? color;
@@ -44,7 +51,18 @@ class _RawHabit {
   final num target;
   final String unit;
   final bool archived;
+  final String description;
+  final HabitInterval interval;
+  final int frequency;
+  final int every;
   final Map<DateTime, num> days = {};
+  final Map<DateTime, String> notes = {};
+  DateTime? since;
+
+  void seen(DateTime day) {
+    final d = DateTime(day.year, day.month, day.day);
+    if (since == null || d.isBefore(since!)) since = d;
+  }
 
   void mark(DateTime day, num count) {
     final d = DateTime(day.year, day.month, day.day);
@@ -141,6 +159,11 @@ class ImportService {
     if (_looksLikeLoopCsv(lower)) {
       return _build(_parseMatrix(header, rows.skip(1)), 'Loop Habit Tracker');
     }
+    if (lower.contains('habit') &&
+        lower.contains('date') &&
+        lower.contains('status')) {
+      return _build(_parseHabitify(lower, rows.skip(1)), 'Habitify');
+    }
     final habitCol = _indexOfAny(lower, const ['habit', 'name', 'habitname']);
     final dateCol = _indexOfAny(lower, const ['date', 'fecha', 'day', 'día', 'timestamp']);
     if (habitCol != null && dateCol != null && habitCol != dateCol) {
@@ -151,9 +174,23 @@ class ImportService {
 
   static ImportOutcome _build(List<_RawHabit> raw, String source) {
     final habits = <Habit>[];
+    final notes = <HabitNote>[];
     var totalEntries = 0;
     for (var i = 0; i < raw.length; i++) {
       final r = raw[i];
+      final id = _uuid.v4();
+      r.notes.forEach((day, text) {
+        notes.add(
+          HabitNote(
+            id: _uuid.v4(),
+            habitId: id,
+            date: day.dayKey,
+            type: NoteType.note,
+            text: text,
+            createdAt: day,
+          ),
+        );
+      });
       final completions = <String, Completion>{};
       r.days.forEach((day, count) {
         final key = day.dayKey;
@@ -161,14 +198,19 @@ class ImportService {
       });
       totalEntries += completions.length;
 
-      final createdAt = r.days.isEmpty
+      final tracked = [...r.days.keys, ?r.since];
+      final createdAt = tracked.isEmpty
           ? DateTime.now()
-          : r.days.keys.reduce((a, b) => a.isBefore(b) ? a : b);
+          : tracked.reduce((a, b) => a.isBefore(b) ? a : b);
       final measurable = r.kind == HabitKind.quantitative;
       habits.add(
         Habit(
-          id: _uuid.v4(),
+          id: id,
           name: r.name.trim().isEmpty ? 'Imported habit' : r.name.trim(),
+          description: r.description,
+          interval: r.interval,
+          targetFrequency: r.frequency,
+          scheduleEvery: r.every,
           color: r.color != null
               ? Color(r.color!)
               : AppPalette.habitColors[i % AppPalette.habitColors.length],
@@ -190,6 +232,7 @@ class ImportService {
       source: source,
       entries: totalEntries,
       skipped: 0,
+      notes: notes,
     );
   }
 
@@ -256,6 +299,15 @@ class ImportService {
         final unitIdx = lower.indexOf('unit');
         final targetIdx = lower.indexOf('target value');
         final archivedIdx = lower.indexOf('archived?');
+        final questionIdx = lower.indexOf('question');
+        final descriptionIdx = lower.indexOf('description');
+        final numeratorIdx = _indexOfAny(
+              lower,
+              const ['frequencynumerator', 'numrepetitions'],
+            ) ??
+            -1;
+        final denominatorIdx =
+            _indexOfAny(lower, const ['frequencydenominator', 'interval']) ?? -1;
         String cell(List<String> row, int idx) =>
             idx >= 0 && row.length > idx ? row[idx].trim() : '';
         for (final row in rows.skip(1)) {
@@ -264,8 +316,12 @@ class ImportService {
           if (name.isEmpty) continue;
           final numerical = cell(row, typeIdx).toUpperCase() == 'NUMERICAL';
           final target = numerical
-              ? (double.tryParse(cell(row, targetIdx)) ?? 1)
+              ? (double.tryParse(cell(row, targetIdx).replaceAll(',', '.')) ?? 1)
               : 1;
+          final (interval, frequency, every) = _loopSchedule(
+            int.tryParse(cell(row, numeratorIdx)) ?? 1,
+            int.tryParse(cell(row, denominatorIdx)) ?? 1,
+          );
           final h = _RawHabit(
             name,
             color: _parseHexColor(cell(row, colorIdx)),
@@ -273,6 +329,12 @@ class ImportService {
             target: target <= 0 ? 1 : target,
             unit: cell(row, unitIdx),
             archived: cell(row, archivedIdx).toLowerCase() == 'true',
+            description: [cell(row, questionIdx), cell(row, descriptionIdx)]
+                .where((text) => text.isNotEmpty)
+                .join('\n'),
+            interval: interval,
+            frequency: frequency,
+            every: every,
           );
           ordered.add(h);
           byName[name] = h;
@@ -280,6 +342,26 @@ class ImportService {
             byPosition[row[posIdx].trim()] = h;
           }
         }
+      }
+    }
+
+    final fromFolder = <_RawHabit>{};
+    for (final path in files.keys) {
+      final lower = path.toLowerCase();
+      if (!lower.endsWith('/checkmarks.csv')) continue;
+      final folder = path.substring(0, path.length - '/checkmarks.csv'.length);
+      final position = folder.split('/').last.split(' ').first.trim();
+      final target = byPosition[position];
+      if (target == null) continue;
+      fromFolder.add(target);
+      final rows = _rows(_decode(files[path]!));
+      for (final row in rows.skip(1)) {
+        if (row.length < 2) continue;
+        final date = _parseDate(row[0]);
+        if (date == null) continue;
+        target.mark(date, _loopValue(row[1], target));
+        final note = row.length > 2 ? row[2].trim() : '';
+        if (note.isNotEmpty) target.notes[date] = note;
       }
     }
 
@@ -300,25 +382,10 @@ class ImportService {
               ordered.add(n);
               return n;
             });
+            if (fromFolder.contains(h)) continue;
             h.mark(date, _loopValue(row[i], h));
           }
         }
-      }
-    }
-
-    for (final path in files.keys) {
-      final lower = path.toLowerCase();
-      if (!lower.endsWith('/checkmarks.csv')) continue;
-      final folder = path.substring(0, path.length - '/checkmarks.csv'.length);
-      final position = folder.split(' ').first.trim();
-      final target = byPosition[position];
-      if (target == null || target.days.isNotEmpty) continue;
-      final rows = _rows(_decode(files[path]!));
-      for (final row in rows.skip(1)) {
-        if (row.length < 2) continue;
-        final date = _parseDate(row[0]);
-        if (date == null) continue;
-        target.mark(date, _loopValue(row[1], target));
       }
     }
 
@@ -328,6 +395,21 @@ class ImportService {
       );
     }
     return ordered;
+  }
+
+  static (HabitInterval, int, int) _loopSchedule(int numerator, int denominator) {
+    if (numerator < 1 || denominator < 1 || numerator >= denominator) {
+      return (HabitInterval.daily, 1, 2);
+    }
+    if (denominator == 7) return (HabitInterval.weekly, numerator, 2);
+    if (denominator == 30 || denominator == 31) {
+      return (HabitInterval.monthly, numerator, 2);
+    }
+    if (numerator == 1) {
+      return (HabitInterval.everyXDays, 1, denominator.clamp(2, 90));
+    }
+    final perWeek = (numerator * 7 / denominator).round().clamp(1, 6);
+    return (HabitInterval.weekly, perWeek, 2);
   }
 
   static List<int>? _entry(Map<String, List<int>> files, String basename,
@@ -579,6 +661,52 @@ class ImportService {
       byName.putIfAbsent(name, () => _RawHabit(name)).mark(date, v);
     }
     return byName.values.toList();
+  }
+
+  static List<_RawHabit> _parseHabitify(
+      List<String> lower, Iterable<List<String>> rows) {
+    final habitCol = lower.indexOf('habit');
+    final dateCol = lower.indexOf('date');
+    final statusCol = lower.indexOf('status');
+    final logCol = lower.indexOf('total log');
+    final idCol = lower.indexOf('habit id');
+    String cell(List<String> row, int idx) =>
+        idx >= 0 && row.length > idx ? row[idx].trim() : '';
+    final names = <String, String>{};
+    final logs = <String, List<(DateTime, String, num)>>{};
+    for (final row in rows) {
+      final name = cell(row, habitCol);
+      final date = _parseDate(cell(row, dateCol));
+      if (name.isEmpty || date == null) continue;
+      final id = cell(row, idCol);
+      final key = id.isEmpty ? name : id;
+      names.putIfAbsent(key, () => name);
+      final log = num.tryParse(cell(row, logCol).replaceAll(',', '.')) ?? 0;
+      logs.putIfAbsent(key, () => []).add(
+            (date, cell(row, statusCol).toLowerCase(), log),
+          );
+    }
+    return [
+      for (final entry in logs.entries)
+        _habitifyHabit(names[entry.key]!, entry.value),
+    ];
+  }
+
+  static _RawHabit _habitifyHabit(
+      String name, List<(DateTime, String, num)> days) {
+    final statuses = {for (final (_, status, _) in days) status};
+    final avoid = statuses.contains('succeeded') ||
+        (statuses.contains('failed') && !statuses.contains('completed'));
+    final habit = _RawHabit(
+      name,
+      kind: avoid ? HabitKind.negative : HabitKind.positive,
+    );
+    for (final (date, status, log) in days) {
+      habit.seen(date);
+      if (avoid && status == 'failed') habit.mark(date, log < 1 ? 1 : log.round());
+      if (!avoid && status == 'completed') habit.mark(date, 1);
+    }
+    return habit;
   }
 
   static bool _isStreakBackup(dynamic decoded) {

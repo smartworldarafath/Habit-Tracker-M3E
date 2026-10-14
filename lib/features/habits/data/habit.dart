@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/core/utils/amount_format.dart';
 import 'package:streak/features/habits/data/completion.dart';
+import 'package:streak/features/habits/data/quant_progress.dart';
 import 'package:streak/features/habits/data/reminder.dart';
 import 'package:streak/features/habits/data/substep.dart';
 import 'package:streak/features/habits/data/vacation.dart';
@@ -67,13 +68,20 @@ class Habit {
     this.focusBreakMinutes = 0,
     this.focusOnly = false,
     this.tracking = false,
+    this.anyAmount = false,
+    this.anySteps = false,
+    this.stepsNeeded = 1,
     this.difficulty = 0,
     this.startMinute = -1,
     this.durationMinutes = 0,
     this.substeps = const [],
     this.vacations = const [],
     this.restDays = const [],
+    this.missReasons = const {},
     this.archivedAt,
+    this.scheduleStart,
+    this.fromLastDone = false,
+    this.monthWeekday = false,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? AppClock.now();
 
@@ -111,12 +119,14 @@ class Habit {
       case HabitInterval.everyXDays:
         if (scheduleEvery <= 0) return false;
         final day = date.atMidnight;
-        final start = createdAt.atMidnight;
+        final start = (scheduleStart ?? createdAt).atMidnight;
         if (day.isBefore(start)) return false;
+        if (fromLastDone) return _dueSinceLastDone(day, start);
         if (scheduleUnit == ScheduleUnit.months) {
           final months =
               (day.year - start.year) * 12 + day.month - start.month;
           if (months < 0 || months % scheduleEvery != 0) return false;
+          if (monthWeekday) return _sameWeekdaySlot(day, start);
           final last = DateTime(day.year, day.month + 1, 0).day;
           return day.day == (start.day <= last ? start.day : last);
         }
@@ -129,9 +139,56 @@ class Habit {
     }
   }
 
+  bool _sameWeekdaySlot(DateTime day, DateTime start) {
+    if (day.weekday != start.weekday) return false;
+    final nth = (start.day - 1) ~/ 7;
+    if (nth < 4) return (day.day - 1) ~/ 7 == nth;
+    return day.day + 7 > DateTime(day.year, day.month + 1, 0).day;
+  }
+
+  bool _dueSinceLastDone(DateTime day, DateTime start) {
+    final last = _lastDoneBefore(day.epochDay);
+    if (last == null || last < start.epochDay) return true;
+    return !day.isBefore(_nextDueAfter(epochDayDate(last)));
+  }
+
+  int? _lastDoneBefore(int epochDay) {
+    var low = 0;
+    var high = _doneDays.length;
+    while (low < high) {
+      final mid = (low + high) ~/ 2;
+      if (_doneDays[mid] < epochDay) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+    return low == 0 ? null : _doneDays[low - 1];
+  }
+
+  DateTime _nextDueAfter(DateTime done) {
+    if (scheduleUnit != ScheduleUnit.months) {
+      return done.addDays(scheduleSpanDays);
+    }
+    final month = DateTime(done.year, done.month + scheduleEvery);
+    final last = DateTime(month.year, month.month + 1, 0).day;
+    return DateTime(month.year, month.month, math.min(done.day, last));
+  }
+
+  late final List<int> _doneDays = [
+    for (final key in completions.keys)
+      if (isCompletedOn(parseDayKey(key))) dayKeyEpoch(key),
+  ]..sort();
+
   final String coverPath;
   final int coverClarity;
   final DateTime createdAt;
+
+  final DateTime? scheduleStart;
+
+  final bool fromLastDone;
+
+  final bool monthWeekday;
 
   final HabitKind kind;
   final double dailyCost;
@@ -146,6 +203,12 @@ class Habit {
   final bool focusOnly;
 
   final bool tracking;
+
+  final bool anyAmount;
+
+  final bool anySteps;
+
+  final int stepsNeeded;
 
   final int difficulty;
 
@@ -191,6 +254,8 @@ class Habit {
 
   final List<int> restDays;
 
+  final Map<String, String> missReasons;
+
   final DateTime? archivedAt;
 
   bool get isArchived => archivedAt != null;
@@ -223,9 +288,14 @@ class Habit {
   bool isSatisfiedOn(DateTime date) =>
       isCompletedOn(date) || _doneAheadOf(date);
 
+  bool isDoneAheadOn(DateTime date) =>
+      !isCompletedOn(date) && _doneAheadOf(date);
+
   bool _doneAheadOf(DateTime date) {
     final span = scheduleSpanDays;
-    if (interval != HabitInterval.everyXDays || span <= 1) return false;
+    if (interval != HabitInterval.everyXDays || span <= 1 || fromLastDone) {
+      return false;
+    }
     final floor = startedAt;
     var cursor = date.atMidnight;
     for (var step = 1; step < span; step++) {
@@ -269,7 +339,7 @@ class Habit {
     }
     final span = scheduleSpanDays;
     if (interval != HabitInterval.everyXDays || span <= 1) return false;
-    if (isScheduledOn(cursor)) return false;
+    if (isScheduledOn(cursor)) return isDoneAheadOn(cursor);
     final floor = startedAt;
     for (var step = 1; step < span; step++) {
       cursor = cursor.addDays(-1);
@@ -301,11 +371,28 @@ class Habit {
     if (negative) {
       return day.isBefore(startedAt) ? false : entry == null;
     }
-    if (hasSubsteps) {
-      return substeps.every((s) => entry!.steps.contains(s.id));
-    }
-    return entry!.count >= perDayTarget;
+    return isDoneEntry(entry!);
   }
+
+  bool isDoneEntry(Completion entry) {
+    if (!hasSubsteps) return reaches(entry.count);
+    bool checked(Substep step) => entry.steps.contains(step.id);
+    if (!anySteps) return substeps.every(checked);
+    return substeps.where(checked).length >= stepsNeeded.clamp(1, substeps.length);
+  }
+
+  bool get hasGoal => perDayTarget > 0;
+
+  bool get acceptsAnyAmount =>
+      kind == HabitKind.quantitative && (anyAmount || !hasGoal);
+
+  bool reaches(double count) =>
+      acceptsAnyAmount ? count > 0 : count >= perDayTarget;
+
+  QuantProgress progressFor(double count) =>
+      acceptsAnyAmount && count > 0 && (!hasGoal || count < perDayTarget)
+          ? const QuantProgress(laps: 1, fraction: 0)
+          : QuantProgress.of(count: count, target: perDayTarget);
 
   bool isRelapseOn(DateTime date) =>
       kind == HabitKind.negative && completions.containsKey(date.dayKey);
@@ -337,11 +424,7 @@ class Habit {
   late final int totalCompletions = _totalCompletions();
 
   int _totalCompletions() {
-    if (hasSubsteps) {
-      final ids = substeps.map((s) => s.id).toSet();
-      return completions.values.where((c) => ids.every(c.steps.contains)).length;
-    }
-    return completions.values.where((c) => c.count >= perDayTarget).length;
+    return completions.values.where(isDoneEntry).length;
   }
 
   bool get isDoneForNow {
@@ -525,10 +608,7 @@ class Habit {
     final today = AppClock.today();
     final marked = <int, bool>{};
     for (final entry in completions.entries) {
-      marked[dayKeyEpoch(entry.key)] = negative ||
-          (hasSubsteps
-              ? substeps.every((s) => entry.value.steps.contains(s.id))
-              : entry.value.count >= perDayTarget);
+      marked[dayKeyEpoch(entry.key)] = negative || isDoneEntry(entry.value);
     }
     final breaks = [
       for (final vacation in vacations)
@@ -644,14 +724,22 @@ class Habit {
     int? focusBreakMinutes,
     bool? focusOnly,
     bool? tracking,
+    bool? anyAmount,
+    bool? anySteps,
+    int? stepsNeeded,
     int? difficulty,
     int? startMinute,
     int? durationMinutes,
     List<Substep>? substeps,
     List<VacationPeriod>? vacations,
     List<int>? restDays,
+    Map<String, String>? missReasons,
     DateTime? archivedAt,
     bool clearArchived = false,
+    DateTime? scheduleStart,
+    bool clearScheduleStart = false,
+    bool? fromLastDone,
+    bool? monthWeekday,
     DateTime? createdAt,
   }) {
     return Habit(
@@ -681,6 +769,9 @@ class Habit {
       focusMinutes: focusMinutes ?? this.focusMinutes,
       focusOnly: focusOnly ?? this.focusOnly,
       tracking: tracking ?? this.tracking,
+      anyAmount: anyAmount ?? this.anyAmount,
+      anySteps: anySteps ?? this.anySteps,
+      stepsNeeded: stepsNeeded ?? this.stepsNeeded,
       difficulty: difficulty ?? this.difficulty,
       focusBreakMinutes: focusBreakMinutes ?? this.focusBreakMinutes,
       startMinute: startMinute ?? this.startMinute,
@@ -688,7 +779,13 @@ class Habit {
       substeps: substeps ?? this.substeps,
       vacations: vacations ?? this.vacations,
       restDays: restDays ?? this.restDays,
+      missReasons: missReasons ?? this.missReasons,
       archivedAt: clearArchived ? null : (archivedAt ?? this.archivedAt),
+      scheduleStart: clearScheduleStart
+          ? null
+          : (scheduleStart ?? this.scheduleStart),
+      fromLastDone: fromLastDone ?? this.fromLastDone,
+      monthWeekday: monthWeekday ?? this.monthWeekday,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -719,6 +816,9 @@ class Habit {
         'coverPath': coverPath,
         'coverClarity': coverClarity,
         'createdAt': createdAt.toIso8601String(),
+        if (scheduleStart != null) 'scheduleStart': scheduleStart!.dayKey,
+        if (fromLastDone) 'fromLastDone': true,
+        if (monthWeekday) 'monthWeekday': true,
         'kind': kind.index,
         'dailyCost': dailyCost,
         'unitLabel': unitLabel,
@@ -729,12 +829,16 @@ class Habit {
         'focusBreakMinutes': focusBreakMinutes,
         'focusOnly': focusOnly,
         'tracking': tracking,
+        'anyAmount': anyAmount,
+        'anySteps': anySteps,
+        'stepsNeeded': stepsNeeded,
         'difficulty': difficulty,
         'startMinute': startMinute,
         'durationMinutes': durationMinutes,
         'substeps': substeps.map((s) => s.toMap()).toList(),
         'vacations': vacations.map((v) => v.toMap()).toList(),
         'restDays': restDays,
+        if (missReasons.isNotEmpty) 'missReasons': missReasons,
         if (archivedAt != null) 'archivedAt': archivedAt!.toIso8601String(),
       };
 
@@ -756,7 +860,7 @@ class Habit {
             ) ??
             const {},
         interval: HabitInterval.values[(map['interval'] ?? 0) as int],
-        targetFrequency: (map['targetFrequency'] ?? 1) as int,
+        targetFrequency: math.max(1, (map['targetFrequency'] ?? 1) as int),
         scheduleWeekdays: (map['scheduleWeekdays'] as List?)
                 ?.map((e) => e as int)
                 .toList() ??
@@ -775,6 +879,11 @@ class Habit {
         createdAt: map['createdAt'] != null
             ? DateTime.tryParse(map['createdAt'] as String)
             : null,
+        scheduleStart: map['scheduleStart'] is String
+            ? parseDayKey(map['scheduleStart'] as String)
+            : null,
+        fromLastDone: map['fromLastDone'] == true,
+        monthWeekday: map['monthWeekday'] == true,
         kind: HabitKind.values[(map['kind'] ?? 0) as int],
         dailyCost: ((map['dailyCost'] ?? 0) as num).toDouble(),
         unitLabel: (map['unitLabel'] ?? '') as String,
@@ -786,6 +895,9 @@ class Habit {
             ((map['focusBreakMinutes'] ?? 0) as num).toInt(),
         focusOnly: (map['focusOnly'] ?? false) as bool,
         tracking: (map['tracking'] ?? false) as bool,
+        anyAmount: (map['anyAmount'] ?? false) as bool,
+        anySteps: (map['anySteps'] ?? false) as bool,
+        stepsNeeded: (map['stepsNeeded'] as num?)?.toInt() ?? 1,
         difficulty: ((map['difficulty'] ?? 0) as num).toInt().clamp(0, 3),
         startMinute: ((map['startMinute'] ?? -1) as num).toInt(),
         durationMinutes: ((map['durationMinutes'] ?? 0) as num).toInt(),
@@ -802,6 +914,9 @@ class Habit {
                 .toList(),
         restDays:
             (map['restDays'] as List?)?.map((e) => e as int).toList() ?? const [],
+        missReasons: map['missReasons'] == null
+            ? const {}
+            : Map<String, String>.from(map['missReasons'] as Map),
         archivedAt: map['archivedAt'] == null
             ? null
             : DateTime.tryParse(map['archivedAt'] as String),

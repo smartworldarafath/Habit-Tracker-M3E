@@ -197,7 +197,48 @@ Date,Meditate,Exercise
       expect(read.isArchived, isFalse);
     });
 
-    test('prefers the top-level Checkmarks.csv over per-habit ones', () {
+    test('brings frequency, question, notes and comma decimals', () {
+      final archive = Archive()
+        ..addFile(ArchiveFile(
+            'Habits.csv',
+            0,
+            _b('Position,Name,Type,Question,Description,FrequencyNumerator,'
+                'FrequencyDenominator,Color,Unit,Target Type,Target Value,'
+                'Archived?\n'
+                '001,Gym,YES_NO,Did you train?,Legs and back,3,7,#1976D2,,,,false\n'
+                '002,Water,NUMERICAL,,,1,1,#E53935,l,AT_LEAST,"1,5",false\n'
+                '003,Bills,YES_NO,,,1,30,#43A047,,,,false\n'
+                '004,Plants,YES_NO,,,1,3,#43A047,,,,false\n')))
+        ..addFile(ArchiveFile('001 Gym/Checkmarks.csv', 0,
+            _b('Date,Value,Notes\n2024-03-02,YES_MANUAL,"Heavy day\nnew PR"\n'
+                '2024-03-01,YES_AUTO,\n')))
+        ..addFile(ArchiveFile('Checkmarks.csv', 0,
+            _b('Date,Gym,Water,Bills,Plants,\n'
+                '2024-03-02,YES_MANUAL,1500,NO,NO,\n'
+                '2024-03-01,YES_MANUAL,0,NO,YES_MANUAL,\n')));
+      final zipped = ZipEncoder().encode(archive)!;
+      final o = ImportService.parseBytes(zipped, fileName: 'loop.zip');
+
+      final gym = _byName(o, 'Gym');
+      expect(gym.interval, HabitInterval.weekly);
+      expect(gym.targetFrequency, 3);
+      expect(gym.description, 'Did you train?\nLegs and back');
+      expect(gym.isCompletedOn(DateTime(2024, 3, 1)), isFalse);
+      expect(gym.isCompletedOn(DateTime(2024, 3, 2)), isTrue);
+      expect(o.notes.single.habitId, gym.id);
+      expect(o.notes.single.date, DateTime(2024, 3, 2).dayKey);
+      expect(o.notes.single.text, 'Heavy day\nnew PR');
+
+      expect(_byName(o, 'Water').perDayTarget, 1.5);
+      expect(_byName(o, 'Water').interval, HabitInterval.daily);
+      expect(_byName(o, 'Bills').interval, HabitInterval.monthly);
+      final plants = _byName(o, 'Plants');
+      expect(plants.interval, HabitInterval.everyXDays);
+      expect(plants.scheduleEvery, 3);
+      expect(plants.isCompletedOn(DateTime(2024, 3, 1)), isTrue);
+    });
+
+    test('without Habits.csv the top-level Checkmarks.csv is used', () {
       final archive = Archive()
         ..addFile(ArchiveFile('001 Meditate/Checkmarks.csv', 0,
             _b('Date,Meditate\n2024-01-01,2\n')))
@@ -411,6 +452,35 @@ Date,Meditate,Exercise
       final a = _byName(o, 'A');
       expect(a.completions.containsKey(DateTime(2024, 1, 31).dayKey), isTrue);
       expect(a.completions.containsKey(DateTime(2024, 2, 1).dayKey), isTrue);
+    });
+  });
+
+  group('Habitify CSV', () {
+    final csv = '''
+﻿Habit;Date;Total log;Unit;Status;Habit ID
+Quit;2026-02-09;0;times;Succeeded;q1
+Quit;2026-02-10;0;times;Succeeded;q1
+Quit;2026-02-11;3;times;Failed;q1
+Quit;2026-02-12;1;times;Failed;q1
+Read;2026-02-10;1;times;Completed;r1
+Read;2026-02-11;0;times;Skipped;r1
+Read;2026-02-12;1;times;Completed;r1
+''';
+
+    test('reads Status: Failed is a relapse, Skipped is not done', () {
+      final o = ImportService.parseBytes(_b(csv), fileName: 'habitify.csv');
+      expect(o.source, 'Habitify');
+      final quit = _byName(o, 'Quit');
+      final read = _byName(o, 'Read');
+      expect(quit.kind, HabitKind.negative);
+      expect(quit.createdAt, DateTime(2026, 2, 9));
+      expect(quit.isCompletedOn(DateTime(2026, 2, 10)), isTrue);
+      expect(quit.isCompletedOn(DateTime(2026, 2, 11)), isFalse);
+      expect(quit.completions[DateTime(2026, 2, 11).dayKey]!.count, 3);
+      expect(quit.completions.length, 2);
+      expect(read.kind, HabitKind.positive);
+      expect(read.completions.length, 2);
+      expect(read.isCompletedOn(DateTime(2026, 2, 11)), isFalse);
     });
   });
 
