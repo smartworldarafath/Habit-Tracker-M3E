@@ -12,13 +12,14 @@ data class WidgetLook(
     val details: Boolean = true,
     val round: Boolean = false,
     val hideDone: Boolean = false,
+    val hideTracking: Boolean = false,
     val compact: Boolean = false,
     val band: Boolean = true,
 )
 
 object WidgetConfig {
     private const val PREFS = "StreakWidgetConfig"
-    val KINDS = listOf("habit", "today", "stats", "heatmap", "todos")
+    val KINDS = listOf("habit", "today", "stats", "heatmap", "todos", "focus")
     private val templates = HashMap<Int, Int>()
     const val DEFAULT_BG = 0x101014
     const val DEFAULT_BG_LIGHT = 0xF5F5F7
@@ -89,6 +90,7 @@ object WidgetConfig {
             details = p.getBoolean("details_$k", true),
             round = p.getBoolean("roundButtons_$k", round),
             hideDone = p.getBoolean("hideDone_$k", false),
+            hideTracking = p.getBoolean("hideTracking_$k", false),
             compact = p.getBoolean("compact_$k", false),
             band = p.getBoolean("band_$k", true),
         )
@@ -102,6 +104,7 @@ object WidgetConfig {
             .putBoolean("details_$id", look.details)
             .putBoolean("roundButtons_$id", look.round)
             .putBoolean("hideDone_$id", look.hideDone)
+            .putBoolean("hideTracking_$id", look.hideTracking)
             .putBoolean("compact_$id", look.compact)
             .putBoolean("band_$id", look.band)
             .commit()
@@ -121,6 +124,7 @@ object WidgetConfig {
 
     fun kindOf(className: String): String = when {
         className.contains("Todos") -> "todos"
+        className.contains("Focus") -> "focus"
         className.contains("Today") -> "today"
         className.contains("Stats") -> "stats"
         className.contains("Heatmap") -> "heatmap"
@@ -184,6 +188,7 @@ object WidgetConfig {
             .remove("details_$id")
             .remove("roundButtons_$id")
             .remove("hideDone_$id")
+            .remove("hideTracking_$id")
             .remove("compact_$id")
             .remove("band_$id")
             .apply()

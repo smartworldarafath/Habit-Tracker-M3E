@@ -18,6 +18,7 @@ import 'package:streak/core/widgets/section_label.dart';
 import 'package:streak/features/focus/data/focus_session.dart';
 import 'package:streak/features/focus/pages/focus_stats_page.dart';
 import 'package:streak/features/focus/widgets/focus_daily_bars.dart';
+import 'package:streak/features/focus/widgets/focus_setup_parts.dart';
 import 'package:streak/features/focus/pages/focus_page.dart';
 import 'package:streak/features/focus/state/focus_actions.dart';
 import 'package:streak/features/focus/state/focus_controller.dart';
@@ -50,6 +51,7 @@ import 'package:streak/core/express/express_surface.dart';
 import 'package:streak/core/widgets/glass.dart';
 import 'package:streak/features/habits/widgets/quant_daily_bars.dart';
 import 'package:streak/features/habits/widgets/quantitative_progress.dart';
+import 'package:streak/features/habits/pages/habit_stats_page.dart';
 import 'package:streak/features/habits/widgets/saved_money.dart';
 import 'package:streak/features/habits/widgets/share_card.dart';
 import 'package:streak/features/habits/widgets/streak_summary.dart';
@@ -295,6 +297,10 @@ class _HabitDetailsPageState extends State<HabitDetailsPage> {
                 if (minimal) ...[
                   MinimalSection(
                     title: context.l10n.streaks,
+                    trailing: habit.kind != HabitKind.quantitative &&
+                            hasHabitStats(habit)
+                        ? QuantStatsLink(habit: habit)
+                        : null,
                     child: MinimalStreakTiles(habit: habit, mode: _mode),
                   ),
                   if (habit.hasCost)
@@ -303,7 +309,13 @@ class _HabitDetailsPageState extends State<HabitDetailsPage> {
                       child: MinimalMoneyTiles(habit: habit),
                     ),
                 ] else ...[
-                  SectionLabel(context.l10n.streaks),
+                  SectionLabel(
+                    context.l10n.streaks,
+                    trailing: habit.kind != HabitKind.quantitative &&
+                            hasHabitStats(habit)
+                        ? QuantStatsLink(habit: habit)
+                        : null,
+                  ),
                   StreakSummary(habit: habit, mode: _mode),
                   if (habit.hasCost) ...[
                     const SizedBox(height: 12),
@@ -528,6 +540,7 @@ class _ActivityView extends StatelessWidget {
           height: 60,
           onToggle: onToggle,
           onLongPress: onLongPress,
+          showNotes: showNotes,
         ),
       );
     }
@@ -804,12 +817,15 @@ class _FocusTile extends StatelessWidget {
               else
                 Icon(LucideIcons.timer, size: 21, color: habit.color.shownIn(context)),
               const SizedBox(width: 14),
-              Expanded(
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 150),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       context.l10n.focus_total,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: express
                           ? ExpressType.headline.at(
                               16,
@@ -841,6 +857,13 @@ class _FocusTile extends StatelessWidget {
                   ],
                 ),
               ),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: FocusQuickTimers(habit: habit),
+                ),
+              ),
+              const SizedBox(width: 6),
               if (express)
                 ExpressIconButton(
                   icon: LucideIcons.play,

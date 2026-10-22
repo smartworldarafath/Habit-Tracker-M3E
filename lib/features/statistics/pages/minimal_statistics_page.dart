@@ -21,10 +21,32 @@ import 'package:streak/features/island/widgets/island_entry.dart';
 import 'package:streak/features/habits/widgets/saved_money.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
 import 'package:streak/features/statistics/data/habit_stats.dart';
+import 'package:streak/features/statistics/widgets/consistency_period.dart';
 import 'package:streak/features/statistics/widgets/period_totals.dart';
 import 'package:streak/features/statistics/widgets/stat_charts.dart';
 import 'package:streak/features/statistics/widgets/year_heatmap.dart';
 import 'package:streak/core/extensions/color_extensions.dart';
+
+class _ConsistencyTile extends StatelessWidget {
+  const _ConsistencyTile({required this.stats});
+
+  final HabitStats stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final period = consistencyPeriodOf(context);
+    final value = stats.consistencyOver(period);
+    final change = consistencyDelta(value);
+    final caption = consistencyCaption(context, period);
+    return MinimalTile(
+      icon: LucideIcons.target,
+      label: context.l10n.completion_rate_short,
+      value: '${value.now}%',
+      caption: change == null ? caption : '$caption · $change',
+      onTap: () => pickConsistencyPeriod(context),
+    );
+  }
+}
 
 class MinimalStatisticsPage extends StatefulWidget {
   const MinimalStatisticsPage({super.key});
@@ -145,12 +167,7 @@ class _MinimalStatisticsPageState extends State<MinimalStatisticsPage> {
                         caption: '${stats.perWeek.toStringAsFixed(1)}  '
                             '${context.l10n.per_week.toLowerCase()}',
                       ),
-                      MinimalTile(
-                        icon: LucideIcons.target,
-                        label: context.l10n.completion_rate_short,
-                        value: '${stats.consistency}%',
-                        caption: context.l10n.last_90_days,
-                      ),
+                      _ConsistencyTile(stats: stats),
                     ],
                   ),
                   const SizedBox(height: 26),
@@ -197,16 +214,23 @@ class _MinimalStatisticsPageState extends State<MinimalStatisticsPage> {
                       ),
                     ),
                   ),
-                  if (habit != null && habit.hasCost)
+                  if (habit != null && showsMoney(habit))
                     MinimalSection(
                       title: context.l10n.money_saved,
                       child: MinimalGrid(
                         children: [
-                          MinimalTile(
-                            icon: LucideIcons.piggyBank,
-                            label: context.l10n.money_saved,
-                            value: habitMoneySaved(context, habit),
-                          ),
+                          if (habit.hasCost)
+                            MinimalTile(
+                              icon: LucideIcons.piggyBank,
+                              label: context.l10n.money_saved,
+                              value: habitMoneySaved(context, habit),
+                            ),
+                          if (habit.logsSpent || habit.moneySpent > 0)
+                            MinimalTile(
+                              icon: LucideIcons.wallet,
+                              label: context.l10n.money_spent,
+                              value: habitMoneySpent(context, habit),
+                            ),
                           MinimalTile(
                             icon: LucideIcons.shieldCheck,
                             label: context.l10n.clean_days,

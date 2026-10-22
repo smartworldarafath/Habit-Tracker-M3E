@@ -10,6 +10,7 @@
   "discard_changes": "Discard changes?",
   "discard_changes_body": "The changes you made to this habit will be lost.",
   "discard": "Discard",
+  "todo_discard_body": "The changes you made to this to-do will be lost.",
   "keep_editing": "Keep editing",
   "delete": "Delete",
   "good_morning": "Good morning",
@@ -659,7 +660,7 @@
   "collapse_cards": "Collapse cards",
   "expand_cards": "Expand cards",
   "view_switcher": "View switcher",
-  "view_switcher_sub": "Show the Week / Month / Year buttons on Today",
+  "view_switcher_sub": "Show the Week / Month / Year buttons on Today. Off, they move to the filter menu",
   "view_switcher_needs": "Turn on activity on cards to use it",
   "focus": "Focus",
   "focus_enable_sub": "A timer for habits that need one",
@@ -715,6 +716,7 @@
   "focus_end_short": "You are {time} short of the goal.",
   "focus_end_tasks": "{count} tasks are still unchecked.",
   "focus_end_reached": "Goal reached. The habit will be marked as done.",
+  "focus_end_reached_free": "Goal reached.",
   "focus_end_keep": "Keep going",
   "focus_end_anyway": "End anyway",
   "focus_end_complete": "Mark as done",
@@ -802,6 +804,13 @@
   "rest_days_none": "None",
   "consistency": "Consistency",
   "last_90_days": "Last 90 days",
+  "last_12_months": "Last 12 months",
+  "consistency_vs_previous": "{change} vs previous",
+  "@consistency_vs_previous": {
+    "placeholders": {
+      "change": {"type": "String"}
+    }
+  },
   "focus_clear_today": "Clear today's sessions",
   "focus_defaults": "Session defaults",
   "plan_day": "Plan the day",
@@ -981,6 +990,29 @@
   "focus_only_start": "Start session",
   "focus_flowtime": "Flowtime",
   "focus_flowtime_hint": "No goal and no alarm. The clock counts up and you stop when you feel done.",
+  "focus_mode_timer": "Timer",
+  "focus_ends_at": "Ends at {time}",
+  "@focus_ends_at": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "focus_no_limit": "No time limit",
+  "focus_style_plain": "Simple",
+  "focus_label_sub": "Sort your sessions, for example by subject. Hold one to remove it.",
+  "focus_label_icon": "Icon (optional)",
+  "focus_save_timer": "Save timer",
+  "focus_remove_timer": "Remove this saved timer?",
+  "focus_days_row": "{count, plural, =1{1 day in a row} other{{count} days in a row}}",
+  "@focus_days_row": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "focus_end_flow": "You focused for {time}.",
   "@focus_end_flow": {
     "placeholders": { "time": { "type": "String" } }
@@ -1408,13 +1440,103 @@
   "todo_save_another": "Save and add another",
   "todo_add_subtask": "Add subtask",
   "pin_paste": "Paste code",
+  "quant_preset_steps": "Steps",
+  "health_steps_denied": "Streak can't read your steps without permission",
+  "health_permission": "Permission",
+  "health_unit_steps": "steps",
+  "health_intro": "Streak only reads your step count, so your step habits fill in by themselves.",
+  "health_point_read": "It only reads steps. It never reads anything else and never writes to Health Connect.",
+  "health_point_local": "Your steps stay on your phone. Streak never connects to the internet.",
+  "health_point_off": "You can turn it off at any time, in the habit or in Health Connect.",
+  "health_manage": "Manage permission",
+  "performance": "Performance",
+  "performance_sub": "Lighter app for older or low-end phones",
+  "glass_effects": "Glass effects",
+  "glass_effects_sub": "Blur behind the bar and at the screen edges. It's what weighs the most",
+  "animations": "Animations",
+  "animations_sub": "Entrances, page changes and moving text",
   "widgets_sub": "Widget style, for phones without the widget editor",
   "widgets_hint": "If your home screen doesn't open the editor when you add or hold a widget, change its style here. It applies to every widget of that type that wasn't customized on its own.",
   "widget_kind_habit": "Habits",
   "widget_kind_today": "Today",
   "widget_kind_stats": "Summary",
   "widget_kind_heatmap": "Heatmap",
-  "widget_kind_todos": "To-do"
+  "widget_kind_todos": "To-do",
+  "widget_kind_focus": "Focus",
+  "today_view": "View",
+  "avoid_track_spent": "Log what you spend",
+  "avoid_track_spent_sub": "When you relapse, note how much it cost you. The cost per day is filled in for you",
+  "clean_goal": "Clean days goal",
+  "clean_goal_sub": "Pick how many days in a row you want to hold out",
+  "clean_goal_left": "{count, plural, =1{1 day to go} other{{count} days to go}}",
+  "@clean_goal_left": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "clean_goal_reached": "Goal reached",
+  "clean_goal_again": "Your streak keeps going. Keep it up",
+  "clean_goal_of": "of {goal}",
+  "@clean_goal_of": {
+    "placeholders": { "goal": { "type": "int" } }
+  },
+  "relapse_spent": "Spent on this relapse",
+  "money_spent": "Money spent",
+  "avoid_month": "Month summary",
+  "avoid_balance": "Balance",
+  "total_goal": "Total goal",
+  "total_goal_sub": "A target for the whole habit, like 1000 pages or 50 times",
+  "total_goal_left": "{amount} to go",
+  "@total_goal_left": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "total_goal_of": "of {amount}",
+  "@total_goal_of": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "count_times": "{count, plural, =1{1 time} other{{count} times}}",
+  "@count_times": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "focus_change_timer": "Change timer",
+  "focus_retime_hint": "The time you've already focused is kept.",
+  "focus_retime_apply": "Apply",
+  "widget_focus_today": "Focus today",
+  "focus_streak": "Focus streak",
+  "focus_by_hour": "When you focus",
+  "focus_by_weekday": "Focus by day",
+  "focus_heatmap": "Focus activity",
+  "focus_plan_vs_real": "Planned vs real",
+  "focus_avg_longer": "On average, {pct} longer than planned",
+  "@focus_avg_longer": {
+    "placeholders": { "pct": { "type": "String" } }
+  },
+  "focus_avg_shorter": "On average, {pct} shorter than planned",
+  "@focus_avg_shorter": {
+    "placeholders": { "pct": { "type": "String" } }
+  },
+  "focus_avg_on_plan": "On average, right on plan",
+  "focus_session_longer": "{pct} longer than planned",
+  "@focus_session_longer": {
+    "placeholders": { "pct": { "type": "String" } }
+  },
+  "focus_session_shorter": "{pct} shorter than planned",
+  "@focus_session_shorter": {
+    "placeholders": { "pct": { "type": "String" } }
+  },
+  "focus_session_on_plan": "Right on plan",
+  "focus_pauses_avg": "Pauses per session",
+  "focus_pause_count": "{count, plural, =0{No pauses} =1{1 pause} other{{count} pauses}}",
+  "@focus_pause_count": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "focus_vs_previous": "{change} vs the previous period",
+  "@focus_vs_previous": {
+    "placeholders": { "change": { "type": "String" } }
+  },
+  "focus_plan_hint": "Counts from start to finish, pauses included. Only sessions started from now on.",
+  "focus_busiest": "Most focused at {hour}",
+  "@focus_busiest": {
+    "placeholders": { "hour": { "type": "String" } }
+  }
 }
 
 

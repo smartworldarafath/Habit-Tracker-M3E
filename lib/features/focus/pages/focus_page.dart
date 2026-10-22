@@ -28,6 +28,8 @@ import 'package:streak/features/focus/state/focus_controller.dart';
 import 'package:streak/core/widgets/celebration_overlay.dart';
 import 'package:streak/features/focus/widgets/focus_backgrounds.dart';
 import 'package:streak/features/focus/widgets/focus_end_dialog.dart';
+import 'package:streak/features/focus/widgets/focus_insights.dart';
+import 'package:streak/features/focus/widgets/focus_retime_sheet.dart';
 import 'package:streak/features/focus/widgets/focus_task_lists.dart';
 import 'package:streak/features/focus/widgets/focus_video_scene.dart';
 import 'package:streak/features/focus/widgets/music_sheet.dart';
@@ -212,14 +214,20 @@ class _FocusPageState extends State<FocusPage> {
     final pending = habit == null
         ? focus.pendingTasks
         : habit.substeps.where((step) => !checked.contains(step.id)).length;
+    final draft = focus.draft;
 
     final lines = <String>[
       if (focus.isFlow)
         context.l10n.focus_end_flow(formatHoursShort(focus.elapsedSeconds))
       else if (reached)
-        context.l10n.focus_end_reached
+        habit == null
+            ? context.l10n.focus_end_reached_free
+            : context.l10n.focus_end_reached
       else
         context.l10n.focus_end_short(formatHoursShort(focus.remainingSeconds)),
+      if (reached && draft.measured)
+        '${focusSessionLine(context, draft)}  ·  '
+            '${context.l10n.focus_pause_count(draft.pauses)}',
       if (pending > 0) context.l10n.focus_end_tasks(pending),
       if (!reached && focus.isPomodoro && !focus.isBreak && settings.focusWholeRounds)
         context.l10n.focus_end_drop,
@@ -281,8 +289,9 @@ class _FocusPageState extends State<FocusPage> {
     final leadMinutes =
         starting ? (widget.startMinutes ?? focus.targetMinutes) : focus.targetMinutes;
     final inset = MediaQuery.viewInsetsOf(context).bottom;
+    final active = context.select<FocusController, bool>((f) => f.isActive);
 
-    if (!focus.isActive && !_leaving && _leadValue == 0) {
+    if (!active && !_leaving && _leadValue == 0) {
       _leaving = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) AppNavigator.pop();
@@ -341,12 +350,17 @@ class _FocusPageState extends State<FocusPage> {
                   builder: (context, _) => _TopBar(
                     immersive: _immersive,
                     onImmersive: _toggleImmersive,
+                    onTarget: leading || !focus.isActive || focus.isBreak
+                        ? null
+                        : () => showFocusRetimeSheet(context),
                     title: label,
-                    target: leadMinutes <= 0
+                    target: (leading ? leadMinutes : focus.targetMinutes) <= 0
                         ? context.l10n.focus_flowtime
                         : focus.isPomodoro && !leading
                             ? '${context.l10n.minutes_short('${focus.targetMinutes}')}  ·  ${context.l10n.focus_round(focus.round)}'
-                            : context.l10n.minutes_short('$leadMinutes'),
+                            : context.l10n.minutes_short(
+                                '${leading ? leadMinutes : focus.targetMinutes}',
+                              ),
                   ),
                 );
 
@@ -553,18 +567,21 @@ class _TopBar extends StatelessWidget {
     required this.target,
     required this.immersive,
     required this.onImmersive,
+    this.onTarget,
   });
 
   final String title;
   final String target;
   final bool immersive;
   final VoidCallback onImmersive;
+  final VoidCallback? onTarget;
 
   Future<void> _pickStyle(BuildContext context) async {
     final labels = [
       context.l10n.focus_style_digital,
       context.l10n.focus_style_flip,
       context.l10n.focus_style_dots,
+      context.l10n.focus_style_plain,
     ];
     await _sheet(
       context,
@@ -574,19 +591,26 @@ class _TopBar extends StatelessWidget {
         children: [
           Consumer<SettingsController>(
             builder: (_, s, __) => LiveSeconds(
-              builder: (context, seconds) => Row(
+              builder: (context, seconds) => Column(
                 children: [
-                  for (var i = 0; i < labels.length; i++) ...[
-                    if (i > 0) const SizedBox(width: 10),
-                    Expanded(
-                      child: ClockPreview(
-                        style: ClockStyle.values[i],
-                        label: labels[i],
-                        color: context.colors.primary,
-                        selected: s.focusClockStyle == i,
-                        seconds: seconds,
-                        onTap: () => s.setFocusClockStyle(i),
-                      ),
+                  for (var row = 0; row < labels.length; row += 2) ...[
+                    if (row > 0) const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        for (var i = row; i < row + 2 && i < labels.length; i++) ...[
+                          if (i > row) const SizedBox(width: 12),
+                          Expanded(
+                            child: ClockPreview(
+                              style: ClockStyle.values[i],
+                              label: labels[i],
+                              color: context.colors.primary,
+                              selected: s.focusClockStyle == i,
+                              seconds: seconds,
+                              onTap: () => s.setFocusClockStyle(i),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ],
@@ -886,11 +910,34 @@ class _TopBar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 1),
-                Text(
-                  target,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: Colors.white.withValues(alpha: 0.55),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onTarget,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          target,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: Colors.white.withValues(
+                              alpha: onTarget == null ? 0.55 : 0.75,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (onTarget != null) ...[
+                        const SizedBox(width: 2),
+                        Icon(
+                          LucideIcons.chevronDown,
+                          size: 14,
+                          color: Colors.white.withValues(alpha: 0.75),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],
@@ -908,6 +955,12 @@ class _TopBar extends StatelessWidget {
               tooltip: context.l10n.focus_options,
               style: MorphMenuStyle.glass(),
               items: [
+                if (onTarget case final retime?)
+                  (
+                    icon: LucideIcons.timerReset,
+                    label: context.l10n.focus_change_timer,
+                    onTap: retime,
+                  ),
                 (
                   icon: LucideIcons.music,
                   label: context.l10n.focus_sound,

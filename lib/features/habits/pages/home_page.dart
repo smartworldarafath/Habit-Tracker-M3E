@@ -119,6 +119,16 @@ class _HomePageState extends State<HomePage> {
     context.read<SettingsController>().setHeatmapMode(mode.index);
   }
 
+  void _openFilter(SettingsController settings) {
+    final modes = !settings.viewSwitcher &&
+        (settings.isMinimalStyle || settings.cardActivity);
+    showTodayFilterSheet(
+      context,
+      mode: modes ? _mode : null,
+      onMode: _changeMode,
+    );
+  }
+
   void _celebrate() => _confetti.value++;
 
   void _payout(HabitsController controller, DateTime date) {
@@ -309,6 +319,43 @@ class _HomePageState extends State<HomePage> {
     final railed = minimal && wide;
     final bigText = MediaQuery.textScalerOf(context).scale(14) > 20;
     final classic = !minimal && !express;
+    final shortcuts = <String, MorphMenuItem>{
+      if (settings.focusEnabled)
+        'focus': (
+          icon: LucideIcons.timer,
+          label: context.l10n.focus,
+          onTap: () => openFocus(context),
+        ),
+      if (settings.planningEnabled)
+        'plan': (
+          icon: LucideIcons.calendarClock,
+          label: context.l10n.day_timeline,
+          onTap: () => AppNavigator.push(const DayTimelinePage()),
+        ),
+      if (settings.notesEnabled)
+        'notes': (
+          icon: LucideIcons.notebookPen,
+          label: context.l10n.notes_all,
+          onTap: () => AppNavigator.push(const AllNotesPage()),
+        ),
+      if (settings.todosEnabled)
+        'todos': (
+          icon: LucideIcons.listChecks,
+          label: context.l10n.todos,
+          onTap: () => AppNavigator.push(const TodosPage()),
+        ),
+      'stats': (
+        icon: LucideIcons.chartColumn,
+        label: context.l10n.stats,
+        onTap: () => AppNavigator.push(const StatisticsPage()),
+      ),
+      'settings': (
+        icon: LucideIcons.settings,
+        label: context.l10n.settings,
+        onTap: () => AppNavigator.push(const SettingsPage()),
+      ),
+    };
+    final shortcut = shortcuts[settings.minimalShortcut];
     return Scaffold(
       extendBodyBehindAppBar: classic,
       floatingActionButton: express && !_reordering
@@ -335,53 +382,41 @@ class _HomePageState extends State<HomePage> {
                     child: Text(context.l10n.today),
                   ),
 
-        leadingWidth: minimal && !railed && !_reordering ? 64 : null,
+        leadingWidth: minimal && !railed && !_reordering
+            ? (shortcut == null ? 64 : 118)
+            : null,
         leading: minimal && !railed && !_reordering
             ? Padding(
                 padding: const EdgeInsetsDirectional.only(start: 16),
-                child: Center(
-                  child: MorphMenu(
-                    icon: LucideIcons.ellipsis,
-                    tooltip: context.l10n.focus_options,
-                    style: MorphMenuStyle.paper(context),
-                    anchor: Alignment.topLeft,
-                    items: [
-                      if (settings.focusEnabled)
-                        (
-                          icon: LucideIcons.timer,
-                          label: context.l10n.focus,
-                          onTap: () => openFocus(context),
-                        ),
-                      if (settings.planningEnabled)
-                        (
-                          icon: LucideIcons.calendarClock,
-                          label: context.l10n.day_timeline,
-                          onTap: () => AppNavigator.push(const DayTimelinePage()),
-                        ),
-                      if (settings.notesEnabled)
-                        (
-                          icon: LucideIcons.notebookPen,
-                          label: context.l10n.notes_all,
-                          onTap: () => AppNavigator.push(const AllNotesPage()),
-                        ),
-                      if (settings.todosEnabled)
-                        (
-                          icon: LucideIcons.listChecks,
-                          label: context.l10n.todos,
-                          onTap: () => AppNavigator.push(const TodosPage()),
-                        ),
-                      (
-                        icon: LucideIcons.chartColumn,
-                        label: context.l10n.stats,
-                        onTap: () => AppNavigator.push(const StatisticsPage()),
-                      ),
-                      (
-                        icon: LucideIcons.settings,
-                        label: context.l10n.settings,
-                        onTap: () => AppNavigator.push(const SettingsPage()),
+                child: Row(
+                  children: [
+                    MorphMenu(
+                      icon: LucideIcons.ellipsis,
+                      tooltip: context.l10n.focus_options,
+                      style: MorphMenuStyle.paper(context),
+                      anchor: Alignment.topLeft,
+                      items: [
+                        for (final MapEntry(:key, :value) in shortcuts.entries)
+                          (
+                            icon: value.icon,
+                            label: value.label,
+                            onTap: () {
+                              settings.setMinimalShortcut(key);
+                              value.onTap();
+                            },
+                          ),
+                      ],
+                    ),
+                    if (shortcut != null) ...[
+                      const SizedBox(width: 10),
+                      MorphMenuButton(
+                        icon: shortcut.icon,
+                        tooltip: shortcut.label,
+                        style: MorphMenuStyle.paper(context),
+                        onTap: shortcut.onTap,
                       ),
                     ],
-                  ),
+                  ],
                 ),
               )
             : null,
@@ -397,7 +432,7 @@ class _HomePageState extends State<HomePage> {
                   tooltip: context.l10n.today_filter,
                   style: MorphMenuStyle.paper(context),
                   active: todayFiltered(settings),
-                  onTap: () => showTodayFilterSheet(context),
+                  onTap: () => _openFilter(settings),
                 ),
                 const SizedBox(width: 10),
                 Builder(
@@ -644,7 +679,7 @@ class _HomePageState extends State<HomePage> {
                     );
               final allDone =
                   hidingDone && visible.isEmpty && filtered.isNotEmpty;
-              void openFilter() => showTodayFilterSheet(context);
+              void openFilter() => _openFilter(settings);
 
               final header = _reordering
                   ? _ReorderBanner(text: context.l10n.reorder_hint)
@@ -821,9 +856,9 @@ class _HomePageState extends State<HomePage> {
     }
     if (habit.kind == HabitKind.negative && !isRelapse(habit, date)) {
       if (date.atMidnight.isAfter(AppClock.today())) return;
-      if (!await confirmRelapse(context, habit)) return;
-      if (!mounted) return;
-      await controller.logRelapse(habit.id, date);
+      final spent = await askRelapse(context, habit);
+      if (spent == null || !mounted) return;
+      await controller.logRelapse(habit.id, date, spent: spent);
       return;
     }
     if (!await allowManualCheck(context, habit: habit, date: date)) return;

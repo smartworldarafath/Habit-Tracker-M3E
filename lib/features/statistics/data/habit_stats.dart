@@ -4,6 +4,19 @@ import 'package:flutter/foundation.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/features/habits/data/habit.dart';
 
+enum ConsistencyPeriod {
+  week(7),
+  month(30),
+  quarter(90),
+  year(365);
+
+  const ConsistencyPeriod(this.days);
+
+  final int days;
+}
+
+typedef ConsistencyValue = ({int now, int? before});
+
 @immutable
 class HabitStats {
   const HabitStats({
@@ -47,7 +60,9 @@ class HabitStats {
     currentStreak: 0,
     bestStreak: 0,
     monthRate: 0,
-    consistency: 0,
+    consistency: [
+      for (final _ in ConsistencyPeriod.values) (now: 0, before: null),
+    ],
     weekDone: 0,
     monthDone: 0,
     allDone: 0,
@@ -72,7 +87,10 @@ class HabitStats {
   final int weekDone;
   final int monthDone;
   final int allDone;
-  final int consistency;
+  final List<ConsistencyValue> consistency;
+
+  ConsistencyValue consistencyOver(ConsistencyPeriod period) =>
+      consistency[period.index];
 
   int get bestWeekday => _argMax(weekday);
   int get bestMonth => _argMax(monthly);
@@ -147,10 +165,24 @@ class HabitStats {
     return series;
   }
 
-  static bool _isDue(Habit habit, DateTime day) =>
-      !day.isBefore(habit.startedAt) &&
-      habit.isScheduledOn(day) &&
-      !habit.isNeutralOn(day);
+  static int? _rate(List<Habit> habits, DateTime from, DateTime to) {
+    var done = 0.0;
+    var possible = 0;
+    for (final habit in habits) {
+      final tally = habit.tally(from, to);
+      done += tally.done * habit.difficultyWeight;
+      possible += tally.days * habit.difficultyWeight;
+    }
+    return possible == 0 ? null : (done / possible * 100).round();
+  }
+
+  static bool _isDue(Habit habit, DateTime day) {
+    if (day.isBefore(habit.startedAt)) return false;
+    if (!day.isAfter(habit.startedAt) && !habit.isCompletedOn(day)) {
+      return false;
+    }
+    return habit.isScheduledOn(day) && !habit.isNeutralOn(day);
+  }
 
   static ({int current, int best}) perfectStreakOf(
     List<Habit> habits,
@@ -284,7 +316,7 @@ class HabitStats {
     var perfectDays = 0;
     for (final key in daily.keys) {
       final date = parseDayKey(key);
-      final due = habits.where((h) => h.isScheduledOn(date));
+      final due = habits.where((h) => _isDue(h, date));
       if (due.isNotEmpty && due.every((h) => h.isCompletedOn(date))) {
         perfectDays++;
       }
@@ -303,16 +335,17 @@ class HabitStats {
     }
     final monthRate = possible == 0 ? 0 : (done / possible * 100).round();
 
-    final weight = habits.fold<int>(0, (sum, h) => sum + h.difficultyWeight);
-    final consistency = weight == 0
-        ? 0
-        : (habits.fold<double>(
-                  0,
-                  (sum, h) => sum + h.strength * h.difficultyWeight,
-                ) /
-                weight *
-                100)
-            .round();
+    final consistency = [
+      for (final period in ConsistencyPeriod.values)
+        (
+          now: _rate(habits, today.addDays(1 - period.days), today) ?? 0,
+          before: _rate(
+            habits,
+            today.addDays(1 - 2 * period.days),
+            today.addDays(-period.days),
+          ),
+        ),
+    ];
 
     final perfect = perfectStreakOf(habits, today);
 

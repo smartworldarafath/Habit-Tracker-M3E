@@ -60,6 +60,9 @@ class Habit {
     this.coverClarity = 100,
     this.kind = HabitKind.positive,
     this.dailyCost = 0,
+    this.trackSpent = false,
+    this.cleanGoal = 0,
+    this.totalGoal = 0,
     this.unitLabel = '',
     this.incrementAmount = 1,
     this.quantKind = QuantKind.generic,
@@ -68,6 +71,7 @@ class Habit {
     this.focusBreakMinutes = 0,
     this.focusOnly = false,
     this.tracking = false,
+    this.healthSteps = false,
     this.anyAmount = false,
     this.anySteps = false,
     this.stepsNeeded = 1,
@@ -192,6 +196,13 @@ class Habit {
 
   final HabitKind kind;
   final double dailyCost;
+
+  final bool trackSpent;
+
+  final int cleanGoal;
+
+  final double totalGoal;
+
   final String unitLabel;
   final double incrementAmount;
   final QuantKind quantKind;
@@ -203,6 +214,10 @@ class Habit {
   final bool focusOnly;
 
   final bool tracking;
+
+  final bool healthSteps;
+
+  bool get readsSteps => healthSteps && kind == HabitKind.quantitative;
 
   final bool anyAmount;
 
@@ -421,6 +436,37 @@ class Habit {
 
   double get moneySaved => hasCost ? cleanDays * dailyCost : 0;
 
+  bool get logsSpent => kind == HabitKind.negative && trackSpent;
+
+  bool get hasCleanGoal => kind == HabitKind.negative && cleanGoal > 0;
+
+  bool get hasTotalGoal => kind != HabitKind.negative && totalGoal > 0;
+
+  late final double totalDone = _totalDone();
+
+  double _totalDone() {
+    var total = 0.0;
+    for (final entry in completions.values) {
+      if (kind == HabitKind.quantitative) {
+        total += entry.count;
+      } else if (isDoneEntry(entry)) {
+        total++;
+      }
+    }
+    return total;
+  }
+
+  late final double moneySpent = _moneySpent();
+
+  double _moneySpent() {
+    if (kind != HabitKind.negative) return 0;
+    var total = 0.0;
+    for (final entry in completions.values) {
+      total += entry.spent;
+    }
+    return total;
+  }
+
   late final int totalCompletions = _totalCompletions();
 
   int _totalCompletions() {
@@ -473,6 +519,22 @@ class Habit {
   }
 
   late final int consistency = (strength * 100).round();
+
+  ({double done, int days}) tally(DateTime from, DateTime to) {
+    var done = 0.0;
+    var days = 0;
+    for (var day = from; !day.isAfter(to); day = day.addDays(1)) {
+      if (day.isBefore(startedAt) ||
+          !isScheduledOn(day) ||
+          isNeutralOn(day) ||
+          isCoveredOn(day)) {
+        continue;
+      }
+      days++;
+      done += _dayValue(day);
+    }
+    return (done: done, days: days);
+  }
 
   int _countInRange(DateTime start, DateTime end) {
     var count = 0;
@@ -716,6 +778,9 @@ class Habit {
     int? coverClarity,
     HabitKind? kind,
     double? dailyCost,
+    bool? trackSpent,
+    int? cleanGoal,
+    double? totalGoal,
     String? unitLabel,
     double? incrementAmount,
     QuantKind? quantKind,
@@ -724,6 +789,7 @@ class Habit {
     int? focusBreakMinutes,
     bool? focusOnly,
     bool? tracking,
+    bool? healthSteps,
     bool? anyAmount,
     bool? anySteps,
     int? stepsNeeded,
@@ -762,6 +828,9 @@ class Habit {
       coverClarity: coverClarity ?? this.coverClarity,
       kind: kind ?? this.kind,
       dailyCost: dailyCost ?? this.dailyCost,
+      trackSpent: trackSpent ?? this.trackSpent,
+      cleanGoal: cleanGoal ?? this.cleanGoal,
+      totalGoal: totalGoal ?? this.totalGoal,
       unitLabel: unitLabel ?? this.unitLabel,
       incrementAmount: incrementAmount ?? this.incrementAmount,
       quantKind: quantKind ?? this.quantKind,
@@ -769,6 +838,7 @@ class Habit {
       focusMinutes: focusMinutes ?? this.focusMinutes,
       focusOnly: focusOnly ?? this.focusOnly,
       tracking: tracking ?? this.tracking,
+      healthSteps: healthSteps ?? this.healthSteps,
       anyAmount: anyAmount ?? this.anyAmount,
       anySteps: anySteps ?? this.anySteps,
       stepsNeeded: stepsNeeded ?? this.stepsNeeded,
@@ -821,6 +891,9 @@ class Habit {
         if (monthWeekday) 'monthWeekday': true,
         'kind': kind.index,
         'dailyCost': dailyCost,
+        if (trackSpent) 'trackSpent': true,
+        if (cleanGoal > 0) 'cleanGoal': cleanGoal,
+        if (totalGoal > 0) 'totalGoal': totalGoal,
         'unitLabel': unitLabel,
         'incrementAmount': incrementAmount,
         'quantKind': quantKind.index,
@@ -829,6 +902,7 @@ class Habit {
         'focusBreakMinutes': focusBreakMinutes,
         'focusOnly': focusOnly,
         'tracking': tracking,
+        if (healthSteps) 'healthSteps': true,
         'anyAmount': anyAmount,
         'anySteps': anySteps,
         'stepsNeeded': stepsNeeded,
@@ -886,6 +960,9 @@ class Habit {
         monthWeekday: map['monthWeekday'] == true,
         kind: HabitKind.values[(map['kind'] ?? 0) as int],
         dailyCost: ((map['dailyCost'] ?? 0) as num).toDouble(),
+        trackSpent: map['trackSpent'] == true,
+        cleanGoal: (map['cleanGoal'] as num?)?.toInt() ?? 0,
+        totalGoal: (map['totalGoal'] as num?)?.toDouble() ?? 0,
         unitLabel: (map['unitLabel'] ?? '') as String,
         incrementAmount: ((map['incrementAmount'] ?? 1) as num).toDouble(),
         quantKind: QuantKind.values[(map['quantKind'] ?? 0) as int],
@@ -895,6 +972,7 @@ class Habit {
             ((map['focusBreakMinutes'] ?? 0) as num).toInt(),
         focusOnly: (map['focusOnly'] ?? false) as bool,
         tracking: (map['tracking'] ?? false) as bool,
+        healthSteps: map['healthSteps'] == true,
         anyAmount: (map['anyAmount'] ?? false) as bool,
         anySteps: (map['anySteps'] ?? false) as bool,
         stepsNeeded: (map['stepsNeeded'] as num?)?.toInt() ?? 1,

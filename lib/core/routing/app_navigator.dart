@@ -33,6 +33,9 @@ class AppNavigator {
     );
   }
 
+  static Future<T?> pushRoute<T>(Route<T> route) =>
+      (_pane ?? key.currentState!).push<T>(route);
+
   static Future<T?> morph<T>(
     Widget page, {
     required BuildContext from,
@@ -96,6 +99,7 @@ class AppNavigator {
         opaque: true,
         pageBuilder: (_, __, ___) => AppBackground(child: page),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          if (MediaQuery.disableAnimationsOf(context)) return child;
           if (fullscreenDialog) {
             return SlideTransition(
               position: Tween<Offset>(
@@ -148,4 +152,15 @@ class AppPredictivePageRoute<T> extends PageRoute<T>
 
   @override
   Duration get reverseTransitionDuration => const Duration(milliseconds: 280);
+
+  @override
+  Widget buildTransitions(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    return super.buildTransitions(context, animation, secondaryAnimation, child);
+  }
 }
