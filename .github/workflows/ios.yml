@@ -41,13 +41,14 @@ jobs:
         run: |
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -qry HabitTrackerM3E-v1.3.0.ipa Payload
-          cp HabitTrackerM3E-v1.3.0.ipa Streak-ios.ipa
+          TAG="${{ inputs.tag }}"
+          zip -qry "HabitTrackerM3E-${TAG}.ipa" Payload
+          cp "HabitTrackerM3E-${TAG}.ipa" Streak-ios.ipa
 
       - name: Attach IPA to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag }}
           files: |
-            HabitTrackerM3E-v1.3.0.ipa
+            HabitTrackerM3E-${{ inputs.tag }}.ipa
             Streak-ios.ipa
