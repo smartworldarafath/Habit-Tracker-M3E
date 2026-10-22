@@ -87,7 +87,8 @@ void main() {
     ]);
     await pumpScreen(tester, const TodosPage());
 
-    expect(find.text('Today · 9:00 AM'), findsOneWidget);
+    expect(find.text('Today'), findsOneWidget);
+    expect(find.text('9:00 AM'), findsOneWidget);
   });
 
   testWidgets('writing a to-do adds it to the list', (tester) async {
@@ -101,7 +102,7 @@ void main() {
 
     await tester.enterText(find.byType(TextField).first, 'Book the flight');
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(LucideIcons.arrowLeft));
+    await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
     await tester.pump(const Duration(milliseconds: 800));
 

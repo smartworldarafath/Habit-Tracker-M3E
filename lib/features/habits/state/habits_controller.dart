@@ -26,6 +26,7 @@ class HabitsController extends ChangeNotifier {
 
   late Map<String, Habit> _habits;
   List<Habit>? _active;
+  List<Habit>? _every;
   int _countedOn = AppClock.today().epochDay;
   bool _disposed = false;
 
@@ -39,12 +40,15 @@ class HabitsController extends ChangeNotifier {
   void notifyListeners() {
     if (_disposed) return;
     _active = null;
+    _every = null;
     super.notifyListeners();
   }
 
   List<Habit> get habits => _active ??=
       _habits.values.where((h) => !h.isArchived).toList()
         ..sort((a, b) => a.order.compareTo(b.order));
+
+  List<Habit> get withArchived => _every ??= _habits.values.toList();
 
   List<Habit> get archived {
     final list = _habits.values.where((h) => h.isArchived).toList()
@@ -62,6 +66,14 @@ class HabitsController extends ChangeNotifier {
   Habit? byId(String id) => _habits[id];
 
   Future<void> rescheduleReminders() async {
+    try {
+      await _notifications.cancelOrphans({
+        for (final habit in _habits.values)
+          if (!habit.isArchived) habit.id,
+      });
+    } catch (e) {
+      debugPrint('Could not clear stale reminders: $e');
+    }
     if (NotificationService.armedToday('habitRemindersArmedOn')) return;
     for (final habit in _habits.values) {
       if (habit.isArchived || habit.reminders.isEmpty) continue;
@@ -119,6 +131,9 @@ class HabitsController extends ChangeNotifier {
     int coverClarity = 100,
     HabitKind kind = HabitKind.positive,
     double dailyCost = 0,
+    bool trackSpent = false,
+    int cleanGoal = 0,
+    double totalGoal = 0,
     double perDayTarget = 1,
     String unitLabel = '',
     double incrementAmount = 1,
@@ -126,6 +141,7 @@ class HabitsController extends ChangeNotifier {
     String bookCoverPath = '',
     bool focusOnly = false,
     bool tracking = false,
+    bool healthSteps = false,
     bool anyAmount = false,
     bool anySteps = false,
     int stepsNeeded = 1,
@@ -159,6 +175,9 @@ class HabitsController extends ChangeNotifier {
       coverClarity: coverClarity,
       kind: kind,
       dailyCost: dailyCost,
+      trackSpent: trackSpent,
+      cleanGoal: cleanGoal,
+      totalGoal: totalGoal,
       perDayTarget: perDayTarget,
       unitLabel: unitLabel,
       incrementAmount: incrementAmount,
@@ -166,6 +185,7 @@ class HabitsController extends ChangeNotifier {
       bookCoverPath: bookCoverPath,
       focusOnly: focusOnly,
       tracking: tracking,
+      healthSteps: healthSteps,
       anyAmount: anyAmount,
       anySteps: anySteps,
       stepsNeeded: stepsNeeded,
@@ -205,10 +225,16 @@ class HabitsController extends ChangeNotifier {
     await _apply(habit, CompletionOps.toggle(habit, date));
   }
 
-  Future<void> logRelapse(String id, DateTime date) async {
+  Future<void> logRelapse(String id, DateTime date, {double? spent}) async {
     final habit = _habits[id];
     if (habit == null) return;
-    await _apply(habit, CompletionOps.logRelapse(habit, date));
+    await _apply(habit, CompletionOps.logRelapse(habit, date, spent: spent));
+  }
+
+  Future<void> setSpent(String id, DateTime date, double spent) async {
+    final habit = _habits[id];
+    if (habit == null) return;
+    await _apply(habit, CompletionOps.setSpent(habit, date, spent));
   }
 
   Future<void> addRelapse(String id, DateTime date) async {
@@ -258,6 +284,14 @@ class HabitsController extends ChangeNotifier {
     if (habit == null) return;
     final current = habit.completions[date.dayKey]?.count ?? 0;
     await _apply(habit, CompletionOps.addProgress(habit, date, value - current));
+  }
+
+  Future<void> logSteps(String id, Map<DateTime, double> counts) async {
+    final habit = _habits[id];
+    if (habit == null || !habit.readsSteps) return;
+    final completions = CompletionOps.raiseCounts(habit, counts);
+    if (identical(completions, habit.completions)) return;
+    await _apply(habit, completions);
   }
 
   Future<void> setStep(

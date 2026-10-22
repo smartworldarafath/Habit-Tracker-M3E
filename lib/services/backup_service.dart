@@ -41,6 +41,7 @@ class BackupData {
     this.device = '',
     this.changes = const {},
     this.deleted = const {},
+    this.cleared = const {},
   });
 
   final List<Habit> habits;
@@ -55,6 +56,7 @@ class BackupData {
   final String device;
   final Map<String, int> changes;
   final Map<String, int> deleted;
+  final Map<String, int> cleared;
 
   bool get isEmpty =>
       habits.isEmpty && notes.isEmpty && focus.isEmpty && todos.isEmpty;
@@ -70,6 +72,7 @@ class BackupService {
         'device': LocalStore.deviceId,
         'changes': LocalStore.changes,
         'deleted': LocalStore.deleted,
+        'cleared': LocalStore.cleared,
         'habits': habits.map((h) => h.toMap()).toList(),
         'categories':
             LocalStore.readCategories().map((c) => c.toMap()).toList(),
@@ -206,18 +209,28 @@ class BackupService {
   }
 
   static void _prune(Directory dir, String prefix, String extension, int keep) {
-    final old = dir
+    const stampLength = 19;
+    final plain = prefix.length + stampLength + extension.length;
+    final own = '_${LocalStore.deviceId}$extension';
+    final files = dir
         .listSync()
         .whereType<File>()
         .where((f) {
           final name = f.uri.pathSegments.last;
-          return name.startsWith(prefix) && name.endsWith(extension);
+          return name.startsWith(prefix) &&
+              name.endsWith(extension) &&
+              (name.length == plain || name.endsWith(own));
         })
         .toList()
       ..sort((a, b) => b.path.compareTo(a.path));
-    for (final stale in old.skip(keep)) {
+    final days = <String>{};
+    for (final (index, file) in files.indexed) {
+      final name = file.uri.pathSegments.last;
+      final day = name.substring(prefix.length, prefix.length + 10);
+      final daily = days.length < keep && days.add(day);
+      if (index < keep || daily) continue;
       try {
-        stale.deleteSync();
+        file.deleteSync();
       } catch (_) {}
     }
   }
@@ -254,38 +267,45 @@ class BackupService {
     final result = await FilePicker.platform.pickFiles(
       dialogTitle: 'Select a Streak backup file',
       type: FileType.any,
-      withData: true,
     );
     if (result == null || result.files.isEmpty) {
       throw Exception('No file selected');
     }
 
-    final picked = result.files.single;
-    List<int>? bytes = picked.bytes;
-    if (bytes == null && picked.path != null) {
-      try {
-        bytes = await File(picked.path!).readAsBytes();
-      } catch (e) {
-        debugPrint('Could not read ${picked.path}: $e');
-        throw Exception('That file could not be read');
-      }
+    final path = result.files.single.path;
+    if (path == null) throw Exception('Could not read the selected file');
+    final List<int> head;
+    try {
+      head = await _head(path);
+    } catch (e) {
+      debugPrint('Could not read $path: $e');
+      throw Exception('That file could not be read');
     }
-    if (bytes == null) {
-      throw Exception('Could not read the selected file');
-    }
-    if (ImportService.looksLikeZip(bytes)) {
-      final json = await BackupArchive.unpack(bytes, (await appDataDir()).path);
+    if (ImportService.looksLikeZip(head)) {
+      final json = await BackupArchive.unpack(path, (await appDataDir()).path);
       if (json != null) return parse(json);
     }
-    if (ImportService.looksLikeZip(bytes) ||
-        ImportService.looksLikeSqlite(bytes)) {
+    if (ImportService.looksLikeZip(head) ||
+        ImportService.looksLikeSqlite(head)) {
       throw Exception(
         'That is an export from another app, not a Streak backup. '
         'Use "Import from another app" for it.',
       );
     }
 
-    return parse(const Utf8Decoder(allowMalformed: true).convert(bytes));
+    return parse(
+      const Utf8Decoder(allowMalformed: true)
+          .convert(await File(path).readAsBytes()),
+    );
+  }
+
+  static Future<List<int>> _head(String path) async {
+    final file = await File(path).open();
+    try {
+      return await file.read(16);
+    } finally {
+      await file.close();
+    }
   }
 
   static BackupData parse(String raw) {
@@ -342,6 +362,7 @@ class BackupService {
       device: root['device'] is String ? root['device'] as String : '',
       changes: _stamps(root['changes']),
       deleted: _stamps(root['deleted']),
+      cleared: _stamps(root['cleared']),
     );
 
     if (data.isEmpty && data.deleted.isEmpty) {

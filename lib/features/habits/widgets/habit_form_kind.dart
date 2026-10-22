@@ -13,6 +13,7 @@ import 'package:streak/features/habits/data/habit.dart';
 import 'package:streak/features/habits/data/substep.dart';
 import 'package:streak/features/habits/widgets/habit_form_schedule.dart';
 import 'package:streak/features/habits/widgets/minimal_form_fields.dart';
+import 'package:streak/features/habits/widgets/quant_preset_grid.dart';
 import 'package:streak/features/habits/widgets/saved_money.dart';
 import 'package:streak/features/habits/widgets/substep_draft.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
@@ -213,6 +214,160 @@ class CostField extends StatelessWidget {
           CompactNote(text: context.l10n.cost_note, color: color),
         ],
       ),
+    );
+  }
+}
+
+const cleanGoalPresets = [7, 14, 30, 60, 90];
+
+class AvoidExtras extends StatelessWidget {
+  const AvoidExtras({
+    super.key,
+    required this.trackSpent,
+    required this.cleanGoal,
+    required this.color,
+    required this.onTrackSpent,
+    required this.onCleanGoal,
+    this.compact = false,
+  });
+
+  final bool trackSpent;
+  final int cleanGoal;
+  final Color color;
+  final ValueChanged<bool> onTrackSpent;
+  final ValueChanged<int> onCleanGoal;
+  final bool compact;
+
+  Future<void> _pickGoal(BuildContext context) async {
+    final value = await showNumberKeypadDialog(
+      context,
+      title: context.l10n.clean_goal,
+      value: (cleanGoal > 0 ? cleanGoal : 30).toDouble(),
+      unit: context.l10n.days.toLowerCase(),
+      min: 1,
+      accent: color,
+    );
+    if (value != null) onCleanGoal(value.round().clamp(1, 3650));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final gap = SizedBox(height: compact ? 10 : 12);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        HabitFlagToggle(
+          icon: LucideIcons.wallet,
+          title: context.l10n.avoid_track_spent,
+          hint: context.l10n.avoid_track_spent_sub,
+          value: trackSpent,
+          color: color,
+          onChanged: onTrackSpent,
+          compact: compact,
+        ),
+        gap,
+        HabitFlagToggle(
+          icon: LucideIcons.flag,
+          title: context.l10n.clean_goal,
+          hint: cleanGoal > 0
+              ? context.l10n.count_days(cleanGoal)
+              : context.l10n.clean_goal_sub,
+          value: cleanGoal > 0,
+          color: color,
+          onChanged: (on) => onCleanGoal(on ? 30 : 0),
+          compact: compact,
+        ),
+        if (cleanGoal > 0) ...[
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final days in cleanGoalPresets)
+                ChoiceChip(
+                  label: Text(context.l10n.count_days(days)),
+                  selected: days == cleanGoal,
+                  showCheckmark: false,
+                  selectedColor: color.withValues(alpha: 0.22),
+                  onSelected: (_) => onCleanGoal(days),
+                ),
+              if (!cleanGoalPresets.contains(cleanGoal))
+                ChoiceChip(
+                  label: Text(context.l10n.count_days(cleanGoal)),
+                  selected: true,
+                  showCheckmark: false,
+                  selectedColor: color.withValues(alpha: 0.22),
+                  onSelected: (_) => _pickGoal(context),
+                ),
+              ActionChip(
+                avatar: Icon(LucideIcons.pencil, size: 15, color: color),
+                label: Text(context.l10n.custom),
+                onPressed: () => _pickGoal(context),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class TotalGoalField extends StatelessWidget {
+  const TotalGoalField({
+    super.key,
+    required this.goal,
+    required this.unit,
+    required this.label,
+    required this.color,
+    required this.onChanged,
+    this.compact = false,
+  });
+
+  final double goal;
+  final String unit;
+  final String Function(double value) label;
+  final Color color;
+  final ValueChanged<double> onChanged;
+  final bool compact;
+
+  Future<void> _pick(BuildContext context) async {
+    final value = await showNumberKeypadDialog(
+      context,
+      title: context.l10n.total_goal,
+      value: goal > 0 ? goal : 100,
+      unit: unit,
+      min: 1,
+      accent: color,
+    );
+    if (value != null) onChanged(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        HabitFlagToggle(
+          icon: LucideIcons.target,
+          title: context.l10n.total_goal,
+          hint: context.l10n.total_goal_sub,
+          value: goal > 0,
+          color: color,
+          onChanged: (on) => on ? _pick(context) : onChanged(0),
+          compact: compact,
+        ),
+        if (goal > 0) ...[
+          const SizedBox(height: 10),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: ActionChip(
+              avatar: Icon(LucideIcons.pencil, size: 15, color: color),
+              label: Text(label(goal)),
+              onPressed: () => _pick(context),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -729,22 +884,32 @@ class QuantitativeFields extends StatelessWidget {
     required this.unitController,
     required this.target,
     required this.increment,
+    required this.steps,
+    required this.color,
     required this.onPresetSelected,
+    required this.onSteps,
     required this.onUnitChanged,
     required this.onTargetChanged,
     required this.onIncrementChanged,
     this.showGoal = true,
+    this.step,
+    this.unitFocus,
   });
 
   final QuantKind quantKind;
   final TextEditingController unitController;
+  final FocusNode? unitFocus;
   final double target;
   final double increment;
+  final bool steps;
+  final Color color;
   final ValueChanged<QuantKind> onPresetSelected;
+  final VoidCallback onSteps;
   final VoidCallback onUnitChanged;
   final ValueChanged<double> onTargetChanged;
   final ValueChanged<double> onIncrementChanged;
   final bool showGoal;
+  final double? step;
 
   double get _step => switch (quantKind) {
         QuantKind.water => 50,
@@ -763,50 +928,19 @@ class QuantitativeFields extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _PresetChip(
-                    icon: LucideIcons.droplet,
-                    label: context.l10n.quant_preset_water,
-                    selected: quantKind == QuantKind.water,
-                    onTap: () => onPresetSelected(QuantKind.water),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _PresetChip(
-                    icon: LucideIcons.bookOpen,
-                    label: context.l10n.quant_preset_reading,
-                    selected: quantKind == QuantKind.reading,
-                    onTap: () => onPresetSelected(QuantKind.reading),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _PresetChip(
-                    icon: LucideIcons.timer,
-                    label: context.l10n.quant_preset_time,
-                    selected: quantKind == QuantKind.time,
-                    onTap: () => onPresetSelected(QuantKind.time),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _PresetChip(
-                    icon: LucideIcons.gauge,
-                    label: context.l10n.quant_preset_generic,
-                    selected: quantKind == QuantKind.generic,
-                    onTap: () => onPresetSelected(QuantKind.generic),
-                  ),
-                ),
-              ],
+            QuantPresetGrid(
+              quantKind: quantKind,
+              steps: steps,
+              color: color,
+              onSelected: onPresetSelected,
+              onSteps: onSteps,
             ),
             if (!time) ...[
               const SizedBox(height: 16),
               AppTextField(
                 hint: context.l10n.quant_unit_hint,
                 controller: unitController,
+                focusNode: unitFocus,
                 onChanged: (_) => onUnitChanged(),
               ),
             ],
@@ -815,7 +949,7 @@ class QuantitativeFields extends StatelessWidget {
               label: context.l10n.quant_daily_goal,
               value: target,
               unit: unit,
-              step: _step,
+              step: step ?? _step,
               min: 0.01,
               clock: time,
               onChanged: onTargetChanged,
@@ -825,70 +959,12 @@ class QuantitativeFields extends StatelessWidget {
               label: context.l10n.quant_tap_amount,
               value: increment,
               unit: unit,
-              step: _step,
+              step: step ?? _step,
               min: 0.01,
               clock: time,
               onChanged: onIncrementChanged,
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PresetChip extends StatelessWidget {
-  const _PresetChip({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.colors;
-    return Semantics(
-      button: true,
-      selected: selected,
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: selected
-                ? scheme.primary.withValues(alpha: 0.16)
-                : scheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(12),
-            border: selected ? Border.all(color: scheme.primary, width: 1.4) : null,
-          ),
-          child: Column(
-            children: [
-              Icon(icon, size: 17, color: selected ? scheme.primary : context.tokens.muted),
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: selected ? scheme.primary : context.tokens.muted,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

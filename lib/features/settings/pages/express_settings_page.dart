@@ -494,6 +494,12 @@ List<Widget> _appearanceTiles(BuildContext context) {
               onChanged: settings.setAppIcon,
             ),
           ),
+        ExpressTile(
+          icon: LucideIcons.gauge,
+          title: context.l10n.performance,
+          subtitle: context.l10n.performance_sub,
+          onTap: () => AppNavigator.push(const _PerformancePage()),
+        ),
         if (AppPlatform.isAndroid)
           ExpressTile(
             icon: LucideIcons.layoutDashboard,
@@ -504,6 +510,33 @@ List<Widget> _appearanceTiles(BuildContext context) {
       ],
     ),
   ];
+}
+
+class _PerformancePage extends StatelessWidget {
+  const _PerformancePage();
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsController>();
+
+    return ExpressScaffold(
+      title: context.l10n.performance,
+      subtitle: context.l10n.performance_sub,
+      children: [
+        ExpressGroup(
+          children: [
+            _Toggle(
+              icon: LucideIcons.sparkles,
+              title: context.l10n.animations,
+              subtitle: context.l10n.animations_sub,
+              value: settings.animations,
+              onChanged: settings.setAnimations,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
 class _WidgetsPage extends StatelessWidget {

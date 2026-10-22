@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:streak/app/theme/app_palette.dart';
 import 'package:streak/app/theme/app_tokens.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
+import 'package:streak/core/extensions/color_extensions.dart';
 import 'package:streak/core/extensions/inset_extensions.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/icons/habit_icons.dart';
@@ -26,6 +28,7 @@ import 'package:streak/features/focus/widgets/focus_duration_fields.dart';
 import 'package:streak/features/habits/widgets/habit_form_kind.dart';
 import 'package:streak/features/habits/widgets/habit_form_schedule.dart';
 import 'package:streak/features/habits/widgets/habit_time_fields.dart';
+import 'package:streak/features/habits/widgets/quant_preset_grid.dart';
 import 'package:streak/core/express/express_button.dart';
 import 'package:streak/core/express/express_motion.dart';
 import 'package:streak/core/express/express_surface.dart';
@@ -35,9 +38,11 @@ import 'package:streak/core/widgets/sheet_type.dart';
 import 'package:streak/features/habits/widgets/minimal_form_fields.dart';
 import 'package:streak/features/habits/widgets/minimal_pickers.dart';
 import 'package:streak/features/habits/widgets/minimal_substeps.dart';
+import 'package:streak/features/habits/widgets/avoid_stats.dart';
 import 'package:streak/features/habits/widgets/reminder_editor_sheet.dart';
 import 'package:streak/features/habits/widgets/reminder_tile.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
+import 'package:streak/services/health_steps.dart';
 import 'package:streak/services/notification_service.dart';
 
 class HabitFormPage extends StatefulWidget {
@@ -58,6 +63,9 @@ class _HabitFormPageState extends State<HabitFormPage> {
   late final TextEditingController _unitLabel;
   late final TextEditingController _dailyCost;
   final _scroll = ScrollController();
+  final _nameFocus = FocusNode();
+  final _unitFocus = FocusNode();
+  final _noDaysKey = GlobalKey();
   final _lookAnchor = GlobalKey();
 
   String _icon = HabitIcons.defaultIcon;
@@ -84,6 +92,10 @@ class _HabitFormPageState extends State<HabitFormPage> {
   bool _focusOnly = false;
   bool _tracking = false;
   bool _anyAmount = false;
+  bool _healthSteps = false;
+  bool _trackSpent = false;
+  int _cleanGoal = 0;
+  double _totalGoal = 0;
   bool _anySteps = false;
   int _stepsNeeded = 1;
   int _difficulty = 0;
@@ -113,15 +125,39 @@ class _HabitFormPageState extends State<HabitFormPage> {
   bool get _offersDifficulty =>
       _difficulty > 0 || context.watch<SettingsController>().difficultyOption;
 
-  bool get _canSave {
-    if (_name.text.trim().isEmpty) return false;
-    if (_kind == HabitKind.quantitative &&
-        _quantKind != QuantKind.time &&
-        _unitLabel.text.trim().isEmpty) {
-      return false;
+  bool get _needsUnit =>
+      _kind == HabitKind.quantitative &&
+      _quantKind != QuantKind.time &&
+      _unitLabel.text.trim().isEmpty;
+
+  Future<void> _reveal(FocusNode node) async {
+    if (node.context == null && _scroll.hasClients) {
+      await _scroll.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+      );
     }
-    if (_noDays) return false;
-    return true;
+    node.requestFocus();
+  }
+
+  void _save() {
+    if (_name.text.trim().isEmpty) {
+      _reveal(_nameFocus);
+    } else if (_needsUnit) {
+      _reveal(_unitFocus);
+    } else if (_noDays) {
+      final hint = _noDaysKey.currentContext;
+      if (hint != null) {
+        Scrollable.ensureVisible(
+          hint,
+          alignment: 0.5,
+          duration: const Duration(milliseconds: 300),
+        );
+      }
+    } else {
+      _submit();
+    }
   }
 
   bool get _noDays =>
@@ -169,6 +205,10 @@ class _HabitFormPageState extends State<HabitFormPage> {
       _focusOnly = habit.focusOnly;
       _tracking = habit.tracking;
       _anyAmount = habit.anyAmount;
+      _healthSteps = habit.readsSteps;
+      _trackSpent = habit.trackSpent;
+      _cleanGoal = habit.cleanGoal;
+      _totalGoal = habit.totalGoal;
       _anySteps = habit.anySteps;
       _stepsNeeded = habit.stepsNeeded;
       _difficulty = habit.difficulty;
@@ -213,6 +253,10 @@ class _HabitFormPageState extends State<HabitFormPage> {
         _focusOnly,
         _tracking,
         _anyAmount,
+        _healthSteps,
+        _trackSpent,
+        _cleanGoal,
+        _totalGoal,
         _anySteps,
         _stepsNeeded,
         _difficulty,
@@ -246,6 +290,8 @@ class _HabitFormPageState extends State<HabitFormPage> {
     _unitLabel.dispose();
     _dailyCost.dispose();
     _scroll.dispose();
+    _nameFocus.dispose();
+    _unitFocus.dispose();
     super.dispose();
   }
 
@@ -267,6 +313,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
   void _applyQuantPreset(QuantKind preset) {
     setState(() {
       _quantKind = preset;
+      _healthSteps = false;
       switch (preset) {
         case QuantKind.water:
           _unitLabel.text = context.l10n.quant_unit_ml;
@@ -289,6 +336,16 @@ class _HabitFormPageState extends State<HabitFormPage> {
     });
   }
 
+  void _pickSteps() {
+    setState(() {
+      _quantKind = QuantKind.generic;
+      _healthSteps = true;
+      _unitLabel.text = context.l10n.health_unit_steps;
+      _quantTarget = 10000;
+      _quantIncrement = 1000;
+    });
+  }
+
   Future<void> _submit() async {
     final controller = context.read<HabitsController>();
     final name = _name.text.trim();
@@ -307,6 +364,8 @@ class _HabitFormPageState extends State<HabitFormPage> {
         !fromLastDone &&
         _monthWeekday;
     final focusOnly = _kind == HabitKind.positive && _focusOnly;
+    final healthSteps =
+        quantitative && _quantKind == QuantKind.generic && _healthSteps;
     final substeps = _kind == HabitKind.positive && !focusOnly
         ? _substeps.where((s) => s.title.trim().isNotEmpty).toList()
         : <Substep>[];
@@ -332,6 +391,9 @@ class _HabitFormPageState extends State<HabitFormPage> {
           coverPath: _cover,
           coverClarity: _coverClarity,
           dailyCost: dailyCost,
+          trackSpent: negative && _trackSpent,
+          cleanGoal: negative ? _cleanGoal : 0,
+          totalGoal: negative ? 0 : _totalGoal,
           perDayTarget: quantitative ? (_noGoal ? 0 : _quantTarget) : widget.habit!.perDayTarget,
           unitLabel: quantitative ? _quantUnit : widget.habit!.unitLabel,
           incrementAmount:
@@ -340,6 +402,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
           bookCoverPath: quantitative ? _bookCover : widget.habit!.bookCoverPath,
           focusOnly: focusOnly,
           tracking: _tracking,
+          healthSteps: healthSteps,
           anyAmount: quantitative && _anyAmount,
           anySteps: substeps.isNotEmpty && _anySteps,
           stepsNeeded: _stepsNeeded.clamp(1, substeps.isEmpty ? 1 : substeps.length),
@@ -378,6 +441,9 @@ class _HabitFormPageState extends State<HabitFormPage> {
         coverClarity: _coverClarity,
         kind: _kind,
         dailyCost: dailyCost,
+        trackSpent: negative && _trackSpent,
+        cleanGoal: negative ? _cleanGoal : 0,
+        totalGoal: negative ? 0 : _totalGoal,
         perDayTarget: quantitative ? (_noGoal ? 0 : _quantTarget) : 1,
         unitLabel: quantitative ? _quantUnit : '',
         incrementAmount: quantitative ? _quantIncrement : 1,
@@ -385,6 +451,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
         bookCoverPath: quantitative ? bookCover : '',
         focusOnly: focusOnly,
         tracking: _tracking,
+        healthSteps: healthSteps,
         anyAmount: quantitative && _anyAmount,
         anySteps: substeps.isNotEmpty && _anySteps,
         stepsNeeded: _stepsNeeded.clamp(1, substeps.isEmpty ? 1 : substeps.length),
@@ -397,6 +464,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
         restDays: template?.restDays ?? const [],
       );
     }
+    if (healthSteps) unawaited(HealthSteps.sync(controller));
     AppNavigator.pop();
   }
 
@@ -528,7 +596,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
           ? null
           : ExpressSaveBar(
               label: context.l10n.save,
-              onPressed: _canSave ? _submit : null,
+              onPressed: _save,
             ),
       body: Center(
         child: ConstrainedBox(
@@ -556,6 +624,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
         cover: _cover,
         clarity: _coverClarity,
         controller: _name,
+        focusNode: _nameFocus,
         autofocus: _copying,
         onChanged: () => setState(() {}),
         onShuffleIcon: _revealLook,
@@ -582,13 +651,18 @@ class _HabitFormPageState extends State<HabitFormPage> {
         QuantitativeFields(
           quantKind: _quantKind,
           unitController: _unitLabel,
+          unitFocus: _unitFocus,
           target: _quantTarget,
           increment: _quantIncrement,
+          steps: _healthSteps,
+          color: _color,
           onPresetSelected: _applyQuantPreset,
+          onSteps: _pickSteps,
           onUnitChanged: () => setState(() {}),
           onTargetChanged: (v) => setState(() => _quantTarget = v),
           onIncrementChanged: (v) => setState(() => _quantIncrement = v),
           showGoal: !_noGoal,
+          step: _quantStep,
         ),
         const SizedBox(height: 12),
         NoGoalToggle(
@@ -616,6 +690,18 @@ class _HabitFormPageState extends State<HabitFormPage> {
       if (_kind == HabitKind.negative) ...[
         const SizedBox(height: 12),
         CostField(controller: _dailyCost, color: _color),
+        const SizedBox(height: 12),
+        AvoidExtras(
+          trackSpent: _trackSpent,
+          cleanGoal: _cleanGoal,
+          color: _color,
+          onTrackSpent: (v) => setState(() => _trackSpent = v),
+          onCleanGoal: (v) => setState(() => _cleanGoal = v),
+        ),
+      ],
+      if (_kind != HabitKind.negative) ...[
+        const SizedBox(height: 12),
+        _totalGoalField(),
       ],
       if (_kind == HabitKind.positive) ...[
         const SizedBox(height: 12),
@@ -683,7 +769,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
             ),
           ],
         ],
-        if (_noDays) const _NoDaysHint(),
+        if (_noDays) _NoDaysHint(key: _noDaysKey),
       ],
       if (_kind != HabitKind.negative && _planning) ...[
         const SizedBox(height: 26),
@@ -755,7 +841,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
       SectionLabel(context.l10n.icon, key: _lookAnchor),
       IconPicker(
         selected: _icon,
-        color: _color,
+        color: _color.shownIn(context),
         onSelected: (icon) => setState(() => _icon = icon),
       ),
       const SizedBox(height: 26),
@@ -800,7 +886,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
               onPressed: _confirmDelete,
             ),
           TextButton(
-            onPressed: _canSave ? _submit : null,
+            onPressed: _save,
             child: Text(
               context.l10n.save,
               style: sheetActionStyle(context, size: 16),
@@ -810,6 +896,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
         ],
       ),
       body: ListView(
+        controller: _scroll,
         padding: context.pagePadding(20, 0, 20, 32),
         children: [
           MinimalTitle(
@@ -831,6 +918,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
       AppTextField(
         hint: context.l10n.name_hint,
         controller: _name,
+        focusNode: _nameFocus,
         autofocus: _copying,
         onChanged: (_) => setState(() {}),
       ),
@@ -863,31 +951,20 @@ class _HabitFormPageState extends State<HabitFormPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  for (final preset in [
-                    (QuantKind.water, context.l10n.quant_preset_water),
-                    (QuantKind.reading, context.l10n.quant_preset_reading),
-                    (QuantKind.time, context.l10n.quant_preset_time),
-                    (QuantKind.generic, context.l10n.quant_preset_generic),
-                  ]) ...[
-                    if (preset.$1 != QuantKind.water) const SizedBox(width: 7),
-                    Expanded(
-                      child: CompactPill(
-                        label: preset.$2,
-                        selected: preset.$1 == _quantKind,
-                        expand: true,
-                        onTap: () => _applyQuantPreset(preset.$1),
-                      ),
-                    ),
-                  ],
-                ],
+              QuantPresetGrid(
+                quantKind: _quantKind,
+                steps: _healthSteps,
+                color: _color,
+                plain: true,
+                onSelected: _applyQuantPreset,
+                onSteps: _pickSteps,
               ),
               if (_quantKind != QuantKind.time) ...[
                 const SizedBox(height: 14),
                 AppTextField(
                   hint: context.l10n.quant_unit_hint,
                   controller: _unitLabel,
+                  focusNode: _unitFocus,
                   onChanged: (_) => setState(() {}),
                 ),
               ],
@@ -947,6 +1024,19 @@ class _HabitFormPageState extends State<HabitFormPage> {
         CompactNote(text: context.l10n.kind_negative_hint, color: _color),
         const SizedBox(height: 10),
         CostField(controller: _dailyCost, color: _color),
+        const SizedBox(height: 10),
+        AvoidExtras(
+          trackSpent: _trackSpent,
+          cleanGoal: _cleanGoal,
+          color: _color,
+          compact: true,
+          onTrackSpent: (v) => setState(() => _trackSpent = v),
+          onCleanGoal: (v) => setState(() => _cleanGoal = v),
+        ),
+      ],
+      if (_kind != HabitKind.negative) ...[
+        const SizedBox(height: 10),
+        _totalGoalField(compact: true),
       ],
       if (_kind == HabitKind.positive) ...[
         const SizedBox(height: 16),
@@ -1047,7 +1137,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
             selected: _scheduleWeekdays,
             onChanged: (days) => setState(() => _scheduleWeekdays = days),
           ),
-          if (_noDays) const _NoDaysHint(),
+          if (_noDays) _NoDaysHint(key: _noDaysKey),
         ],
       ],
       if (_kind != HabitKind.negative && _planning) ...[
@@ -1124,7 +1214,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
       SectionLabel(context.l10n.icon),
       CompactIconPicker(
         selected: _icon,
-        color: _color,
+        color: _color.shownIn(context),
         onSelected: (icon) => setState(() => _icon = icon),
       ),
       const SizedBox(height: 16),
@@ -1150,6 +1240,21 @@ class _HabitFormPageState extends State<HabitFormPage> {
     ];
   }
 
+  Widget _totalGoalField({bool compact = false}) => TotalGoalField(
+        goal: _totalGoal,
+        compact: compact,
+        unit: _kind == HabitKind.quantitative ? _quantUnit : '',
+        label: (value) => goalAmount(
+          context,
+          kind: _kind,
+          time: _quantKind == QuantKind.time,
+          unit: _quantUnit,
+          value: value,
+        ),
+        color: _color,
+        onChanged: (value) => setState(() => _totalGoal = value),
+      );
+
   String get _quantUnit => _quantKind == QuantKind.time
       ? context.l10n.unit_min_short
       : _unitLabel.text.trim();
@@ -1157,6 +1262,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
   double get _quantStep => switch (_quantKind) {
         QuantKind.water => 50,
         QuantKind.time => 5,
+        QuantKind.generic when _healthSteps => 500,
         _ => 1,
       };
 
@@ -1186,7 +1292,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
                 onPressed: _confirmDelete,
               ),
             TextButton(
-              onPressed: _canSave ? _submit : null,
+              onPressed: _save,
               child: Text(
                 context.l10n.save,
                 style:
@@ -1197,6 +1303,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
           ],
         ),
         body: ListView(
+          controller: _scroll,
           padding: context.pagePadding(16, 16, 16, 16),
           children: [
             HabitPreview(
@@ -1209,6 +1316,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
             AppTextField(
               hint: context.l10n.name_hint,
               controller: _name,
+              focusNode: _nameFocus,
               autofocus: _copying,
               onChanged: (_) => setState(() {}),
             ),
@@ -1230,13 +1338,18 @@ class _HabitFormPageState extends State<HabitFormPage> {
               QuantitativeFields(
                 quantKind: _quantKind,
                 unitController: _unitLabel,
+                unitFocus: _unitFocus,
                 target: _quantTarget,
                 increment: _quantIncrement,
+                steps: _healthSteps,
+                color: _color,
                 onPresetSelected: _applyQuantPreset,
+                onSteps: _pickSteps,
                 onUnitChanged: () => setState(() {}),
                 onTargetChanged: (v) => setState(() => _quantTarget = v),
                 onIncrementChanged: (v) => setState(() => _quantIncrement = v),
                 showGoal: !_noGoal,
+                step: _quantStep,
               ),
               const SizedBox(height: 12),
               NoGoalToggle(
@@ -1266,6 +1379,18 @@ class _HabitFormPageState extends State<HabitFormPage> {
               NegativeHint(color: _color),
               const SizedBox(height: 12),
               CostField(controller: _dailyCost, color: _color),
+              const SizedBox(height: 12),
+              AvoidExtras(
+                trackSpent: _trackSpent,
+                cleanGoal: _cleanGoal,
+                color: _color,
+                onTrackSpent: (v) => setState(() => _trackSpent = v),
+                onCleanGoal: (v) => setState(() => _cleanGoal = v),
+              ),
+            ],
+            if (_kind != HabitKind.negative) ...[
+              const SizedBox(height: 12),
+              _totalGoalField(),
             ],
             if (_kind == HabitKind.positive) ...[
               const SizedBox(height: 20),
@@ -1335,7 +1460,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
                   ),
                 ],
               ],
-              if (_noDays) const _NoDaysHint(),
+              if (_noDays) _NoDaysHint(key: _noDaysKey),
             ],
             if (_kind != HabitKind.negative && _planning) ...[
               const SizedBox(height: 20),
@@ -1408,7 +1533,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
             SectionLabel(context.l10n.icon),
             IconPicker(
               selected: _icon,
-              color: _color,
+              color: _color.shownIn(context),
               onSelected: (icon) => setState(() => _icon = icon),
             ),
             const SizedBox(height: 20),
@@ -1445,7 +1570,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
 }
 
 class _NoDaysHint extends StatelessWidget {
-  const _NoDaysHint();
+  const _NoDaysHint({super.key});
 
   @override
   Widget build(BuildContext context) {

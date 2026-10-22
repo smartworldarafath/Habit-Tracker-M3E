@@ -42,8 +42,13 @@ class StreakApp extends StatelessWidget {
           ThemeMode.light => false,
           ThemeMode.system => Theme.of(context).brightness == Brightness.dark,
         };
-        return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: AppTheme.systemBars(isDark ? Brightness.dark : Brightness.light),
+        final media = MediaQuery.of(context);
+        return MediaQuery(
+          data: settings.animations
+              ? media
+              : media.copyWith(disableAnimations: true),
+          child: AnnotatedRegion<SystemUiOverlayStyle>(
+            value: AppTheme.systemBars(isDark ? Brightness.dark : Brightness.light),
           child: AppLockGate(
             child: AppBackground(
               child: _DesktopFrame(
@@ -52,6 +57,7 @@ class StreakApp extends StatelessWidget {
               ),
             ),
           ),
+        ),
         );
       },
       locale: settings.locale,

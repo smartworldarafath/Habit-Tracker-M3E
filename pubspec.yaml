@@ -3,7 +3,7 @@ description: "Habit Tracker M3E: a minimal habit tracker that helps you build la
 
 publish_to: 'none'
 
-version: 1.3.2+6
+version: 1.3.3+7
 
 environment:
   sdk: ^3.9.2
@@ -118,6 +118,9 @@ flutter:
     - family: GoogleSansFlex
       fonts:
         - asset: fonts/GoogleSansFlex.ttf
+    - family: Nunito
+      fonts:
+        - asset: fonts/Nunito.ttf
     - family: PlayfairDisplay
       fonts:
         - asset: fonts/PlayfairDisplay.ttf

@@ -6,6 +6,7 @@
     <string name="widget_habit_label">Habit Tracker habits</string>
     <string name="widget_today_label">Habit Tracker today</string>
     <string name="widget_stats_label">Habit Tracker summary</string>
+    <string name="widget_focus_label">Habit Tracker focus</string>
     <string name="widget_todos_label">Habit Tracker to-do</string>
     <string name="widget_todos_description">See what is left to do today</string>
 </resources>

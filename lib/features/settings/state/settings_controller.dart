@@ -64,8 +64,10 @@ class SettingsController extends ChangeNotifier {
     _accentColor = LocalStore.setting('accentColor', AppPalette.brand.toARGB32());
     _heatmapMode = LocalStore.setting('heatmapMode', 0);
     _todayCategory = LocalStore.setting('todayCategory', '');
+    _minimalShortcut = LocalStore.setting('minimalShortcut', '');
     _heatmapPath = LocalStore.setting('heatmapPath', false);
     _heatmapRolling = LocalStore.setting('heatmapRolling', false);
+    _consistencyPeriod = LocalStore.setting('consistencyPeriod', 2);
     _startView = LocalStore.setting('startView', 0);
     _planningEnabled = LocalStore.setting('planningEnabled', true);
     _planContent = LocalStore.setting(
@@ -77,6 +79,8 @@ class SettingsController extends ChangeNotifier {
     _cardActivity = LocalStore.setting('cardActivity', true);
     _viewSwitcher = LocalStore.setting('viewSwitcher', true);
     _compactCards = LocalStore.setting('compactCards', false);
+    _glassEffects = LocalStore.setting('glassEffects', true);
+    _animations = LocalStore.setting('animations', true);
     _todosEnabled = LocalStore.setting('todosEnabled', true);
     _todoPapers = LocalStore.setting('todoPapers', true);
     _sortCompletedLast = LocalStore.setting('sortCompletedLast', true);
@@ -162,8 +166,10 @@ class SettingsController extends ChangeNotifier {
   late int _accentColor;
   late int _heatmapMode;
   late String _todayCategory;
+  late String _minimalShortcut;
   late bool _heatmapPath;
   late bool _heatmapRolling;
+  late int _consistencyPeriod;
   late int _startView;
   late bool _planningEnabled;
   late int _planContent;
@@ -173,6 +179,8 @@ class SettingsController extends ChangeNotifier {
   late bool _cardActivity;
   late bool _viewSwitcher;
   late bool _compactCards;
+  late bool _glassEffects;
+  late bool _animations;
   late bool _todosEnabled;
   late int _appStyle;
   late bool _sortCompletedLast;
@@ -288,6 +296,14 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
+  int get consistencyPeriod => _consistencyPeriod;
+
+  Future<void> setConsistencyPeriod(int value) async {
+    _consistencyPeriod = value;
+    await LocalStore.writeSetting('consistencyPeriod', value);
+    notifyListeners();
+  }
+
   Future<void> setHeatmapMode(int value) async {
     _heatmapMode = value;
     await LocalStore.writeSetting('heatmapMode', value);
@@ -295,6 +311,15 @@ class SettingsController extends ChangeNotifier {
   }
 
   String get todayCategory => _todayCategory;
+
+  String get minimalShortcut => _minimalShortcut;
+
+  Future<void> setMinimalShortcut(String value) async {
+    if (value == _minimalShortcut) return;
+    _minimalShortcut = value;
+    await LocalStore.writeSetting('minimalShortcut', value);
+    notifyListeners();
+  }
 
   Future<void> setTodayCategory(String value) async {
     _todayCategory = value;
@@ -346,7 +371,6 @@ class SettingsController extends ChangeNotifier {
 
   Future<void> setPlanMonth(bool value) async {
     _planMonth = value;
-    notifyListeners();
     await LocalStore.writeSetting('planMonth', value);
   }
 
@@ -379,6 +403,22 @@ class SettingsController extends ChangeNotifier {
   Future<void> setCompactCards(bool value) async {
     _compactCards = value;
     await LocalStore.writeSetting('compactCards', value);
+    notifyListeners();
+  }
+
+  bool get glassEffects => _glassEffects;
+
+  Future<void> setGlassEffects(bool value) async {
+    _glassEffects = value;
+    await LocalStore.writeSetting('glassEffects', value);
+    notifyListeners();
+  }
+
+  bool get animations => _animations;
+
+  Future<void> setAnimations(bool value) async {
+    _animations = value;
+    await LocalStore.writeSetting('animations', value);
     notifyListeners();
   }
 
@@ -666,6 +706,7 @@ class SettingsController extends ChangeNotifier {
       archive: archive,
     );
     if (path == null) return false;
+    if (!archive) return true;
     _autoBackupAt = DateTime.now().toIso8601String();
     await LocalStore.writeSetting('autoBackupAt', _autoBackupAt);
     notifyListeners();
