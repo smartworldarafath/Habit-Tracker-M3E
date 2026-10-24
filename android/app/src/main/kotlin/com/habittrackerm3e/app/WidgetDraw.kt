@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.RectF
@@ -90,9 +91,10 @@ object WidgetDraw {
         weight: Int,
         maxWidthDp: Float = 10_000f,
         strike: Boolean = false,
+        liftDp: Float = 0f,
     ): Bitmap {
         val argb = color.toArgb()
-        val key = "t:$value:$sizeSp:$argb:$weight:${maxWidthDp.toInt()}:$strike:${scale(context)}"
+        val key = "t:$value:$sizeSp:$argb:$weight:${maxWidthDp.toInt()}:$strike:$liftDp:${scale(context)}"
         return remember(key) {
             val paint = paint(context, sizeSp, argb, weight)
             val shown = TextUtils.ellipsize(
@@ -100,7 +102,7 @@ object WidgetDraw {
             ).toString()
             val metrics = paint.fontMetrics
             val width = paint.measureText(shown).coerceAtLeast(1f)
-            val height = metrics.descent - metrics.ascent
+            val height = metrics.descent - metrics.ascent + liftDp * density(context)
             val bitmap = Bitmap.createBitmap(
                 (width + 2).toInt(), height.toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888,
             )
@@ -114,6 +116,44 @@ object WidgetDraw {
                 val y = -metrics.ascent - paint.textSize * 0.32f
                 canvas.drawLine(1f, y, width + 1, y, line)
             }
+            bitmap
+        }
+    }
+
+    fun descentDp(context: Context, sizeSp: Float, weight: Int): Float =
+        paint(context, sizeSp, 0, weight).fontMetrics.descent / density(context)
+
+    fun haloText(
+        context: Context,
+        value: String,
+        maxSp: Float,
+        color: Color,
+        halo: Color,
+        weight: Int,
+        maxWidthDp: Float,
+    ): Bitmap {
+        val sizeSp = fit(context, value, maxSp, maxSp * 0.7f, weight, maxWidthDp)
+        val argb = color.toArgb()
+        val key = "h:$value:$sizeSp:$argb:${halo.toArgb()}:$weight:${maxWidthDp.toInt()}:${scale(context)}"
+        return remember(key) {
+            val paint = paint(context, sizeSp, argb, weight)
+            val shown = TextUtils.ellipsize(
+                value, paint, maxWidthDp * density(context), TextUtils.TruncateAt.END,
+            ).toString()
+            val blur = paint.textSize * 0.3f
+            val metrics = paint.fontMetrics
+            val width = paint.measureText(shown).coerceAtLeast(1f)
+            val height = metrics.descent - metrics.ascent + blur
+            val bitmap = Bitmap.createBitmap(
+                (width + 1 + blur).toInt(), height.toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888,
+            )
+            val canvas = Canvas(bitmap)
+            val y = blur / 2 - metrics.ascent
+            paint.setShadowLayer(blur, 0f, 0f, halo.copy(alpha = 0.9f).toArgb())
+            canvas.drawText(shown, 1f, y, paint)
+            canvas.drawText(shown, 1f, y, paint)
+            paint.clearShadowLayer()
+            canvas.drawText(shown, 1f, y, paint)
             bitmap
         }
     }
@@ -222,8 +262,34 @@ object WidgetDraw {
     fun chipFits(context: Context, widthDp: Float, label: String): Boolean =
         paint(context, 10.5f, 0, 800).measureText(label) <= (widthDp - 8f) * density(context)
 
-    fun button(context: Context, sizeDp: Float, color: Color, kind: ButtonKind, fill: Float, ink: Color, round: Boolean): Bitmap {
-        val key = "b:$sizeDp:${color.toArgb()}:$kind:${(fill * 100).toInt()}:${ink.toArgb()}:$round"
+    private fun flower(size: Float, inset: Float): Path {
+        val c = size / 2f
+        val radius = c - inset
+        val steps = 96
+        return Path().apply {
+            for (i in 0..steps) {
+                val angle = Math.PI * 2 * i / steps
+                val r = radius * (0.9f + 0.1f * cos(angle * 8).toFloat())
+                val x = c + r * cos(angle).toFloat()
+                val y = c + r * sin(angle).toFloat()
+                if (i == 0) moveTo(x, y) else lineTo(x, y)
+            }
+            close()
+        }
+    }
+
+    fun button(
+        context: Context,
+        sizeDp: Float,
+        color: Color,
+        kind: ButtonKind,
+        fill: Float,
+        ink: Color,
+        round: Boolean,
+        petals: Boolean = false,
+        tick: Boolean = true,
+    ): Bitmap {
+        val key = "b:$sizeDp:${color.toArgb()}:$kind:${(fill * 100).toInt()}:${ink.toArgb()}:$round:$petals:$tick"
         return remember(key) {
             val d = density(context)
             val px = (sizeDp * d).toInt().coerceAtLeast(1)
@@ -241,37 +307,56 @@ object WidgetDraw {
                 )
             }
             val c = px / 2f
+            fun shape(paint: Paint) =
+                if (petals) canvas.drawPath(flower(px.toFloat(), 0f), paint) else canvas.drawRoundRect(rect, r, r, paint)
             when (kind) {
                 ButtonKind.DONE -> {
-                    canvas.drawRoundRect(rect, r, r, gradient)
-                    glyph(context, canvas, R.drawable.ic_widget_check, c, c, px * 0.56f, CardBitmaps.inkOn(argb))
+                    shape(gradient)
+                    if (tick) glyph(context, canvas, R.drawable.ic_widget_check, c, c, px * 0.56f, CardBitmaps.inkOn(argb))
                 }
                 ButtonKind.AMOUNT -> {
-                    canvas.drawRoundRect(rect, r, r, Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color.copy(alpha = 0.2f).toArgb() })
+                    shape(Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color.copy(alpha = 0.2f).toArgb() })
                     canvas.save()
                     canvas.clipRect(0f, px * (1f - fill.coerceIn(0f, 1f)), px.toFloat(), px.toFloat())
-                    canvas.drawRoundRect(rect, r, r, gradient)
+                    shape(gradient)
                     canvas.restore()
                     centered(canvas, paint(context, sizeDp * 0.6f, if (fill >= 0.5f) CardBitmaps.inkOn(argb) else android.graphics.Color.WHITE, 700), "+", c, c)
                 }
                 ButtonKind.TODO -> {
-                    canvas.drawRoundRect(rect, r, r, Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color.copy(alpha = 0.14f).toArgb() })
+                    shape(Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color.copy(alpha = 0.14f).toArgb() })
                     val stroke = 2 * d
-                    val inner = RectF(stroke / 2, stroke / 2, px - stroke / 2, px - stroke / 2)
-                    canvas.drawRoundRect(inner, r - stroke / 2, r - stroke / 2, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                         style = Paint.Style.STROKE
                         strokeWidth = stroke
                         this.color = color.copy(alpha = 0.75f).toArgb()
-                    })
+                    }
+                    if (petals) {
+                        canvas.drawPath(flower(px.toFloat(), stroke / 2), ring)
+                    } else {
+                        val inner = RectF(stroke / 2, stroke / 2, px - stroke / 2, px - stroke / 2)
+                        canvas.drawRoundRect(inner, r - stroke / 2, r - stroke / 2, ring)
+                    }
                 }
                 ButtonKind.RELAPSE -> {
-                    canvas.drawRoundRect(rect, r, r, Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color.copy(alpha = 0.18f).toArgb() })
+                    shape(Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color.copy(alpha = 0.18f).toArgb() })
                     glyph(context, canvas, R.drawable.ic_widget_cross, c, c, px * 0.56f, ink.toArgb())
                 }
             }
             bitmap
         }
     }
+
+    fun play(context: Context, sizeDp: Float, color: Color): Bitmap =
+        remember("play:$sizeDp:${color.toArgb()}") {
+            val px = (sizeDp * density(context)).toInt().coerceAtLeast(1)
+            val bitmap = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            val c = px / 2f
+            val soft = color.copy(alpha = 0.1f).toArgb()
+            canvas.drawCircle(c, c, c, Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = soft })
+            glyph(context, canvas, R.drawable.ic_focus_play, c + px * 0.03f, c, px * 0.42f, color.toArgb())
+            bitmap
+        }
 
     fun roundCheck(context: Context, sizeDp: Float, ink: Color, done: Boolean): Bitmap {
         val key = "k:$sizeDp:${ink.toArgb()}:$done"
@@ -366,8 +451,18 @@ object WidgetDraw {
         }
     }
 
-    fun dot(context: Context, sizeDp: Float, color: Color, mark: WeekMark, fill: Float, ink: Color, round: Boolean): Bitmap {
-        val key = "dot:$sizeDp:${color.toArgb()}:$mark:${(fill * 100).toInt()}:${ink.toArgb()}:$round"
+    fun dot(
+        context: Context,
+        sizeDp: Float,
+        color: Color,
+        mark: WeekMark,
+        fill: Float,
+        ink: Color,
+        round: Boolean,
+        petals: Boolean = false,
+        tick: Boolean = true,
+    ): Bitmap {
+        val key = "dot:$sizeDp:${color.toArgb()}:$mark:${(fill * 100).toInt()}:${ink.toArgb()}:$round:$petals:$tick"
         return remember(key) {
             val d = density(context)
             val px = (sizeDp * d).toInt().coerceAtLeast(1)
@@ -385,13 +480,15 @@ object WidgetDraw {
             }
             val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
             val corner = if (round) c else px * 0.3f
-            fun shape(paint: Paint, inset: Float = 0f) = canvas.drawRoundRect(
-                RectF(inset, inset, px - inset, px - inset), corner - inset, corner - inset, paint,
-            )
+            fun shape(paint: Paint, inset: Float = 0f) = if (petals) {
+                canvas.drawPath(flower(px.toFloat(), inset), paint)
+            } else {
+                canvas.drawRoundRect(RectF(inset, inset, px - inset, px - inset), corner - inset, corner - inset, paint)
+            }
             when (mark) {
                 WeekMark.DONE -> {
                     shape(gradient)
-                    glyph(context, canvas, R.drawable.ic_widget_check, c, c, px * 0.58f, CardBitmaps.inkOn(argb))
+                    if (tick) glyph(context, canvas, R.drawable.ic_widget_check, c, c, px * 0.58f, CardBitmaps.inkOn(argb))
                 }
                 WeekMark.PART -> {
                     shape(Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color.copy(alpha = 0.18f).toArgb() })

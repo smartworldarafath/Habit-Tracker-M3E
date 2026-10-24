@@ -12,6 +12,8 @@ class AppBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsController>();
+    final themed = settings.colorTheme != null;
+    final scheme = Theme.of(context).colorScheme;
 
     final isDark = switch (settings.themeMode) {
       ThemeMode.dark => true,
@@ -26,11 +28,14 @@ class AppBackground extends StatelessWidget {
           type: settings.appBackground,
           image: settings.bgImage,
           isDark: isDark,
-          flat: settings.isExpressStyle || settings.isMinimalStyle
-              ? (isDark
-                  ? (settings.isMinimalStyle ? AppPalette.paperDark : AppPalette.darkSurface)
-                  : (settings.isMinimalStyle ? const Color(0xFFFFFFFF) : const Color(0xFFFAFAFC)))
-              : null,
+          flat: themed
+              ? scheme.surface
+              : (settings.isExpressStyle || settings.isMinimalStyle
+                  ? (isDark
+                      ? (settings.isMinimalStyle ? AppPalette.paperDark : AppPalette.darkSurface)
+                      : (settings.isMinimalStyle ? const Color(0xFFFFFFFF) : const Color(0xFFFAFAFC)))
+                  : null),
+          glow: themed ? scheme.surfaceContainerHigh : null,
           dotAlpha: settings.isMinimalStyle ? 0.06 : null,
         ),
         child,
@@ -45,6 +50,7 @@ class _Backdrop extends StatelessWidget {
     required this.image,
     required this.isDark,
     required this.flat,
+    this.glow,
     this.dotAlpha,
   });
 
@@ -52,6 +58,7 @@ class _Backdrop extends StatelessWidget {
   final String image;
   final bool isDark;
   final Color? flat;
+  final Color? glow;
   final double? dotAlpha;
 
   @override
@@ -83,6 +90,19 @@ class _Backdrop extends StatelessWidget {
     }
 
     final base = flat;
+    final top = glow;
+    if (base != null && top != null && (type == 1 || type == 3)) {
+      if (type == 3) return ColoredBox(color: base);
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [top, base],
+          ),
+        ),
+      );
+    }
     if (base != null && type != 1 && type != 3) {
       if (type != 2) return ColoredBox(color: base);
       return ColoredBox(

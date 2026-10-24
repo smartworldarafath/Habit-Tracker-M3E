@@ -122,6 +122,29 @@ fun StatsSample(s: WidgetStyle, art: Boolean) {
 }
 
 @Composable
+fun TodayProgressSample(s: WidgetStyle) {
+    val context = LocalContext.current
+    val side = 158f
+    val label = side * 0.1f
+    val ring = side * 0.26f
+    Box(Modifier.fillMaxSize().padding((side * 0.11f).dp)) {
+        Box(Modifier.align(Alignment.TopEnd)) {
+            Bmp(WidgetDraw.ring(context, 3f / 7f, ring, ring * 0.13f, s.content), context)
+        }
+        Column {
+            Row(verticalAlignment = Alignment.Bottom) {
+                Bmp(WidgetDraw.text(context, "3", side * 0.3f, s.content, 800), context)
+                Bmp(WidgetDraw.text(context, " / 7", label * 1.1f, s.muted, 700), context)
+            }
+            Bmp(WidgetDraw.text(context, sample(context, "done_today", "done today").replaceFirstChar { it.uppercase() }, label, s.content, 800), context)
+            Spacer(Modifier.height(6.dp))
+            Bmp(WidgetDraw.text(context, "${sample(context, "label_week", "Week")}  18 ✓", label * 0.85f, s.muted, 650), context)
+            Bmp(WidgetDraw.text(context, sample(context, "best_streak", "🔥 {streak} best streak").replace("{streak}", "12"), label * 0.85f, s.muted, 650), context)
+        }
+    }
+}
+
+@Composable
 fun TodaySample(s: WidgetStyle, look: WidgetLook = WidgetLook()) {
     val context = LocalContext.current
     val habits = remember(s.dark) { samples(context, s) }
@@ -169,7 +192,7 @@ fun TodaySample(s: WidgetStyle, look: WidgetLook = WidgetLook()) {
                             Bmp(WidgetDraw.text(context, habit.streak.toString(), 10.5f, s.content.copy(alpha = 0.6f), 650), context)
                         }
                     }
-                    Bmp(WidgetDraw.button(context, button, habit.color, habit.button, habit.fill, s.content, look.round), context)
+                    Bmp(WidgetDraw.button(context, button, habit.color, habit.button, habit.fill, s.content, look.round, look.flower, look.tick), context)
                 }
                 Spacer(Modifier.height(if (look.compact) 3.dp else 5.dp))
             }
@@ -318,7 +341,7 @@ fun WeekSample(s: WidgetStyle, span: Int = 7, look: WidgetLook = WidgetLook(roun
                             else -> WeekMark.DONE
                         }
                         Box(Modifier.width(cell.dp).height(rowH.dp), contentAlignment = Alignment.Center) {
-                            Bmp(WidgetDraw.dot(context, dot, habit.color, mark, habit.fill, s.content, look.round), context)
+                            Bmp(WidgetDraw.dot(context, dot, habit.color, mark, habit.fill, s.content, look.round, look.flower, look.tick), context)
                         }
                     }
                 }

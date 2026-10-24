@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:streak/app/theme/app_tokens.dart';
+import 'package:streak/core/extensions/clock_extensions.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/icons/habit_glyph.dart';
@@ -46,9 +47,9 @@ class TimelineBlock extends StatelessWidget {
   }
 
   String _subtitle(BuildContext context) {
-    final start = minuteLabel(habit.startMinute);
+    final start = context.clockAt(habit.startMinute);
     if (habit.durationMinutes <= 0) return start;
-    return '$start - ${minuteLabel(habit.endMinute)}'
+    return '$start - ${context.clockAt(habit.endMinute)}'
         '  ·  ${spanLabel(habit.durationMinutes)}';
   }
 
@@ -58,9 +59,10 @@ class TimelineBlock extends StatelessWidget {
       final unit = habit.isTimeAmount || habit.unitLabel.isEmpty
           ? ''
           : ' ${habit.unitLabel}';
-      if (!habit.hasGoal) return '${habit.amountText(count)}$unit';
+      final goal = habit.goalOn(date);
+      if (goal <= 0) return '${habit.amountText(count)}$unit';
       return '${habit.amountText(count)}/'
-          '${habit.amountText(habit.perDayTarget)}$unit';
+          '${habit.amountText(goal)}$unit';
     }
     if (habit.hasSubsteps) {
       final steps = habit.completions[date.dayKey]?.steps.length ?? 0;
@@ -86,7 +88,7 @@ class TimelineBlock extends StatelessWidget {
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerRight,
               child: Text(
-                minuteLabel(habit.startMinute),
+                context.clockAt(habit.startMinute),
                 style: TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w700,
@@ -225,10 +227,10 @@ class TimelineTodo extends StatelessWidget {
     return (_tile + (_span - 15) * 0.85).clamp(_tile, 148.0);
   }
 
-  String get _subtitle {
-    final start = minuteLabel(_start);
+  String _subtitle(BuildContext context) {
+    final start = context.clockAt(_start);
     if (_span <= 0) return start;
-    return '$start - ${minuteLabel(_start + _span)}  ·  ${spanLabel(_span)}';
+    return '$start - ${context.clockAt(_start + _span)}  ·  ${spanLabel(_span)}';
   }
 
   @override
@@ -247,7 +249,7 @@ class TimelineTodo extends StatelessWidget {
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerRight,
               child: Text(
-                minuteLabel(_start),
+                context.clockAt(_start),
                 style: TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w700,
@@ -308,7 +310,7 @@ class TimelineTodo extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            _subtitle,
+                            _subtitle(context),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -426,7 +428,7 @@ class _NoteLine extends StatelessWidget {
               ),
               if (minutes != null) ...[
                 Text(
-                  minuteLabel(minutes),
+                  context.clockAt(minutes),
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w800,
@@ -490,7 +492,7 @@ class TimelineCheck extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = habit.completions[date.dayKey]?.count ?? 0;
-    final progress = habit.progressFor(count);
+    final progress = habit.progressFor(count, goal: habit.pastGoalOn(date));
     final color = _quant ? progress.activeColor(habit.color.shownIn(context)) : habit.color.shownIn(context);
     final circle = context.watch<SettingsController>().isCircleCheck;
 

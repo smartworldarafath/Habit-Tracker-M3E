@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:streak/app/app_lock_pin.dart';
 import 'package:streak/features/habits/data/habit.dart';
 import 'package:streak/app/theme/app_palette.dart';
+import 'package:streak/app/theme/color_themes.dart';
 import 'package:streak/core/database/local_store.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/core/utils/cover_storage.dart';
@@ -62,6 +63,7 @@ class SettingsController extends ChangeNotifier {
     _appIcon = LocalStore.setting('appIcon', 0);
     _verifiedBadge = LocalStore.setting('verifiedBadge', 1);
     _accentColor = LocalStore.setting('accentColor', AppPalette.brand.toARGB32());
+    _colorTheme = LocalStore.setting('colorTheme', '');
     _heatmapMode = LocalStore.setting('heatmapMode', 0);
     _todayCategory = LocalStore.setting('todayCategory', '');
     _minimalShortcut = LocalStore.setting('minimalShortcut', '');
@@ -119,6 +121,7 @@ class SettingsController extends ChangeNotifier {
     _focusAlert = LocalStore.setting('focusAlert', '');
     _focusHold = LocalStore.setting('focusHold', false);
     _focusWholeRounds = LocalStore.setting('focusWholeRounds', false);
+    _focusAutoNext = LocalStore.setting('focusAutoNext', false);
     _focusLongBreak = LocalStore.setting('focusLongBreak', 0);
     _focusImages =
         List<String>.from(LocalStore.setting('focusImages', const <String>[]));
@@ -164,6 +167,7 @@ class SettingsController extends ChangeNotifier {
   late int _appIcon;
   late int _verifiedBadge;
   late int _accentColor;
+  late String _colorTheme;
   late int _heatmapMode;
   late String _todayCategory;
   late String _minimalShortcut;
@@ -214,6 +218,7 @@ class SettingsController extends ChangeNotifier {
   late String _focusAlert;
   late bool _focusHold;
   late bool _focusWholeRounds;
+  late bool _focusAutoNext;
   late int _focusLongBreak;
   late List<String> _focusImages;
   late List<int> _hiddenScenes;
@@ -275,6 +280,14 @@ class SettingsController extends ChangeNotifier {
   Future<void> setAccentColor(Color color) async {
     _accentColor = color.toARGB32();
     await LocalStore.writeSetting('accentColor', _accentColor);
+    notifyListeners();
+  }
+
+  ColorTheme? get colorTheme => ColorTheme.byId(_colorTheme);
+
+  Future<void> setColorTheme(ColorTheme? theme) async {
+    _colorTheme = theme?.id ?? '';
+    await LocalStore.writeSetting('colorTheme', _colorTheme);
     notifyListeners();
   }
 
@@ -506,6 +519,7 @@ class SettingsController extends ChangeNotifier {
   String get focusAlert => _focusAlert;
   bool get focusHold => _focusHold;
   bool get focusWholeRounds => _focusWholeRounds;
+  bool get focusAutoNext => _focusAutoNext;
   int get focusLongBreak => _focusLongBreak;
   List<String> get focusImages => List.unmodifiable(_focusImages);
 
@@ -590,6 +604,14 @@ class SettingsController extends ChangeNotifier {
   Future<void> setFocusHold(bool value) async {
     _focusHold = value;
     await LocalStore.writeSetting('focusHold', value);
+    if (value && _focusAutoNext) return setFocusAutoNext(false);
+    notifyListeners();
+  }
+
+  Future<void> setFocusAutoNext(bool value) async {
+    _focusAutoNext = value;
+    await LocalStore.writeSetting('focusAutoNext', value);
+    if (value && _focusHold) return setFocusHold(false);
     notifyListeners();
   }
 

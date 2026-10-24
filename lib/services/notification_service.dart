@@ -22,10 +22,12 @@ import 'package:streak/l10n/app_localizations.dart';
 import 'package:streak/l10n/app_localizations_en.dart';
 import 'package:streak/services/home_widget_service.dart';
 import 'package:streak/services/in_app_notifications.dart';
+import 'package:streak/services/reminder_sounds.dart';
 import 'package:streak/services/todos_widget_service.dart';
 import 'package:streak/services/widget_icon_service.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:uuid/uuid.dart';
 
 class NotificationService {
   NotificationService._internal();
@@ -681,18 +683,48 @@ class NotificationService {
     );
   }
 
+  static const _soundChannelPrefix = 'habit_sound_';
+
+  static String _soundChannelId(String uri) =>
+      '$_soundChannelPrefix${uri.replaceAll(RegExp('[^A-Za-z0-9]'), '_')}';
+
+  Future<String?> _soundOf(Habit habit) async {
+    if (!Platform.isAndroid || habit.soundUri.isEmpty) return null;
+    return ReminderSounds.resolve(habit.soundUri, habit.soundName);
+  }
+
+  Future<void> dropUnusedSoundChannels(Iterable<Habit> habits) async {
+    if (!Platform.isAndroid) return;
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return;
+    final used = {
+      for (final habit in habits)
+        if (habit.soundUri.isNotEmpty) _soundChannelId(habit.soundUri),
+    };
+    for (final channel in await android.getNotificationChannels() ?? const []) {
+      if (channel.id.startsWith(_soundChannelPrefix) &&
+          !used.contains(channel.id)) {
+        await android.deleteNotificationChannel(channel.id);
+      }
+    }
+  }
+
   Future<NotificationDetails> _details(
     Habit habit,
     String body,
     AppLocalizations strings, {
     Reminder? reminder,
-  }) async =>
-      NotificationDetails(
+  }) async {
+    final sound = await _soundOf(habit);
+    final own = sound != null;
+    return NotificationDetails(
         windows: await _windowsDetails(habit, strings),
         android: AndroidNotificationDetails(
-          _channelId,
-          _channelName,
+          own ? _soundChannelId(habit.soundUri) : _channelId,
+          own ? '$_channelName \u00b7 ${habit.soundName}' : _channelName,
           channelDescription: 'Reminders to keep your streaks alive',
+          sound: own ? UriAndroidNotificationSound(sound) : null,
           importance: Importance.high,
           priority: Priority.high,
           color: habit.color,
@@ -736,6 +768,7 @@ class NotificationService {
           threadIdentifier: habit.id,
         ),
       );
+  }
 
   Future<void> snooze(Habit habit) async {
     if (!_ready) await initialize();
@@ -1101,6 +1134,17 @@ class NotificationActions {
     final todos = LocalStore.readTodos();
     final index = todos.indexWhere((todo) => todo.id == id);
     if (index == -1 || todos[index].done) return;
+    if (todos[index].repeats) {
+      final next = todos[index].nextTime(AppClock.today());
+      final record = todos[index].doneRecord(const Uuid().v4(), DateTime.now());
+      todos[index] = next;
+      todos.add(record);
+      await LocalStore.writeTodo(next);
+      await LocalStore.writeTodo(record);
+      await NotificationService().scheduleTodo(next);
+      await TodosWidgetService.sync(todos);
+      return;
+    }
     final done = todos[index].copyWith(done: true, doneAt: DateTime.now());
     todos[index] = done;
     await LocalStore.writeTodo(done);

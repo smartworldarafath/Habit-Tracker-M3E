@@ -247,6 +247,9 @@
   "reminders_ready_title": "Reminders are on",
   "reminders_ready_body": "Streak will remind you here.",
   "add_reminder": "Add reminder",
+  "reminder_sound": "Sound",
+  "reminder_sound_default": "Default",
+  "reminder_sound_hint": "Tap a sound to hear it. The reminders of this habit will use it.",
   "delete_habit": "Delete habit",
   "archive_habit": "Archive habit",
   "archive": "Archive",
@@ -601,6 +604,40 @@
   "todo_date": "Date",
   "todo_no_date": "No date",
   "todo_time": "Time",
+  "todo_repeat": "Repeat",
+  "todo_repeat_never": "Don't repeat",
+  "todo_repeat_workdays": "Monday to Friday",
+  "todo_repeat_days": "{count, plural, =1{Every day} other{Every {count} days}}",
+  "@todo_repeat_days": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "todo_repeat_weeks": "{count, plural, =1{Every week} other{Every {count} weeks}}",
+  "@todo_repeat_weeks": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "todo_repeat_months": "{count, plural, =1{Every month} other{Every {count} months}}",
+  "@todo_repeat_months": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "todo_repeat_years": "{count, plural, =1{Every year} other{Every {count} years}}",
+  "@todo_repeat_years": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "todo_repeat_custom": "Custom",
+  "todo_repeat_unit_days": "Days",
+  "todo_repeat_unit_weeks": "Weeks",
+  "todo_repeat_unit_months": "Months",
+  "todo_repeat_unit_years": "Years",
+  "todo_repeat_on_day": "On day {day}",
+  "@todo_repeat_on_day": {
+    "placeholders": { "day": { "type": "int" } }
+  },
+  "todo_repeat_on_weekday": "On the {nth, select, 1{first} 2{second} 3{third} 4{fourth} other{last}} {weekday}",
+  "@todo_repeat_on_weekday": {
+    "placeholders": { "nth": { "type": "String" }, "weekday": { "type": "String" } }
+  },
+  "todo_repeat_from_done": "Count from when I finish it",
+  "todo_repeat_skip": "Skip this one",
   "todo_estimate": "Duration",
   "todo_estimate_none": "No duration",
   "todo_priority": "Priority",
@@ -684,6 +721,8 @@
   "focus_long_break_sub": "Every 4 rounds, a longer break.",
   "focus_whole_rounds": "Only count full rounds",
   "focus_whole_rounds_sub": "A round you end early is not saved.",
+  "focus_auto_next": "Keep going on its own",
+  "focus_auto_next_sub": "When a break ends, the next round starts without waiting.",
   "focus_end_drop": "If you end now, this round is not saved.",
   "focus_restart": "Restart",
   "focus_restart_title": "Restart this round?",
@@ -801,6 +840,11 @@
     "placeholders": { "day": { "type": "String" } }
   },
   "unscheduled_confirm": "Log anyway",
+  "paused_day_title": "Day paused",
+  "paused_day_body": "This habit is paused on {day}. Log it anyway?",
+  "@paused_day_body": {
+    "placeholders": { "day": { "type": "String" } }
+  },
   "rest_days_none": "None",
   "consistency": "Consistency",
   "last_90_days": "Last 90 days",
@@ -961,6 +1005,10 @@
   "sync_guide": "How to sync two devices",
   "theme_sub": "Light, dark or the system one",
   "accent_color_sub": "Used on buttons and highlights",
+  "color_theme": "Color theme",
+  "color_theme_sub": "Full palettes like Catppuccin or Nord",
+  "color_theme_default": "Streak",
+  "color_theme_hint": "Each theme brings its own background, text and accent color. It follows light and dark mode.",
   "app_background_sub": "What you see behind the cards",
   "check_style_sub": "Square or round marks",
   "app_icon_sub": "The icon on your home screen",
@@ -973,6 +1021,9 @@
   "app_lock_delay_sub": "How soon it asks again after you leave",
   "focus_only": "Only with a focus session",
   "focus_only_hint": "The habit is checked when you finish a session, not by tapping it.",
+  "focus_time_habit_hint": "Each focus session adds its minutes to the day it was done.",
+  "focus_edit_session": "Edit session",
+  "focus_session_updated": "Session updated",
   "focus_only_title": "Needs a focus session",
   "focus_only_body": "\"{name}\" is completed by finishing a focus session.",
   "@focus_only_body": {
@@ -1127,6 +1178,9 @@
   "widget_cfg_buttons": "Buttons",
   "widget_cfg_buttons_round": "Round",
   "widget_cfg_buttons_square": "Square",
+  "widget_cfg_buttons_flower": "Flower",
+  "widget_cfg_tick": "Checkmark",
+  "widget_cfg_tick_hint": "Off: done buttons are only filled with color",
   "widget_cfg_hide_done": "Hide completed",
   "widget_cfg_compact": "Compact",
   "widget_cfg_compact_hint": "Smaller rows, streak next to the name",
@@ -1481,6 +1535,7 @@
   "relapse_spent": "Spent on this relapse",
   "money_spent": "Money spent",
   "avoid_month": "Month summary",
+  "avoid_by_month": "Relapses by month",
   "avoid_balance": "Balance",
   "total_goal": "Total goal",
   "total_goal_sub": "A target for the whole habit, like 1000 pages or 50 times",
@@ -1491,6 +1546,27 @@
   "total_goal_of": "of {amount}",
   "@total_goal_of": {
     "placeholders": { "amount": { "type": "String" } }
+  },
+  "book": "Book",
+  "book_pages": "Pages in the book",
+  "book_pages_sub": "Counts from today. On the last page it adds a read and starts over",
+  "book_new": "New book",
+  "book_reads": "{count, plural, =0{First read} =1{Read once} other{Read {count} times}}",
+  "@book_reads": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "book_read_number": "Read {number}",
+  "@book_read_number": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "book_since": "Since {day}",
+  "@book_since": {
+    "placeholders": { "day": { "type": "String" } }
+  },
+  "book_reading_now": "Reading",
+  "book_page": "Page {page} of {pages}",
+  "@book_page": {
+    "placeholders": { "page": { "type": "String" }, "pages": { "type": "String" } }
   },
   "count_times": "{count, plural, =1{1 time} other{{count} times}}",
   "@count_times": {

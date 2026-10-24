@@ -212,8 +212,8 @@ Two files on the [**Releases**](https://github.com/smartworldarafath/Habit-Track
 
 | File | For |
 |------|-----|
-| `HabitTrackerM3E-v1.3.3-macos.dmg` | Drag-and-drop installer: open DMG and drag to Applications |
-| `HabitTrackerM3E-v1.3.3-macos.zip` | Portable `.app` archive: unzip and run directly |
+| `HabitTrackerM3E-v1.3.4-macos.dmg` | Drag-and-drop installer: open DMG and drag to Applications |
+| `HabitTrackerM3E-v1.3.4-macos.zip` | Portable `.app` archive: unzip and run directly |
 
 Runs on **macOS 12.0 (Monterey) and newer** (Apple Silicon & Intel).
 

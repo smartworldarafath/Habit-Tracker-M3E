@@ -40,10 +40,12 @@ import 'package:streak/features/habits/widgets/minimal_pickers.dart';
 import 'package:streak/features/habits/widgets/minimal_substeps.dart';
 import 'package:streak/features/habits/widgets/avoid_stats.dart';
 import 'package:streak/features/habits/widgets/reminder_editor_sheet.dart';
+import 'package:streak/features/habits/widgets/reminder_sound_picker.dart';
 import 'package:streak/features/habits/widgets/reminder_tile.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
 import 'package:streak/services/health_steps.dart';
 import 'package:streak/services/notification_service.dart';
+import 'package:streak/services/reminder_sounds.dart';
 
 class HabitFormPage extends StatefulWidget {
   const HabitFormPage({super.key, this.habit, this.template});
@@ -82,6 +84,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
   String _cover = '';
   int _coverClarity = 100;
   late List<Reminder> _reminders;
+  ReminderSound _sound = defaultReminderSound;
 
   HabitKind _kind = HabitKind.positive;
   QuantKind _quantKind = QuantKind.generic;
@@ -89,6 +92,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
   bool _noGoal = false;
   double _quantIncrement = 1;
   String _bookCover = '';
+  double _bookPages = 0;
   bool _focusOnly = false;
   bool _tracking = false;
   bool _anyAmount = false;
@@ -118,6 +122,11 @@ class _HabitFormPageState extends State<HabitFormPage> {
       _scheduleUnit == ScheduleUnit.months && !_fromLastDone;
 
   bool get _planning => context.watch<SettingsController>().planningEnabled;
+
+  bool get _focusTimeHabit =>
+      _kind == HabitKind.quantitative &&
+      _quantKind == QuantKind.time &&
+      context.watch<SettingsController>().focusEnabled;
 
   bool get _offersTracking =>
       _tracking || context.watch<SettingsController>().trackingOption;
@@ -196,12 +205,14 @@ class _HabitFormPageState extends State<HabitFormPage> {
       _cover = habit.coverPath;
       _coverClarity = habit.coverClarity;
       _reminders = List.of(habit.reminders);
+      _sound = ReminderSound(habit.soundName, habit.soundUri);
       _kind = habit.kind;
       _quantKind = habit.quantKind;
       _noGoal = habit.kind == HabitKind.quantitative && habit.perDayTarget <= 0;
       _quantTarget = habit.kind == HabitKind.quantitative && !_noGoal ? habit.perDayTarget : 8;
       _quantIncrement = habit.incrementAmount;
       _bookCover = habit.bookCoverPath;
+      _bookPages = habit.bookPages;
       _focusOnly = habit.focusOnly;
       _tracking = habit.tracking;
       _anyAmount = habit.anyAmount;
@@ -244,12 +255,14 @@ class _HabitFormPageState extends State<HabitFormPage> {
         _cover,
         _coverClarity,
         [for (final reminder in _reminders) reminder.toMap()],
+        _sound.uri,
         _kind.name,
         _quantKind.name,
         _quantTarget,
         _noGoal,
         _quantIncrement,
         _bookCover,
+        _bookPages,
         _focusOnly,
         _tracking,
         _anyAmount,
@@ -388,6 +401,8 @@ class _HabitFormPageState extends State<HabitFormPage> {
           fromLastDone: fromLastDone,
           monthWeekday: monthWeekday,
           reminders: _reminders,
+          soundUri: _sound.uri,
+          soundName: _sound.title,
           coverPath: _cover,
           coverClarity: _coverClarity,
           dailyCost: dailyCost,
@@ -400,6 +415,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
               quantitative ? _quantIncrement : widget.habit!.incrementAmount,
           quantKind: quantitative ? _quantKind : widget.habit!.quantKind,
           bookCoverPath: quantitative ? _bookCover : widget.habit!.bookCoverPath,
+          bookPages: _readsBook ? _bookPages : 0,
           focusOnly: focusOnly,
           tracking: _tracking,
           healthSteps: healthSteps,
@@ -412,7 +428,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
           startMinute: negative ? -1 : _startMinute,
           durationMinutes: negative ? 0 : _durationMinutes,
           substeps: substeps,
-        ),
+        ).rememberGoal(widget.habit!).keepBook(widget.habit!),
       );
     } else {
       final template = widget.template;
@@ -437,6 +453,8 @@ class _HabitFormPageState extends State<HabitFormPage> {
         fromLastDone: fromLastDone,
         monthWeekday: monthWeekday,
         reminders: _reminders,
+        soundUri: _sound.uri,
+        soundName: _sound.title,
         coverPath: cover,
         coverClarity: _coverClarity,
         kind: _kind,
@@ -449,6 +467,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
         incrementAmount: quantitative ? _quantIncrement : 1,
         quantKind: quantitative ? _quantKind : QuantKind.generic,
         bookCoverPath: quantitative ? bookCover : '',
+        bookPages: _readsBook ? _bookPages : 0,
         focusOnly: focusOnly,
         tracking: _tracking,
         healthSteps: healthSteps,
@@ -564,6 +583,21 @@ class _HabitFormPageState extends State<HabitFormPage> {
       alignment: 0.1,
     );
   }
+
+  List<Widget> _soundRow({bool compact = false}) => [
+        if (ReminderSounds.supported && _reminders.isNotEmpty) ...[
+          SizedBox(height: compact ? 7 : 8),
+          ReminderSoundRow(
+            name: _sound.title,
+            compact: compact,
+            onTap: () => pickReminderSound(
+              context,
+              uri: _sound.uri,
+              onChanged: (sound) => setState(() => _sound = sound),
+            ),
+          ),
+        ],
+      ];
 
   Widget _buildExpress(BuildContext context) {
     return Scaffold(
@@ -685,6 +719,8 @@ class _HabitFormPageState extends State<HabitFormPage> {
             onPick: _pickBookCover,
             onRemove: () => setState(() => _bookCover = ''),
           ),
+          const SizedBox(height: 12),
+          _bookPagesField(),
         ],
       ],
       if (_kind == HabitKind.negative) ...[
@@ -727,6 +763,10 @@ class _HabitFormPageState extends State<HabitFormPage> {
             ),
           ],
         ],
+      ],
+      if (_focusTimeHabit) ...[
+        const SizedBox(height: 20),
+        ..._focusTimerFields(),
       ],
       if (_kind != HabitKind.negative) ...[
         const SizedBox(height: 26),
@@ -797,6 +837,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
           ),
         ),
       AddReminderButton(onTap: _addReminder),
+      ..._soundRow(),
       if (_kind == HabitKind.positive && !_focusOnly) ...[
         const SizedBox(height: 26),
         SectionLabel(context.l10n.checklist),
@@ -1017,6 +1058,8 @@ class _HabitFormPageState extends State<HabitFormPage> {
             onPick: _pickBookCover,
             onRemove: () => setState(() => _bookCover = ''),
           ),
+          const SizedBox(height: 10),
+          _bookPagesField(compact: true),
         ],
       ],
       if (_kind == HabitKind.negative) ...[
@@ -1063,6 +1106,10 @@ class _HabitFormPageState extends State<HabitFormPage> {
             ),
           ],
         ],
+      ],
+      if (_focusTimeHabit) ...[
+        const SizedBox(height: 16),
+        ..._focusTimerFields(),
       ],
       if (_kind != HabitKind.negative) ...[
         const SizedBox(height: 16),
@@ -1167,6 +1214,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
           ),
         ),
       CompactAddButton(label: context.l10n.add_reminder, onTap: _addReminder),
+      ..._soundRow(compact: true),
       if (_kind == HabitKind.positive && !_focusOnly) ...[
         const SizedBox(height: 16),
         SectionLabel(context.l10n.checklist),
@@ -1240,6 +1288,31 @@ class _HabitFormPageState extends State<HabitFormPage> {
     ];
   }
 
+  List<Widget> _focusTimerFields() => [
+    SectionLabel(context.l10n.focus),
+    FocusDurationChips(
+      minutes: _focusMinutes,
+      onChanged: (v) => setState(() => _focusMinutes = v),
+    ),
+    if (_focusMinutes > 0) ...[
+      const SizedBox(height: 12),
+      FocusPomodoroCard(
+        enabled: _pomodoro,
+        breakMinutes: _breakMinutes,
+        onToggle: (v) => setState(() => _pomodoro = v),
+        onBreakChanged: (v) => setState(() => _breakMinutes = v),
+      ),
+    ],
+    const SizedBox(height: 8),
+    Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Text(
+        context.l10n.focus_time_habit_hint,
+        style: sheetBodyStyle(context, size: 12.5, color: context.tokens.muted),
+      ),
+    ),
+  ];
+
   Widget _totalGoalField({bool compact = false}) => TotalGoalField(
         goal: _totalGoal,
         compact: compact,
@@ -1253,6 +1326,17 @@ class _HabitFormPageState extends State<HabitFormPage> {
         ),
         color: _color,
         onChanged: (value) => setState(() => _totalGoal = value),
+      );
+
+  bool get _readsBook =>
+      _kind == HabitKind.quantitative && _quantKind == QuantKind.reading;
+
+  Widget _bookPagesField({bool compact = false}) => BookPagesField(
+        pages: _bookPages,
+        unit: _quantUnit,
+        compact: compact,
+        color: _color,
+        onChanged: (value) => setState(() => _bookPages = value),
       );
 
   String get _quantUnit => _quantKind == QuantKind.time
@@ -1372,6 +1456,8 @@ class _HabitFormPageState extends State<HabitFormPage> {
                   onPick: _pickBookCover,
                   onRemove: () => setState(() => _bookCover = ''),
                 ),
+                const SizedBox(height: 12),
+                _bookPagesField(),
               ],
             ],
             if (_kind == HabitKind.negative) ...[
@@ -1416,6 +1502,10 @@ class _HabitFormPageState extends State<HabitFormPage> {
                   ),
                 ],
               ],
+            ],
+            if (_focusTimeHabit) ...[
+              const SizedBox(height: 20),
+              ..._focusTimerFields(),
             ],
             if (_kind != HabitKind.negative) ...[
               const SizedBox(height: 20),
@@ -1489,6 +1579,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
                 ),
               ),
             AddReminderButton(onTap: _addReminder),
+            ..._soundRow(),
             if (_kind == HabitKind.positive && !_focusOnly) ...[
               const SizedBox(height: 20),
               SectionLabel(context.l10n.checklist),

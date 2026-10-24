@@ -71,6 +71,7 @@ class HabitsController extends ChangeNotifier {
         for (final habit in _habits.values)
           if (!habit.isArchived) habit.id,
       });
+      await _notifications.dropUnusedSoundChannels(_habits.values);
     } catch (e) {
       debugPrint('Could not clear stale reminders: $e');
     }
@@ -127,6 +128,8 @@ class HabitsController extends ChangeNotifier {
     bool fromLastDone = false,
     bool monthWeekday = false,
     required List<Reminder> reminders,
+    String soundUri = '',
+    String soundName = '',
     String coverPath = '',
     int coverClarity = 100,
     HabitKind kind = HabitKind.positive,
@@ -139,6 +142,7 @@ class HabitsController extends ChangeNotifier {
     double incrementAmount = 1,
     QuantKind quantKind = QuantKind.generic,
     String bookCoverPath = '',
+    double bookPages = 0,
     bool focusOnly = false,
     bool tracking = false,
     bool healthSteps = false,
@@ -171,6 +175,8 @@ class HabitsController extends ChangeNotifier {
       fromLastDone: fromLastDone,
       monthWeekday: monthWeekday,
       reminders: reminders,
+      soundUri: soundUri,
+      soundName: soundName,
       coverPath: coverPath,
       coverClarity: coverClarity,
       kind: kind,
@@ -183,6 +189,7 @@ class HabitsController extends ChangeNotifier {
       incrementAmount: incrementAmount,
       quantKind: quantKind,
       bookCoverPath: bookCoverPath,
+      bookPages: bookPages,
       focusOnly: focusOnly,
       tracking: tracking,
       healthSteps: healthSteps,
@@ -211,10 +218,18 @@ class HabitsController extends ChangeNotifier {
   }
 
   Future<void> update(Habit habit) async {
+    final soundChanged = _habits[habit.id]?.soundUri != habit.soundUri;
     _habits[habit.id] = habit;
     await LocalStore.writeHabit(habit);
     notifyListeners();
     await _notifications.scheduleFor(habit);
+    if (soundChanged) {
+      try {
+        await _notifications.dropUnusedSoundChannels(_habits.values);
+      } catch (e) {
+        debugPrint('Could not drop sound channels: $e');
+      }
+    }
     HomeWidgetService.syncSoon(() => asMap);
   }
 
@@ -381,7 +396,7 @@ class HabitsController extends ChangeNotifier {
         periods.add(VacationPeriod(start: period.start, end: previous));
       }
       if (period.end == null) {
-        periods.add(VacationPeriod(start: next));
+        if (!next.isAfter(AppClock.today())) periods.add(VacationPeriod(start: next));
       } else if (period.end!.isAfter(day)) {
         periods.add(VacationPeriod(start: next, end: period.end));
       }

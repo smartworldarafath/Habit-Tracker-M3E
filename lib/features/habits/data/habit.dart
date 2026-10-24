@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/core/utils/amount_format.dart';
+import 'package:streak/features/habits/data/book_read.dart';
 import 'package:streak/features/habits/data/completion.dart';
 import 'package:streak/features/habits/data/quant_progress.dart';
 import 'package:streak/features/habits/data/reminder.dart';
@@ -67,6 +68,12 @@ class Habit {
     this.incrementAmount = 1,
     this.quantKind = QuantKind.generic,
     this.bookCoverPath = '',
+    this.bookPages = 0,
+    this.bookSince,
+    this.bookSkip = 0,
+    this.pastReads = const [],
+    this.soundUri = '',
+    this.soundName = '',
     this.focusMinutes = 25,
     this.focusBreakMinutes = 0,
     this.focusOnly = false,
@@ -82,6 +89,7 @@ class Habit {
     this.vacations = const [],
     this.restDays = const [],
     this.missReasons = const {},
+    this.pastGoals = const {},
     this.archivedAt,
     this.scheduleStart,
     this.fromLastDone = false,
@@ -209,6 +217,53 @@ class Habit {
 
   final String bookCoverPath;
 
+  final double bookPages;
+
+  final DateTime? bookSince;
+
+  final double bookSkip;
+
+  final List<BookRead> pastReads;
+
+  bool get tracksBook =>
+      kind == HabitKind.quantitative &&
+      quantKind == QuantKind.reading &&
+      bookPages > 0;
+
+  late final BookProgress book = BookProgress.of(
+    completions: completions.values,
+    pages: bookPages,
+    since: bookSince,
+    skip: bookSkip,
+    past: pastReads,
+  );
+
+  List<BookRead> get finishedReads => tracksBook
+      ? book.reads.where((read) => read.isFinished).toList()
+      : pastReads;
+
+  double get _readToday => completions[AppClock.today().dayKey]?.count ?? 0;
+
+  Habit newBook(double pages) => copyWith(
+        bookPages: pages,
+        bookSince: AppClock.today(),
+        bookSkip: _readToday,
+        pastReads: finishedReads,
+      );
+
+  Habit keepBook(Habit before) {
+    if (!tracksBook || bookPages == before.bookPages) return this;
+    if (before.bookPages <= 0 && !startedAt.isBefore(AppClock.today())) return this;
+    return copyWith(
+      bookSince: AppClock.today(),
+      bookSkip: _readToday,
+      pastReads: before.finishedReads,
+    );
+  }
+
+  final String soundUri;
+  final String soundName;
+
   final int focusMinutes;
   final int focusBreakMinutes;
   final bool focusOnly;
@@ -270,6 +325,39 @@ class Habit {
   final List<int> restDays;
 
   final Map<String, String> missReasons;
+
+  final Map<String, double> pastGoals;
+
+  late final List<(int, double)> _goalSteps = [
+    for (final entry in pastGoals.entries) (dayKeyEpoch(entry.key), entry.value),
+  ]..sort((a, b) => a.$1.compareTo(b.$1));
+
+  double? _pastGoalAt(int epochDay) {
+    for (final (until, goal) in _goalSteps) {
+      if (epochDay < until) return goal;
+    }
+    return null;
+  }
+
+  double? pastGoalOn(DateTime date) =>
+      pastGoals.isEmpty ? null : _pastGoalAt(date.epochDay);
+
+  double goalOn(DateTime date) => pastGoalOn(date) ?? perDayTarget;
+
+  double get _shownGoal => acceptsAnyAmount ? 0 : perDayTarget;
+
+  Habit rememberGoal(Habit before) {
+    if (kind != HabitKind.quantitative || before.kind != kind) {
+      return pastGoals.isEmpty ? this : copyWith(pastGoals: const {});
+    }
+    final old = before._shownGoal;
+    if (old == _shownGoal) return this;
+    final today = AppClock.today();
+    if (!startedAt.isBefore(today)) return this;
+    final key = today.dayKey;
+    if (pastGoals.containsKey(key)) return this;
+    return copyWith(pastGoals: {...pastGoals, key: old});
+  }
 
   final DateTime? archivedAt;
 
@@ -390,7 +478,10 @@ class Habit {
   }
 
   bool isDoneEntry(Completion entry) {
-    if (!hasSubsteps) return reaches(entry.count);
+    if (!hasSubsteps) {
+      final past = pastGoals.isEmpty ? null : _pastGoalAt(dayKeyEpoch(entry.date));
+      return reaches(entry.count, goal: past);
+    }
     bool checked(Substep step) => entry.steps.contains(step.id);
     if (!anySteps) return substeps.every(checked);
     return substeps.where(checked).length >= stepsNeeded.clamp(1, substeps.length);
@@ -401,13 +492,34 @@ class Habit {
   bool get acceptsAnyAmount =>
       kind == HabitKind.quantitative && (anyAmount || !hasGoal);
 
-  bool reaches(double count) =>
-      acceptsAnyAmount ? count > 0 : count >= perDayTarget;
+  bool reaches(double count, {double? goal}) {
+    if (goal != null) return goal <= 0 ? count > 0 : count >= goal;
+    return acceptsAnyAmount ? count > 0 : count >= perDayTarget;
+  }
 
-  QuantProgress progressFor(double count) =>
-      acceptsAnyAmount && count > 0 && (!hasGoal || count < perDayTarget)
-          ? const QuantProgress(laps: 1, fraction: 0)
-          : QuantProgress.of(count: count, target: perDayTarget);
+  QuantProgress progressFor(double count, {double? goal}) {
+    if (goal != null) {
+      return goal <= 0
+          ? QuantProgress(laps: count > 0 ? 1 : 0, fraction: 0)
+          : QuantProgress.of(count: count, target: goal);
+    }
+    return acceptsAnyAmount && count > 0 && (!hasGoal || count < perDayTarget)
+        ? const QuantProgress(laps: 1, fraction: 0)
+        : QuantProgress.of(count: count, target: perDayTarget);
+  }
+
+  QuantProgress progressOn(DateTime date, double count) {
+    final past = pastGoalOn(date);
+    if (past != null) return progressFor(count, goal: past);
+    return hasGoal
+        ? QuantProgress.of(count: count, target: effectiveTarget)
+        : progressFor(count);
+  }
+
+  double fillTargetOn(DateTime date) {
+    final target = pastGoalOn(date) ?? effectiveTarget;
+    return target <= 0 ? 1.0 : target;
+  }
 
   bool isRelapseOn(DateTime date) =>
       kind == HabitKind.negative && completions.containsKey(date.dayKey);
@@ -785,6 +897,12 @@ class Habit {
     double? incrementAmount,
     QuantKind? quantKind,
     String? bookCoverPath,
+    double? bookPages,
+    DateTime? bookSince,
+    double? bookSkip,
+    List<BookRead>? pastReads,
+    String? soundUri,
+    String? soundName,
     int? focusMinutes,
     int? focusBreakMinutes,
     bool? focusOnly,
@@ -800,6 +918,7 @@ class Habit {
     List<VacationPeriod>? vacations,
     List<int>? restDays,
     Map<String, String>? missReasons,
+    Map<String, double>? pastGoals,
     DateTime? archivedAt,
     bool clearArchived = false,
     DateTime? scheduleStart,
@@ -835,6 +954,12 @@ class Habit {
       incrementAmount: incrementAmount ?? this.incrementAmount,
       quantKind: quantKind ?? this.quantKind,
       bookCoverPath: bookCoverPath ?? this.bookCoverPath,
+      bookPages: bookPages ?? this.bookPages,
+      bookSince: bookSince ?? this.bookSince,
+      bookSkip: bookSkip ?? this.bookSkip,
+      pastReads: pastReads ?? this.pastReads,
+      soundUri: soundUri ?? this.soundUri,
+      soundName: soundName ?? this.soundName,
       focusMinutes: focusMinutes ?? this.focusMinutes,
       focusOnly: focusOnly ?? this.focusOnly,
       tracking: tracking ?? this.tracking,
@@ -850,6 +975,7 @@ class Habit {
       vacations: vacations ?? this.vacations,
       restDays: restDays ?? this.restDays,
       missReasons: missReasons ?? this.missReasons,
+      pastGoals: pastGoals ?? this.pastGoals,
       archivedAt: clearArchived ? null : (archivedAt ?? this.archivedAt),
       scheduleStart: clearScheduleStart
           ? null
@@ -898,6 +1024,13 @@ class Habit {
         'incrementAmount': incrementAmount,
         'quantKind': quantKind.index,
         'bookCoverPath': bookCoverPath,
+        if (bookPages > 0) 'bookPages': bookPages,
+        if (bookSince != null) 'bookSince': bookSince!.dayKey,
+        if (bookSkip > 0) 'bookSkip': bookSkip,
+        if (pastReads.isNotEmpty)
+          'pastReads': pastReads.map((read) => read.toMap()).toList(),
+        if (soundUri.isNotEmpty) 'soundUri': soundUri,
+        if (soundUri.isNotEmpty) 'soundName': soundName,
         'focusMinutes': focusMinutes,
         'focusBreakMinutes': focusBreakMinutes,
         'focusOnly': focusOnly,
@@ -913,6 +1046,7 @@ class Habit {
         'vacations': vacations.map((v) => v.toMap()).toList(),
         'restDays': restDays,
         if (missReasons.isNotEmpty) 'missReasons': missReasons,
+        if (pastGoals.isNotEmpty) 'pastGoals': pastGoals,
         if (archivedAt != null) 'archivedAt': archivedAt!.toIso8601String(),
       };
 
@@ -967,6 +1101,18 @@ class Habit {
         incrementAmount: ((map['incrementAmount'] ?? 1) as num).toDouble(),
         quantKind: QuantKind.values[(map['quantKind'] ?? 0) as int],
         bookCoverPath: (map['bookCoverPath'] ?? '') as String,
+        bookPages: (map['bookPages'] as num?)?.toDouble() ?? 0,
+        bookSince: map['bookSince'] is String
+            ? parseDayKey(map['bookSince'] as String)
+            : null,
+        bookSkip: (map['bookSkip'] as num?)?.toDouble() ?? 0,
+        pastReads: map['pastReads'] == null
+            ? const []
+            : (map['pastReads'] as List)
+                .map((r) => BookRead.fromMap(Map<String, dynamic>.from(r as Map)))
+                .toList(),
+        soundUri: (map['soundUri'] ?? '') as String,
+        soundName: (map['soundName'] ?? '') as String,
         focusMinutes: ((map['focusMinutes'] ?? 25) as num).toInt(),
         focusBreakMinutes:
             ((map['focusBreakMinutes'] ?? 0) as num).toInt(),
@@ -995,6 +1141,11 @@ class Habit {
         missReasons: map['missReasons'] == null
             ? const {}
             : Map<String, String>.from(map['missReasons'] as Map),
+        pastGoals: map['pastGoals'] == null
+            ? const {}
+            : (map['pastGoals'] as Map).map(
+                (key, value) => MapEntry(key as String, (value as num).toDouble()),
+              ),
         archivedAt: map['archivedAt'] == null
             ? null
             : DateTime.tryParse(map['archivedAt'] as String),

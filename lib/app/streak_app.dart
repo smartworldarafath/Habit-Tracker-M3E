@@ -29,8 +29,16 @@ class StreakApp extends StatelessWidget {
       title: 'Habit Tracker M3E',
       debugShowCheckedModeBanner: false,
       navigatorKey: AppNavigator.key,
-      theme: AppTheme.light(settings.accentColor, settings.appStyle),
-      darkTheme: AppTheme.dark(settings.accentColor, settings.appStyle),
+      theme: AppTheme.light(
+        settings.accentColor,
+        settings.appStyle,
+        settings.colorTheme,
+      ),
+      darkTheme: AppTheme.dark(
+        settings.accentColor,
+        settings.appStyle,
+        settings.colorTheme,
+      ),
       themeMode: settings.themeMode,
       builder: (context, child) {
         HomeWidgetService.localize(

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:streak/app/theme/app_tokens.dart';
+import 'package:streak/core/extensions/clock_extensions.dart';
 import 'package:streak/core/extensions/color_extensions.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/core/express/express_button.dart';
@@ -88,6 +89,12 @@ class _FocusHistoryPageState extends State<FocusHistoryPage> {
     if (id == null) return context.l10n.focus_history;
     return context.read<HabitsController>().byId(id)?.name ??
         context.l10n.focus_history;
+  }
+
+  Future<void> _edit(FocusSession session) async {
+    final saved = await showFocusLogSheet(context, editing: session);
+    if (saved != true || !mounted) return;
+    AppSnackbar.success(context, context.l10n.focus_session_updated);
   }
 
   Future<void> _log() async {
@@ -226,6 +233,7 @@ class _FocusHistoryPageState extends State<FocusHistoryPage> {
                               selected: _selected.contains(session.id),
                               selecting: _selecting,
                               onToggle: () => _toggle(session.id),
+                              onEdit: () => _edit(session),
                             ),
                           const SizedBox(height: 14),
                         ],
@@ -312,12 +320,14 @@ class _SessionTile extends StatelessWidget {
     required this.selected,
     required this.selecting,
     required this.onToggle,
+    required this.onEdit,
   });
 
   final FocusSession session;
   final bool selected;
   final bool selecting;
   final VoidCallback onToggle;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -325,7 +335,6 @@ class _SessionTile extends StatelessWidget {
         ? null
         : context.watch<HabitsController>().byId(session.habitId);
     final color = habit?.color.shownIn(context) ?? context.colors.primary;
-    final locale = Localizations.localeOf(context).toString();
     final scheme = context.colors;
     final express = context.watch<SettingsController>().isExpressStyle;
 
@@ -335,7 +344,7 @@ class _SessionTile extends StatelessWidget {
         button: true,
         selected: selected,
         child: GestureDetector(
-          onTap: selecting ? onToggle : null,
+          onTap: selecting ? onToggle : onEdit,
           onLongPress: onToggle,
           child: AnimatedContainer(
             duration: express
@@ -424,7 +433,7 @@ class _SessionTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${DateFormat.Hm(locale).format(session.startedAt)}'
+                        '${context.clockOf(session.startedAt)}'
                         '  ·  '
                         '${session.targetMinutes <= 0 ? context.l10n.focus_flowtime : context.l10n.minutes_short('${session.targetMinutes}')}',
                         style: express

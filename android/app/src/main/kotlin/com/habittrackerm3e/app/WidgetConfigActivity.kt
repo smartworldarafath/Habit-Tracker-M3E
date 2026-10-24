@@ -203,7 +203,7 @@ class WidgetConfigActivity : ComponentActivity() {
         if (type == WType.TODOS) WidgetConfig.setTodosAll(this, appWidgetId, todosAll)
         if (type == WType.STATS || type == WType.TODOS || type == WType.FOCUS) WidgetConfig.setArt(this, appWidgetId, art)
         if (type == WType.HABIT) WidgetConfig.setSpan(this, appWidgetId, span)
-        if (type == WType.HABIT || type == WType.TODAY || type == WType.TODOS) WidgetConfig.setLook(this, appWidgetId, look)
+        if (type == WType.HABIT || type == WType.TODAY || type == WType.TODOS || type == WType.STATS) WidgetConfig.setLook(this, appWidgetId, look)
         if (filters) WidgetConfig.setHabits(this, appWidgetId, chosen)
         if (type == WType.HEATMAP) {
             HeatmapConfig.setHabit(this, appWidgetId, habitId)
@@ -433,12 +433,21 @@ class WidgetConfigActivity : ComponentActivity() {
                                     Label(tr("cfg_buttons", "Buttons"))
                                     Spacer(Modifier.height(12.dp))
                                     Segmented(
-                                        left = tr("cfg_buttons_round", "Round"),
-                                        right = tr("cfg_buttons_square", "Square"),
-                                        selected = if (look.round) 0 else 1,
-                                        onLeft = { look = look.copy(round = true) },
-                                        onRight = { look = look.copy(round = false) },
+                                        listOf(
+                                            tr("cfg_buttons_round", "Round") to { look = look.copy(round = true, flower = false) },
+                                            tr("cfg_buttons_square", "Square") to { look = look.copy(round = false, flower = false) },
+                                            tr("cfg_buttons_flower", "Flower") to { look = look.copy(flower = true) },
+                                        ),
+                                        selected = when {
+                                            look.flower -> 2
+                                            look.round -> 0
+                                            else -> 1
+                                        },
                                     )
+                                }
+                                Line()
+                                ToggleRow(tr("cfg_tick", "Checkmark"), tr("cfg_tick_hint", "Off: done buttons are only filled with color"), look.tick) {
+                                    look = look.copy(tick = it)
                                 }
                             }
                             if (type == WType.TODOS) {
@@ -455,6 +464,18 @@ class WidgetConfigActivity : ComponentActivity() {
                                 ToggleRow(tr("cfg_compact", "Compact"), tr("cfg_compact_todos_hint", "Smaller rows, time next to the task"), look.compact) {
                                     look = look.copy(compact = it)
                                 }
+                            }
+                            if (type == WType.STATS) {
+                                Inset {
+                                    Segmented(
+                                        left = tr("streak_days", "Streak days"),
+                                        right = tr("today", "Today"),
+                                        selected = if (look.today) 1 else 0,
+                                        onLeft = { look = look.copy(today = false) },
+                                        onRight = { look = look.copy(today = true) },
+                                    )
+                                }
+                                Line()
                             }
                             if (hasArt) {
                                 if (type == WType.TODOS) Line()
@@ -709,6 +730,12 @@ class WidgetConfigActivity : ComponentActivity() {
         selected: Int,
         onLeft: () -> Unit,
         onRight: () -> Unit,
+    ) = Segmented(listOf(left to onLeft, right to onRight), selected)
+
+    @Composable
+    private fun Segmented(
+        options: List<Pair<String, () -> Unit>>,
+        selected: Int,
     ) = Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -716,7 +743,7 @@ class WidgetConfigActivity : ComponentActivity() {
             .background(fieldColor)
             .padding(4.dp),
     ) {
-        listOf(left to onLeft, right to onRight).forEachIndexed { index, (label, action) ->
+        options.forEachIndexed { index, (label, action) ->
             val on = selected == index
             Box(
                 modifier = Modifier
@@ -824,7 +851,7 @@ class WidgetConfigActivity : ComponentActivity() {
             when (type) {
                 WType.HABIT -> WeekSample(style, span, look)
                 WType.TODAY -> TodaySample(style, look)
-                WType.STATS -> StatsSample(style, art)
+                WType.STATS -> if (look.today) TodayProgressSample(style) else StatsSample(style, art)
                 WType.FOCUS -> FocusSample(style)
                 WType.HEATMAP -> Box(Modifier.padding(14.dp)) { LivePreview(style, layout, habitId, allColor) }
                 WType.TODOS -> TodosSample(style, art, look)

@@ -2,6 +2,7 @@ package com.habittrackerm3e.app
 
 import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceId
@@ -51,6 +52,8 @@ class FocusWidget : GlanceAppWidget() {
         val room = size.width.value - pad * 2
         val density = WidgetDraw.density(context)
         val label = (side * 0.1f).coerceIn(13f, 18f)
+        val button = (side * 0.2f).coerceIn(30f, 42f)
+        val start = single?.optString("id")?.takeIf { it.isNotEmpty() }?.let { "focusStart:$it" } ?: "focusStart"
 
         WidgetSurface(style) {
             Box(
@@ -72,24 +75,35 @@ class FocusWidget : GlanceAppWidget() {
                         .padding(start = pad.dp, end = pad.dp, top = (pad * 1.5f).dp, bottom = pad.dp),
                 ) {
                     val today = duration(totals[0])
-                    val big = WidgetDraw.fit(context, today, (side * 0.22f).coerceIn(24f, 46f), 16f, 800, room)
-                    Drawn(WidgetDraw.text(context, today, big, style.content, 800, room), density, today)
+                    val big = WidgetDraw.fit(context, today, (side * 0.22f).coerceIn(24f, 46f), 16f, 800, room - button - 6f)
+                    Drawn(WidgetDraw.text(context, today, big, style.content, 800, room - button - 6f), density, today)
                     val caption = WidgetText.get(context, "focus_today", "Focus today")
                     Drawn(WidgetDraw.text(context, caption, label, style.content, 800, room), density, caption)
                     Spacer(GlanceModifier.height(6.dp))
                     val small = label * 0.85f
+                    val halo = if (style.dark) Color.Black else Color.White
                     val week = "${WidgetText.get(context, "label_week", "Week")}  ${duration(totals[1])}"
-                    Drawn(WidgetDraw.text(context, week, small, style.muted, 650, room), density, week)
+                    Drawn(WidgetDraw.haloText(context, week, small, style.muted, halo, 650, room), density, week)
                     val month = "${WidgetText.get(context, "label_month", "Month")}  ${duration(totals[2])}"
-                    Drawn(WidgetDraw.text(context, month, small, style.muted, 650, room), density, month)
+                    Drawn(WidgetDraw.haloText(context, month, small, style.muted, halo, 650, room), density, month)
                     if (single != null) {
                         val name = single.optString("name")
                         Drawn(
-                            WidgetDraw.text(context, name, (side * 0.08f).coerceIn(11f, 14f), style.muted, 600, room),
+                            WidgetDraw.haloText(context, name, (side * 0.08f).coerceIn(11f, 14f), style.muted, halo, 600, room),
                             density,
                             name,
                         )
                     }
+                }
+                Box(
+                    modifier = GlanceModifier.fillMaxSize().padding(pad.dp),
+                    contentAlignment = Alignment.TopEnd,
+                ) {
+                    Image(
+                        provider = ImageProvider(WidgetDraw.play(context, button, style.content)),
+                        contentDescription = WidgetText.get(context, "focus_start", "Start focus"),
+                        modifier = GlanceModifier.size(button.dp).clickable(openPageAction(context, start)),
+                    )
                 }
             }
         }
