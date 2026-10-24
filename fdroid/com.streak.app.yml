@@ -2,14 +2,14 @@ Categories:
   - Habit Tracker
   - Sports & Health
 License: GPL-3.0-only
-AuthorName: InlitX
-WebSite: https://github.com/InlitX/streak
-SourceCode: https://github.com/InlitX/streak
-IssueTracker: https://github.com/InlitX/streak/issues
-Donate: https://ko-fi.com/inlitx
+AuthorName: Arafath
+WebSite: https://github.com/smartworldarafath/Habit-Tracker-M3E
+SourceCode: https://github.com/smartworldarafath/Habit-Tracker-M3E
+IssueTracker: https://github.com/smartworldarafath/Habit-Tracker-M3E/issues
+Donate: https://ko-fi.com/smartworldarafath
 
 RepoType: git
-Repo: https://github.com/InlitX/streak.git
+Repo: https://github.com/smartworldarafath/Habit-Tracker-M3E.git
 
 Builds:
   - versionName: 1.1.0
@@ -25,6 +25,6 @@ Builds:
 
 AutoUpdateMode: Version v%v
 UpdateCheckMode: HTTP
-UpdateCheckData: https://raw.githubusercontent.com/InlitX/streak/main/pubspec.yaml|version:\s.*\+(\d+)|https://raw.githubusercontent.com/InlitX/streak/main/pubspec.yaml|version:\s(.*)\+
+UpdateCheckData: https://raw.githubusercontent.com/smartworldarafath/Habit-Tracker-M3E/main/pubspec.yaml|version:\s.*\+(\d+)|https://raw.githubusercontent.com/smartworldarafath/Habit-Tracker-M3E/main/pubspec.yaml|version:\s(.*)\+
 CurrentVersion: 1.1.0
 CurrentVersionCode: 2

@@ -3,7 +3,7 @@
 **Pursuant to Section 7 of the GNU General Public License, version 3**
 
 Streak
-Copyright (C) 2026 InlitX
+Copyright (C) 2026 smartworldarafath
 
 SPDX-License-Identifier: GPL-3.0-only
 
@@ -27,7 +27,7 @@ That text is reproduced verbatim and has not been modified.
 
 For the purposes of this document:
 
-1. "Streak" means the software published by InlitX under that name, including
+1. "Streak" means the software published by smartworldarafath under that name, including
    its source code, documentation and accompanying assets, in every version
    that includes this document.
 2. "Covered work", "Appropriate Legal Notices", "convey" and "propagate" have
@@ -43,7 +43,7 @@ author attribution is required:
    based on Streak, shall display the following Attribution Notice among its
    Appropriate Legal Notices:
 
-   > Based on Streak by InlitX
+   > Based on Streak by smartworldarafath
 
 2. Where the covered work has an interactive user interface, the Attribution
    Notice shall be displayed wherever that interface displays its Appropriate
@@ -70,7 +70,7 @@ notices of Streak and a copy of this document.
 ## 5. Scope
 
 1. The additional term set out in Article 2 applies only to material whose
-   copyright is held by InlitX, and only in versions of Streak that include
+   copyright is held by smartworldarafath, and only in versions of Streak that include
    this document.
 2. Versions of Streak published before this document was added remain subject
    to the License alone, without additional terms.

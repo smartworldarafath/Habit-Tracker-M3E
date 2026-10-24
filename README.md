@@ -299,7 +299,7 @@ issue first so we can agree on the direction.
 ## Contact
 
 For anything that doesn't fit in an issue, write to
-[**inlitx@proton.me**](mailto:inlitx@proton.me).
+[**smartworld.bd.710@gmail.com**](mailto:smartworld.bd.710@gmail.com).
 
 ---
 

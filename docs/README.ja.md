@@ -28,9 +28,9 @@
   <img alt="Android" src="https://img.shields.io/badge/Android-3DDC84?style=flat&logo=android&logoColor=white" />
   <img alt="GPLv3 ライセンス" src="https://img.shields.io/badge/License-GPLv3-7C3AED?style=flat&logo=gnu&logoColor=white" />
   <img alt="広告なし・トラッキングなし" src="https://img.shields.io/badge/No%20ads%20%C2%B7%20No%20tracking-22C55E?style=flat&logo=shield&logoColor=white" />
-  <img alt="Downloads" src="https://img.shields.io/github/downloads/InlitX/streak/total?style=flat&logo=github&logoColor=white&label=Downloads&color=7C3AED" />
+  <img alt="Downloads" src="https://img.shields.io/github/downloads/smartworldarafath/Habit-Tracker-M3E/total?style=flat&logo=github&logoColor=white&label=Downloads&color=7C3AED" />
 </p>
-<a href="https://trendshift.io/repositories/79460?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-79460" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/79460" alt="InlitX%2Fstreak | Trendshift" width="250" height="55"/></a>
+<a href="https://trendshift.io/repositories/79460?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-79460" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/79460" alt="smartworldarafath%2FHabit-Tracker-M3E | Trendshift" width="250" height="55"/></a>
 
 <br/>
 
@@ -40,9 +40,9 @@
 &nbsp;
 <a href="https://www.openapk.net/streak/com.streak.app/"><img alt="OpenAPK で入手" src="../assets/badges/get-it-on-openapk.png" height="60" /></a>
 &nbsp;
-<a href="https://github.com/InlitX/streak/releases"><img alt="GitHub で入手" src="../assets/badges/get-it-on-github.png" height="60" /></a>
+<a href="https://github.com/smartworldarafath/Habit-Tracker-M3E/releases"><img alt="GitHub で入手" src="../assets/badges/get-it-on-github.png" height="60" /></a>
 &nbsp;
-<a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.streak.app%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FInlitX%2Fstreak%22%2C%22author%22%3A%22InlitX%22%2C%22name%22%3A%22Streak%22%2C%22preferredApkIndex%22%3A0%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Afalse%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22filterReleaseTitlesByRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22filterReleaseNotesByRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22verifyLatestTag%5C%22%3Afalse%2C%5C%22dontSortReleasesList%5C%22%3Afalse%2C%5C%22useLatestAssetDateAsReleaseDate%5C%22%3Afalse%2C%5C%22trackOnly%5C%22%3Afalse%2C%5C%22versionExtractionRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22matchGroupToUse%5C%22%3A%5C%22%5C%22%2C%5C%22versionDetection%5C%22%3Atrue%2C%5C%22releaseDateAsVersion%5C%22%3Afalse%2C%5C%22useVersionCodeAsOSVersion%5C%22%3Afalse%2C%5C%22apkFilterRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22invertAPKFilter%5C%22%3Afalse%2C%5C%22autoApkFilterByArch%5C%22%3Atrue%2C%5C%22appName%5C%22%3A%5C%22%5C%22%2C%5C%22shizukuPretendToBeGooglePlay%5C%22%3Afalse%2C%5C%22allowInsecure%5C%22%3Afalse%2C%5C%22exemptFromBackgroundUpdates%5C%22%3Afalse%2C%5C%22skipUpdateNotifications%5C%22%3Afalse%2C%5C%22about%5C%22%3A%5C%22Streak%20is%20an%20open%20source%20habit%20tracker%20for%20Android.%20Build%20habits%20with%20one%20tap%2C%20watch%20your%20progress%20grow%2C%20and%20keep%20everything%20on%20your%20device.%20No%20accounts%2C%20no%20ads%2C%20no%20tracking.%5C%22%7D%22%2C%22overrideSource%22%3Anull%7D"><img alt="Obtainium で入手" src="../assets/badges/get-it-on-obtainium.png" height="60" /></a>
+<a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.streak.app%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fsmartworldarafath%2FHabit-Tracker-M3E%22%2C%22author%22%3A%22Arafath%22%2C%22name%22%3A%22Streak%22%2C%22preferredApkIndex%22%3A0%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Afalse%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22filterReleaseTitlesByRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22filterReleaseNotesByRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22verifyLatestTag%5C%22%3Afalse%2C%5C%22dontSortReleasesList%5C%22%3Afalse%2C%5C%22useLatestAssetDateAsReleaseDate%5C%22%3Afalse%2C%5C%22trackOnly%5C%22%3Afalse%2C%5C%22versionExtractionRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22matchGroupToUse%5C%22%3A%5C%22%5C%22%2C%5C%22versionDetection%5C%22%3Atrue%2C%5C%22releaseDateAsVersion%5C%22%3Afalse%2C%5C%22useVersionCodeAsOSVersion%5C%22%3Afalse%2C%5C%22apkFilterRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22invertAPKFilter%5C%22%3Afalse%2C%5C%22autoApkFilterByArch%5C%22%3Atrue%2C%5C%22appName%5C%22%3A%5C%22%5C%22%2C%5C%22shizukuPretendToBeGooglePlay%5C%22%3Afalse%2C%5C%22allowInsecure%5C%22%3Afalse%2C%5C%22exemptFromBackgroundUpdates%5C%22%3Afalse%2C%5C%22skipUpdateNotifications%5C%22%3Afalse%2C%5C%22about%5C%22%3A%5C%22Streak%20is%20an%20open%20source%20habit%20tracker%20for%20Android.%20Build%20habits%20with%20one%20tap%2C%20watch%20your%20progress%20grow%2C%20and%20keep%20everything%20on%20your%20device.%20No%20accounts%2C%20no%20ads%2C%20no%20tracking.%5C%22%7D%22%2C%22overrideSource%22%3Anull%7D"><img alt="Obtainium で入手" src="../assets/badges/get-it-on-obtainium.png" height="60" /></a>
 
 <br/>
 
@@ -215,7 +215,7 @@ Streak は Android、Windows、Linux で動作します：
 <details>
 <summary><b>Linux</b></summary>
 
-[**Releases**](https://github.com/InlitX/streak/releases) ページに、64 ビット x86 向けの
+[**Releases**](https://github.com/smartworldarafath/Habit-Tracker-M3E/releases) ページに、64 ビット x86 向けの
 ファイルが 2 つあります：
 
 | ファイル | 用途 |
@@ -233,7 +233,7 @@ Streak を開いている間に鳴ります。うまく動かないことがあ�
 <summary><b>APK を直接インストールする</b></summary>
 
 APK ファイルを直接使いたい場合は、
-[**Releases**](https://github.com/InlitX/streak/releases) ページにあります。
+[**Releases**](https://github.com/smartworldarafath/Habit-Tracker-M3E/releases) ページにあります。
 ダウンロードサイズを抑えるため、端末の種類ごとにファイルを分けています：
 
 | APK | 用途 |
@@ -245,7 +245,7 @@ APK ファイルを直接使いたい場合は、
 **Android 9 (Pie) 以降**で動作します。
 
 APK を自分でインストールした場合は、[**Obtainium**](https://github.com/ImranR98/Obtainium)
-を使うとアップデートを続けられます。`https://github.com/InlitX/streak` を追加すれば
+を使うとアップデートを続けられます。`https://github.com/smartworldarafath/Habit-Tracker-M3E` を追加すれば
 Releases ページを追跡し、新しいバージョンが出たら知らせて、端末に合った APK を選んでくれます。
 
 > [!NOTE]
@@ -323,7 +323,7 @@ Streak は無料でオープンソース、広告もありません。これか�
 
 何かお返しをしたいと思ったら、スター、翻訳、わかりやすいバグ報告も、コーヒー 1 杯と同じくらい助けになります。
 
-<a href="https://ko-fi.com/inlitx"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Ko-fi で支援する" height="38" /></a>
+<a href="https://ko-fi.com/smartworldarafath"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Ko-fi で支援する" height="38" /></a>
 
 <sub><b>暗号資産ウォレット</b></sub>
 
@@ -349,11 +349,11 @@ Streak は無料でオープンソース、広告もありません。これか�
 <br/>
 <br/>
 
-<a href="https://www.star-history.com/?repos=InlitX%2Fstreak&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=smartworldarafath%2FHabit-Tracker-M3E&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=InlitX/streak&type=date&theme=dark&legend=top-left&sealed_token=aNqDTOocHK1NkSrMsZrD1iFDpo1AtZvvUo3ZqETCzSujh-eSh0ekwpay4FpVGocizt1wmR5QWrkuMUAl2r9yllwF4v9e3tnsI6c1lv0upumuFVgsXGvAwA" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=InlitX/streak&type=date&legend=top-left&sealed_token=aNqDTOocHK1NkSrMsZrD1iFDpo1AtZvvUo3ZqETCzSujh-eSh0ekwpay4FpVGocizt1wmR5QWrkuMUAl2r9yllwF4v9e3tnsI6c1lv0upumuFVgsXGvAwA" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=InlitX/streak&type=date&legend=top-left&sealed_token=aNqDTOocHK1NkSrMsZrD1iFDpo1AtZvvUo3ZqETCzSujh-eSh0ekwpay4FpVGocizt1wmR5QWrkuMUAl2r9yllwF4v9e3tnsI6c1lv0upumuFVgsXGvAwA" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=smartworldarafath/Habit-Tracker-M3E&type=date&theme=dark&legend=top-left&sealed_token=aNqDTOocHK1NkSrMsZrD1iFDpo1AtZvvUo3ZqETCzSujh-eSh0ekwpay4FpVGocizt1wmR5QWrkuMUAl2r9yllwF4v9e3tnsI6c1lv0upumuFVgsXGvAwA" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=smartworldarafath/Habit-Tracker-M3E&type=date&legend=top-left&sealed_token=aNqDTOocHK1NkSrMsZrD1iFDpo1AtZvvUo3ZqETCzSujh-eSh0ekwpay4FpVGocizt1wmR5QWrkuMUAl2r9yllwF4v9e3tnsI6c1lv0upumuFVgsXGvAwA" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=smartworldarafath/Habit-Tracker-M3E&type=date&legend=top-left&sealed_token=aNqDTOocHK1NkSrMsZrD1iFDpo1AtZvvUo3ZqETCzSujh-eSh0ekwpay4FpVGocizt1wmR5QWrkuMUAl2r9yllwF4v9e3tnsI6c1lv0upumuFVgsXGvAwA" />
  </picture>
 </a>
 

@@ -1,4 +1,4 @@
-app-id: io.github.InlitX.streak
+app-id: io.github.Arafath.streak
 runtime: org.freedesktop.Platform
 runtime-version: '26.08'
 sdk: org.freedesktop.Sdk
@@ -29,19 +29,19 @@ modules:
       env:
         PUB_CACHE: /run/build/streak/.pub-cache
     build-commands:
-      - sed -i 's/set(APPLICATION_ID "com.streak.app")/set(APPLICATION_ID "io.github.InlitX.streak")/' linux/CMakeLists.txt
-      - grep -q 'set(APPLICATION_ID "io.github.InlitX.streak")' linux/CMakeLists.txt
+      - sed -i 's/set(APPLICATION_ID "com.streak.app")/set(APPLICATION_ID "io.github.Arafath.streak")/' linux/CMakeLists.txt
+      - grep -q 'set(APPLICATION_ID "io.github.Arafath.streak")' linux/CMakeLists.txt
       - flutter build linux --release --no-pub
       - install -D $BUNDLE_PATH/Streak /app/bin/Streak
       - cp -r $BUNDLE_PATH/lib /app/bin/lib
       - cp -r $BUNDLE_PATH/data /app/bin/data
-      - install -Dm644 assets/icon.svg /app/share/icons/hicolor/scalable/apps/io.github.InlitX.streak.svg
-      - install -Dm644 linux/flatpak/io.github.InlitX.streak.metainfo.xml -t /app/share/metainfo
-      - install -Dm644 linux/flatpak/io.github.InlitX.streak.desktop -t /app/share/applications
-      - install -Dm644 LICENSE ADDITIONAL_TERMS.md -t /app/share/licenses/io.github.InlitX.streak
+      - install -Dm644 assets/icon.svg /app/share/icons/hicolor/scalable/apps/io.github.Arafath.streak.svg
+      - install -Dm644 linux/flatpak/io.github.Arafath.streak.metainfo.xml -t /app/share/metainfo
+      - install -Dm644 linux/flatpak/io.github.Arafath.streak.desktop -t /app/share/applications
+      - install -Dm644 LICENSE ADDITIONAL_TERMS.md -t /app/share/licenses/io.github.Arafath.streak
     sources:
       - type: git
-        url: https://github.com/InlitX/streak.git
+        url: https://github.com/smartworldarafath/Habit-Tracker-M3E.git
         tag: v2.2.0
       - type: git
         url: https://github.com/flutter/flutter.git
