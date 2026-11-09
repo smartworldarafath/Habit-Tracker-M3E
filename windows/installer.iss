@@ -17,9 +17,9 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\build\installer
-OutputBaseFilename=Streak-windows-x64-setup
+OutputBaseFilename=HabitTrackerM3E-windows-x64-setup
 SetupIconFile=runner\resources\app_icon.ico
-UninstallDisplayIcon={app}\Streak.exe
+UninstallDisplayIcon={app}\HabitTrackerM3E.exe
 UninstallDisplayName=Habit Tracker M3E
 WizardStyle=modern
 Compression=lzma2
@@ -45,8 +45,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "..\build\windows\x64\runner\Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\Habit Tracker M3E"; Filename: "{app}\Streak.exe"; AppUserModelID: "com.habittrackerm3e.app"
-Name: "{autodesktop}\Habit Tracker M3E"; Filename: "{app}\Streak.exe"; Tasks: desktopicon; AppUserModelID: "com.habittrackerm3e.app"
+Name: "{autoprograms}\Habit Tracker M3E"; Filename: "{app}\HabitTrackerM3E.exe"; AppUserModelID: "com.habittrackerm3e.app"
+Name: "{autodesktop}\Habit Tracker M3E"; Filename: "{app}\HabitTrackerM3E.exe"; Tasks: desktopicon; AppUserModelID: "com.habittrackerm3e.app"
 
 [Run]
-Filename: "{app}\Streak.exe"; Description: "{cm:LaunchProgram,Habit Tracker M3E}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\HabitTrackerM3E.exe"; Description: "{cm:LaunchProgram,Habit Tracker M3E}"; Flags: nowait postinstall skipifsilent

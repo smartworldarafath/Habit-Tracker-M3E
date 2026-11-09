@@ -43,7 +43,7 @@ jobs:
         run: flutter build windows --release
 
       - name: Zip the build
-        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath Streak-windows-x64.zip
+        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath HabitTrackerM3E-windows-x64.zip
 
       - name: Install Inno Setup
         run: choco install innosetup --version=6.7.1 -y --no-progress
@@ -59,10 +59,10 @@ jobs:
       - name: Keep them as an artifact
         uses: actions/upload-artifact@v4
         with:
-          name: streak-windows
+          name: habittrackerm3e-windows
           path: |
-            Streak-windows-x64.zip
-            build/installer/Streak-windows-x64-setup.exe
+            HabitTrackerM3E-windows-x64.zip
+            build/installer/HabitTrackerM3E-windows-x64-setup.exe
 
       - name: Add them to the release
         if: inputs.tag != ''
@@ -70,5 +70,5 @@ jobs:
         with:
           tag_name: ${{ inputs.tag }}
           files: |
-            Streak-windows-x64.zip
-            build/installer/Streak-windows-x64-setup.exe
+            HabitTrackerM3E-windows-x64.zip
+            build/installer/HabitTrackerM3E-windows-x64-setup.exe

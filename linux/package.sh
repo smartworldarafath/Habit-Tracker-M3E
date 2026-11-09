@@ -10,7 +10,7 @@ rm -rf "$out"
 mkdir -p "$out/Streak" "$out/AppDir/usr/bin"
 
 cp -r "$bundle"/. "$out/Streak/"
-tar -C "$out" -czf Streak-linux-x64.tar.gz Streak
+tar -C "$out" -czf HabitTrackerM3E-linux-x64.tar.gz Streak
 
 cp -r "$bundle"/. "$out/AppDir/usr/bin/"
 cp "$bundle/com.streak.app.desktop" "$bundle/com.streak.app.png" "$out/AppDir/"
@@ -20,4 +20,4 @@ ln -s usr/bin/Streak "$out/AppDir/AppRun"
 curl -fsSL -o "$out/appimagetool" "$tool"
 curl -fsSL -o "$out/runtime" "$runtime"
 chmod +x "$out/appimagetool"
-ARCH=x86_64 "$out/appimagetool" --appimage-extract-and-run --runtime-file "$out/runtime" "$out/AppDir" Streak-x86_64.AppImage
+ARCH=x86_64 "$out/appimagetool" --appimage-extract-and-run --runtime-file "$out/runtime" "$out/AppDir" HabitTrackerM3E-x86_64.AppImage

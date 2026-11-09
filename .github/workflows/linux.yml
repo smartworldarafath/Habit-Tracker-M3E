@@ -52,5 +52,5 @@ jobs:
         with:
           tag_name: ${{ inputs.tag }}
           files: |
-            Streak-linux-x64.tar.gz
-            Streak-x86_64.AppImage
+            HabitTrackerM3E-linux-x64.tar.gz
+            HabitTrackerM3E-x86_64.AppImage

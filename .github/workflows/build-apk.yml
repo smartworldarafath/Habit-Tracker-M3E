@@ -62,15 +62,15 @@ jobs:
       - name: Rename APKs
         run: |
           cd build/app/outputs/flutter-apk
-          mv app-arm64-v8a-release.apk     Streak-arm64-v8a.apk
-          mv app-armeabi-v7a-release.apk   Streak-armeabi-v7a.apk
-          mv app-x86_64-release.apk        Streak-x86_64.apk
+          mv app-arm64-v8a-release.apk     HabitTracker-arm64-v8a.apk
+          mv app-armeabi-v7a-release.apk   HabitTracker-armeabi-v7a.apk
+          mv app-x86_64-release.apk        HabitTracker-x86_64.apk
 
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: streak-apks
-          path: build/app/outputs/flutter-apk/Streak-*.apk
+          name: habittracker-apks
+          path: build/app/outputs/flutter-apk/HabitTracker-*.apk
           if-no-files-found: error
 
   release:
@@ -128,20 +128,20 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "$KEYSTORE_BASE64" | base64 -d > android/app/streak-release.jks
+            echo "$KEYSTORE_BASE64" | base64 -d > android/app/habittracker-release.jks
             cat > android/key.properties <<EOF
           storePassword=$KEYSTORE_PASSWORD
           keyPassword=$KEY_PASSWORD
           keyAlias=$KEY_ALIAS
-          storeFile=streak-release.jks
+          storeFile=habittracker-release.jks
           EOF
           else
-            keytool -genkey -v -keystore android/app/streak-release.jks -alias streak -keyalg RSA -keysize 2048 -validity 10000 -storepass streak123 -keypass streak123 -dname "CN=Habit Tracker M3E, OU=M3E, O=SmartWorldArafath, L=Dhaka, ST=Dhaka, C=BD"
+            keytool -genkey -v -keystore android/app/habittracker-release.jks -alias streak -keyalg RSA -keysize 2048 -validity 10000 -storepass habittracker123 -keypass habittracker123 -dname "CN=Habit Tracker M3E, OU=M3E, O=SmartWorldArafath, L=Dhaka, ST=Dhaka, C=BD"
             cat > android/key.properties <<EOF
-          storePassword=streak123
-          keyPassword=streak123
+          storePassword=habittracker123
+          keyPassword=habittracker123
           keyAlias=streak
-          storeFile=streak-release.jks
+          storeFile=habittracker-release.jks
           EOF
           fi
 
@@ -156,9 +156,9 @@ jobs:
       - name: Rename APKs
         run: |
           cd build/app/outputs/flutter-apk
-          mv app-arm64-v8a-release.apk     Streak-arm64-v8a.apk
-          mv app-armeabi-v7a-release.apk   Streak-armeabi-v7a.apk
-          mv app-x86_64-release.apk        Streak-x86_64.apk
+          mv app-arm64-v8a-release.apk     HabitTracker-arm64-v8a.apk
+          mv app-armeabi-v7a-release.apk   HabitTracker-armeabi-v7a.apk
+          mv app-x86_64-release.apk        HabitTracker-x86_64.apk
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -167,9 +167,9 @@ jobs:
           name: ${{ inputs.tag }}
           generate_release_notes: true
           files: |
-            build/app/outputs/flutter-apk/Streak-arm64-v8a.apk
-            build/app/outputs/flutter-apk/Streak-armeabi-v7a.apk
-            build/app/outputs/flutter-apk/Streak-x86_64.apk
+            build/app/outputs/flutter-apk/HabitTracker-arm64-v8a.apk
+            build/app/outputs/flutter-apk/HabitTracker-armeabi-v7a.apk
+            build/app/outputs/flutter-apk/HabitTracker-x86_64.apk
 
   windows:
     name: Build Windows
@@ -199,7 +199,7 @@ jobs:
       # Everything the app needs to run: Streak.exe, the plugin DLLs, the MSVC
       # runtime and data/. Unzip anywhere and double click.
       - name: Zip the build
-        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath Streak-windows-x64.zip
+        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath HabitTrackerM3E-windows-x64.zip
 
       - name: Install Inno Setup
         run: choco install innosetup --version=6.7.1 -y --no-progress
@@ -215,8 +215,8 @@ jobs:
         with:
           tag_name: ${{ inputs.tag }}
           files: |
-            Streak-windows-x64.zip
-            build/installer/Streak-windows-x64-setup.exe
+            HabitTrackerM3E-windows-x64.zip
+            build/installer/HabitTrackerM3E-windows-x64-setup.exe
 
   linux:
     name: Build Linux
@@ -257,8 +257,8 @@ jobs:
         with:
           tag_name: ${{ inputs.tag }}
           files: |
-            Streak-linux-x64.tar.gz
-            Streak-x86_64.AppImage
+            HabitTrackerM3E-linux-x64.tar.gz
+            HabitTrackerM3E-x86_64.AppImage
 
   deploy-web:
     name: Build & Deploy Web to GitHub Pages
