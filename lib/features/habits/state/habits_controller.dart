@@ -5,11 +5,13 @@ import 'package:streak/core/utils/cover_storage.dart';
 import 'package:streak/features/habits/data/completion.dart';
 import 'package:streak/features/habits/data/completion_ops.dart';
 import 'package:streak/features/habits/data/habit.dart';
+import 'package:streak/features/habits/data/habit_links.dart';
 import 'package:streak/features/habits/data/reminder.dart';
 import 'package:streak/features/habits/data/substep.dart';
 import 'package:streak/features/habits/data/vacation.dart';
 import 'package:streak/services/backup_archive.dart';
 import 'package:streak/services/backup_service.dart';
+import 'package:streak/services/check_sound.dart';
 import 'package:streak/services/folder_sync.dart';
 import 'package:streak/services/home_widget_service.dart';
 import 'package:streak/services/import_service.dart';
@@ -147,6 +149,7 @@ class HabitsController extends ChangeNotifier {
     bool tracking = false,
     bool healthSteps = false,
     bool anyAmount = false,
+    bool atMost = false,
     bool anySteps = false,
     int stepsNeeded = 1,
     int difficulty = 0,
@@ -194,6 +197,7 @@ class HabitsController extends ChangeNotifier {
       tracking: tracking,
       healthSteps: healthSteps,
       anyAmount: anyAmount,
+      atMost: atMost,
       anySteps: anySteps,
       stepsNeeded: stepsNeeded,
       difficulty: difficulty,
@@ -237,7 +241,7 @@ class HabitsController extends ChangeNotifier {
     final habit = _habits[id];
     if (habit == null) return;
     if (habit.blocksManualCheck(date, fromFocus: fromFocus)) return;
-    await _apply(habit, CompletionOps.toggle(habit, date));
+    await _apply(habit, CompletionOps.toggle(habit, date), chime: !fromFocus);
   }
 
   Future<void> logRelapse(String id, DateTime date, {double? spent}) async {
@@ -288,17 +292,33 @@ class HabitsController extends ChangeNotifier {
     await _apply(habit, CompletionOps.clearRelapse(habit, date));
   }
 
-  Future<void> addProgress(String id, DateTime date, double delta) async {
+  Future<void> applyLink(Uri link) async {
+    final habit = _habits[link.queryParameters['habit']];
+    if (habit == null) return;
+    final completions = HabitLinks.apply(habit, link);
+    if (completions != null) await _apply(habit, completions);
+  }
+
+  Future<void> addProgress(
+    String id,
+    DateTime date,
+    double delta, {
+    bool chime = true,
+  }) async {
     final habit = _habits[id];
     if (habit == null) return;
-    await _apply(habit, CompletionOps.addProgress(habit, date, delta));
+    await _apply(habit, CompletionOps.addProgress(habit, date, delta), chime: chime);
   }
 
   Future<void> setProgress(String id, DateTime date, double value) async {
     final habit = _habits[id];
     if (habit == null) return;
     final current = habit.completions[date.dayKey]?.count ?? 0;
-    await _apply(habit, CompletionOps.addProgress(habit, date, value - current));
+    await _apply(
+      habit,
+      CompletionOps.addProgress(habit, date, value - current),
+      chime: true,
+    );
   }
 
   Future<void> logSteps(String id, Map<DateTime, double> counts) async {
@@ -317,7 +337,11 @@ class HabitsController extends ChangeNotifier {
   ) async {
     final habit = _habits[id];
     if (habit == null) return;
-    await _apply(habit, CompletionOps.setStep(habit, date, stepId, checked));
+    await _apply(
+      habit,
+      CompletionOps.setStep(habit, date, stepId, checked),
+      chime: true,
+    );
   }
 
   Future<void> setVacation(String id, bool on, {bool bulk = false}) async {
@@ -406,9 +430,16 @@ class HabitsController extends ChangeNotifier {
 
   Future<void> _apply(
     Habit habit,
-    Map<String, Completion> completions,
-  ) async {
+    Map<String, Completion> completions, {
+    bool chime = false,
+  }) async {
     final updated = habit.copyWith(completions: completions);
+    if (chime &&
+        !habit.tracking &&
+        !habit.isCompletedOn(AppClock.now()) &&
+        updated.isCompletedOn(AppClock.now())) {
+      CheckSound.play();
+    }
     _habits[habit.id] = updated;
     notifyListeners();
     HomeWidgetService.syncSoon(() => asMap);
@@ -522,11 +553,12 @@ class HabitsController extends ChangeNotifier {
     await HomeWidgetService.sync(asMap);
   }
 
-  Future<bool> exportBackup({Rect? origin}) async {
+  Future<bool> exportBackup({Rect? origin, Habit? only}) async {
     try {
       return await BackupService.export(
         _habits.values.toList(),
         origin: origin,
+        only: only,
       );
     } catch (_) {
       return false;

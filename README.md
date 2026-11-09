@@ -82,7 +82,7 @@ Habit Tracker M3E is an open source habit tracker for Android, Windows and Linux
 many habits as you want, log them with one tap, and watch the grid, the streak
 counters and the statistics fill up.
 
-Everything stays on your device. No account, no ads, nothing to sync.
+Everything stays on your device. No account, no ads.
 
 ---
 
@@ -212,8 +212,8 @@ Two files on the [**Releases**](https://github.com/smartworldarafath/Habit-Track
 
 | File | For |
 |------|-----|
-| `HabitTrackerM3E-v1.3.4-macos.dmg` | Drag-and-drop installer: open DMG and drag to Applications |
-| `HabitTrackerM3E-v1.3.4-macos.zip` | Portable `.app` archive: unzip and run directly |
+| `HabitTrackerM3E-v1.3.7-macos.dmg` | Drag-and-drop installer: open DMG and drag to Applications |
+| `HabitTrackerM3E-v1.3.7-macos.zip` | Portable `.app` archive: unzip and run directly |
 
 Runs on **macOS 12.0 (Monterey) and newer** (Apple Silicon & Intel).
 

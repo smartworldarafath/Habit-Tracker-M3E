@@ -11,6 +11,8 @@
   "discard_changes_body": "Se perderán los cambios que has hecho en este hábito.",
   "discard": "Descartar",
   "todo_discard_body": "Se perderán los cambios que has hecho en esta tarea.",
+  "todo_delete_title": "{count, plural, =1{¿Borrar esta tarea?} other{¿Borrar {count} tareas?}}",
+  "todo_delete_body": "Tendrás unos segundos para deshacerlo.",
   "keep_editing": "Seguir editando",
   "delete": "Eliminar",
   "good_morning": "Buenos días",
@@ -172,19 +174,32 @@
   "focus_label_hint": "Mates, lectura, trabajo...",
   "focus_label_remove": "Quitar etiqueta",
   "focus_label_remove_body": "{label} sale de la lista. Tus sesiones de antes la conservan.",
-  "@focus_label_remove_body": {"placeholders": {"label": {"type": "String"}}},
+  "@focus_label_remove_body": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "focus_label_remove_confirm": "Quitar",
   "by_label": "Por etiqueta",
   "tracking_hide": "Ocultar seguimiento",
   "tracking_hide_sub": "Los hábitos de solo seguimiento no salen en esta lista",
   "tracking_show": "Mostrar seguimiento ({count})",
-  "@tracking_show": {"placeholders": {"count": {"type": "int"}}},
+  "@tracking_show": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "daily": "Diario",
   "weekly": "Semanal",
   "monthly": "Mensual",
   "sched_days": "Días",
   "sched_interval": "Intervalo",
   "times_per_week": "{n} veces por semana",
+  "month_fixed_day_hint": "Para la misma fecha cada mes, elige Intervalo y ponlo cada 1 mes",
   "times_per_month": "{n} veces por mes",
   "freq_per_week_short": "{n}×/semana",
   "freq_per_month_short": "{n}×/mes",
@@ -278,6 +293,17 @@
   "undo": "Deshacer",
   "habit_archived": "Hábito archivado",
   "duplicate_habit": "Duplicar hábito",
+  "export_habit": "Exportar este hábito",
+  "habit_links": "Enlaces para automatizar",
+  "habit_links_off": "Deja que apps como Tasker, un atajo o una etiqueta NFC marquen tus hábitos abriendo un enlace. Está apagado hasta que lo enciendas.",
+  "habit_links_on": "Cualquier app de este móvil puede abrir estos enlaces, en todos tus hábitos. Toca uno para copiarlo.",
+  "habit_link_done": "Marcar como hecho",
+  "habit_link_undo": "Borrar el día",
+  "habit_link_add": "Sumar {amount}",
+  "habit_link_relapse": "Registrar recaída",
+  "habit_link_focus": "Empezar una sesión de Focus",
+  "habit_link_open": "Abrir el hábito",
+  "habit_link_day": "Para otro día, añade &day=2026-10-31 al final.",
   "habit_duplicated": "{name} añadido",
   "share_blur": "Desenfoque",
   "delete_habit_body": "¿Eliminar \"{name}\"? Esto no se puede deshacer.",
@@ -434,6 +460,8 @@
   "no_goal_sub": "Solo apuntas el valor, como tu peso. Cualquier cantidad marca el día.",
   "any_amount": "Cualquier cantidad cuenta",
   "any_amount_sub": "Apuntar cualquier cantidad da el día por hecho, aunque no llegues a la meta.",
+  "at_most": "Como máximo",
+  "at_most_sub": "La meta es un límite. El día cuenta si apuntas algo y no lo pasas.",
   "any_step": "Hecho con algunos pasos",
   "any_step_sub": "Marcar un paso ya da el día por hecho, sin tener que hacerlos todos.",
   "steps_needed_sub": "El día cuenta como hecho con {needed} de {total} pasos.",
@@ -441,9 +469,24 @@
   "from_last_done": "Contar desde la última vez",
   "month_weekday": "Mismo día de la semana cada mes",
   "month_weekday_sub": "Cae el {when} del mes, no en una fecha fija.",
-  "@month_weekday_sub": {"placeholders": {"when": {"type": "String"}}},
+  "@month_weekday_sub": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "nth_weekday": "{n, select, first{primer} second{segundo} third{tercer} fourth{cuarto} other{último}} {day}",
-  "@nth_weekday": {"placeholders": {"n": {"type": "String"}, "day": {"type": "String"}}},
+  "@nth_weekday": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      },
+      "day": {
+        "type": "String"
+      }
+    }
+  },
   "from_last_done_sub": "Cada vez que lo haces, la espera empieza de nuevo. Un día que se te pase sigue rompiendo la racha.",
   "quotes": "Frases",
   "quotes_which": "Qué frases",
@@ -561,6 +604,7 @@
   "todo_repeat_months": "{count, plural, =1{Cada mes} other{Cada {count} meses}}",
   "todo_repeat_years": "{count, plural, =1{Cada año} other{Cada {count} años}}",
   "todo_repeat_custom": "Personalizado",
+  "todo_repeat_starts": "Empieza el",
   "todo_repeat_unit_days": "Días",
   "todo_repeat_unit_weeks": "Semanas",
   "todo_repeat_unit_months": "Meses",
@@ -583,14 +627,14 @@
   "todo_project_empty": "Esta carpeta está vacía",
   "todo_background": "Fondo",
   "todo_background_pick": "Elegir foto",
-  "todo_deleted": "Nota eliminada",
+  "todo_deleted": "Tarea eliminada",
   "todo_mark_done": "Marcar como hecha",
   "todo_mark_open": "Marcar como pendiente",
   "todo_pin": "Fijar",
   "todo_unpin": "Desfijar",
   "todo_select": "Seleccionar",
   "todo_selected": "{count, plural, =1{1 seleccionada} other{{count} seleccionadas}}",
-  "todo_deleted_many": "{count, plural, =1{Nota eliminada} other{{count} notas eliminadas}}",
+  "todo_deleted_many": "{count, plural, =1{Tarea eliminada} other{{count} tareas eliminadas}}",
   "priority_none": "Sin prioridad",
   "priority_low": "Baja",
   "priority_medium": "Media",
@@ -680,7 +724,9 @@
   "focus_track_ticking": "Tictac del reloj",
   "focus_track_pad": "Fondo cálido",
   "focus_add_track": "Añadir pista",
-  "focus_resources": "Escenas y sonidos gratis",
+  "focus_resources": "Recursos",
+  "focus_simple_view": "Vista simple",
+  "focus_double_tap_tip": "Toca dos veces el reloj para volver",
   "focus_shuffle": "Aleatorio",
   "focus_loop": "En orden",
   "focus_repeat_one": "Repetir una",
@@ -778,7 +824,7 @@
     }
   },
   "yesterday": "Ayer",
-  "notes_hint": "Mantén pulsado un día para ver o añadir notas",
+  "notes_hint": "Abra un hábito y mantenga presionado un día en su calendario para ver o agregar notas",
   "app_style": "Estilo de la app",
   "app_style_sub": "Elige cómo se ve y se siente toda la app.",
   "style_classic": "Clásico",
@@ -828,6 +874,8 @@
   "today_only_sub": "Esconde los hábitos que no tocan hoy",
   "hide_done": "Ocultar los hechos",
   "hide_done_sub": "Lo que terminas hoy sale de la lista",
+  "hide_clean": "Ocultar los días limpios",
+  "hide_clean_sub": "Los hábitos de evitar solo salen el día que recaes",
   "past_first": "Abrir primero los días pasados",
   "past_first_sub": "Tocar un día pasado lo muestra antes, para no cambiar nada sin querer",
   "miss_reason_title": "¿Por qué no lo hiciste?",
@@ -848,15 +896,27 @@
   "today_filter": "Mostrar",
   "today_fold_done": "Hechos ({count})",
   "@today_fold_done": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "today_fold_other": "Otros días ({count})",
   "@today_fold_other": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "today_fold_hidden": "Ocultos ({count})",
   "@today_fold_hidden": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "card_activity": "Actividad en las tarjetas",
   "card_activity_sub": "Enseña los últimos días en la tarjeta, listos para marcar",
@@ -871,12 +931,24 @@
   "color_theme_sub": "Paletas completas como Catppuccin o Nord",
   "color_theme_default": "Streak",
   "color_theme_hint": "Cada tema trae su propio fondo, textos y color de acento. Sigue el modo claro y oscuro.",
+  "color_theme_custom": "Tus colores",
+  "color_theme_custom_hint": "{mode, select, dark{Estos son los colores del modo oscuro. Pasa a modo claro para editar los otros.} other{Estos son los colores del modo claro. Pasa a modo oscuro para editar los otros.}}",
+  "color_part_background": "Fondo",
+  "color_part_card": "Tarjetas",
+  "color_part_text": "Texto",
+  "color_part_accent": "Acento",
+  "color_part_success": "Hecho",
+  "color_part_warning": "Aviso",
+  "color_part_danger": "Error",
+  "color_part_info": "Información",
   "app_background_sub": "Lo que se ve detrás de las tarjetas",
   "check_style_sub": "Marcas cuadradas o redondas",
   "app_icon_sub": "El icono de tu pantalla de inicio",
   "language_sub": "El idioma de toda la app",
   "week_start_sub": "La primera columna de cada rejilla",
   "celebration_sub": "Lo que ves al marcar un hábito",
+  "check_sound": "Sonido al completar",
+  "check_sound_sub": "Una campanita suave al terminar un hábito. No suena con el móvil en silencio.",
   "start_view_sub": "La vista con la que abre Hoy",
   "quotes_sub": "Qué frases salen en Hoy",
   "focus_daily_goal_sub": "Minutos de foco que buscas cada día",
@@ -1081,11 +1153,29 @@
   "a11y_decrease": "Disminuir",
   "a11y_pick_color": "Elegir color",
   "tracked_week": "{n} esta semana",
-  "@tracked_week": {"placeholders": {"n": {"type": "int"}}},
+  "@tracked_week": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "tracked_month": "{n} este mes",
-  "@tracked_month": {"placeholders": {"n": {"type": "int"}}},
+  "@tracked_month": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "tracked_year": "{n} este año",
-  "@tracked_year": {"placeholders": {"n": {"type": "int"}}},
+  "@tracked_year": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "period_this_week": "Esta semana",
   "period_last_week": "La semana pasada",
   "period_this_month": "Este mes",
@@ -1219,7 +1309,7 @@
   "island_reset_go": "Empezar de nuevo",
   "island_beta": "Esta es una primera versión de la gamificación y todavía está en beta. Puede crecer, cambiar de forma o sustituirse por completo, según cómo la useis.",
   "gamification_beta": "Gamificación (beta)",
-  "last_check": "Última marca",
+  "last_check": "Último registro",
   "check_history": "Historial de marcas",
   "check_history_sub": "{count} días marcados",
   "@check_history_sub": {
@@ -1323,6 +1413,8 @@
   "book_pages": "Páginas del libro",
   "book_pages_sub": "Cuenta desde hoy. Al llegar a la última página suma una lectura y vuelve a empezar",
   "book_new": "Libro nuevo",
+  "book_at_page": "Página por la que voy",
+  "book_read_before": "Veces que ya lo he leído",
   "book_reads": "{count, plural, =0{Primera lectura} =1{Leído una vez} other{Leído {count} veces}}",
   "book_read_number": "Lectura {number}",
   "book_since": "Desde el {day}",

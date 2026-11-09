@@ -28,6 +28,53 @@ class ThemeColors {
   final Color warning;
   final Color danger;
   final Color info;
+
+  static const keys = [
+    'background',
+    'card',
+    'text',
+    'accent',
+    'success',
+    'warning',
+    'danger',
+    'info',
+  ];
+
+  Color operator [](String key) => switch (key) {
+        'background' => background,
+        'card' => card,
+        'text' => text,
+        'accent' => accent,
+        'success' => success,
+        'warning' => warning,
+        'danger' => danger,
+        _ => info,
+      };
+
+  Map<String, int> toMap() => {
+        for (final key in keys) key: this[key].toARGB32(),
+      };
+
+  factory ThemeColors.fromMap(Map<String, dynamic> map, ThemeColors base) {
+    Color pick(String key) =>
+        map[key] is int ? Color(map[key] as int) : base[key];
+    final card = pick('card');
+    final text = pick('text');
+    return ThemeColors(
+      background: pick('background'),
+      card: card,
+      high: Color.lerp(card, text, 0.08)!,
+      highest: Color.lerp(card, text, 0.18)!,
+      outline: Color.lerp(card, text, 0.24)!,
+      text: text,
+      muted: Color.lerp(text, card, 0.38)!,
+      accent: pick('accent'),
+      success: pick('success'),
+      warning: pick('warning'),
+      danger: pick('danger'),
+      info: pick('info'),
+    );
+  }
 }
 
 class ColorTheme {
@@ -51,6 +98,24 @@ class ColorTheme {
       if (theme.id == id) return theme;
     }
     return null;
+  }
+
+  static const customId = 'custom';
+
+  static ColorTheme? custom(Map<String, dynamic> saved) {
+    if (saved.isEmpty) return null;
+    ThemeColors side(String key, ThemeColors base) => ThemeColors.fromMap(
+          saved[key] is Map
+              ? Map<String, dynamic>.from(saved[key] as Map)
+              : const {},
+          base,
+        );
+    return ColorTheme(
+      id: customId,
+      name: '',
+      light: side('light', catppuccin.light),
+      dark: side('dark', catppuccin.dark),
+    );
   }
 
   static const all = [catppuccin, tokyoNight, nord, gruvbox, rosePine];
@@ -125,27 +190,27 @@ class ColorTheme {
     id: 'nord',
     name: 'Nord',
     light: ThemeColors(
-      background: Color(0xFFE5E9F0),
+      background: Color(0xFFD8DEE9),
       card: Color(0xFFECEFF4),
-      high: Color(0xFFD8DEE9),
-      highest: Color(0xFFCBD2DF),
-      outline: Color(0xFFC2CAD8),
+      high: Color(0xFFE5E9F0),
+      highest: Color(0xFFC0C8D6),
+      outline: Color(0xFFB4BED0),
       text: Color(0xFF2E3440),
       muted: Color(0xFF4C566A),
-      accent: Color(0xFF5E81AC),
-      success: Color(0xFF7A9A5E),
+      accent: Color(0xFF4C6E9A),
+      success: Color(0xFF6A8A50),
       warning: Color(0xFFD08770),
       danger: Color(0xFFBF616A),
       info: Color(0xFF5E81AC),
     ),
     dark: ThemeColors(
-      background: Color(0xFF2E3440),
-      card: Color(0xFF3B4252),
-      high: Color(0xFF434C5E),
+      background: Color(0xFF242933),
+      card: Color(0xFF2E3440),
+      high: Color(0xFF3B4252),
       highest: Color(0xFF4C566A),
       outline: Color(0xFF4C566A),
       text: Color(0xFFECEFF4),
-      muted: Color(0xFFA5ADBD),
+      muted: Color(0xFFB4BCCB),
       accent: Color(0xFF88C0D0),
       success: Color(0xFFA3BE8C),
       warning: Color(0xFFEBCB8B),

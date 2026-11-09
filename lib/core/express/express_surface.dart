@@ -68,6 +68,7 @@ class _ExpressSquishState extends State<ExpressSquish> {
       onTapCancel: enabled ? () => _set(false) : null,
       onTap: widget.onTap,
       onLongPress: widget.onLongPress,
+      onSecondaryTap: widget.onLongPress,
       child: AnimatedScale(
         scale: _down && enabled ? widget.scale : 1,
         duration: _down ? Express.fast : Express.quick,
@@ -186,7 +187,7 @@ class ExpressTile extends StatelessWidget {
     final scheme = context.colors;
     final accent = tint ?? scheme.primary;
     final radius = ExpressSlot.of(context, BorderRadius.circular(20));
-    final stacked = stackedRows(context) && value != null;
+    final stacked = stackedValue(context, value);
     final bare = bareRows(context);
 
     return ExpressSquish(

@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
@@ -9,12 +11,14 @@ import 'package:streak/core/extensions/inset_extensions.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/minimal/minimal_kit.dart';
 import 'package:streak/core/widgets/fold_header.dart';
+import 'package:streak/core/widgets/pointer_menu.dart';
 import 'package:streak/core/widgets/sheet_action.dart';
 import 'package:streak/core/widgets/sheet_type.dart';
 import 'package:streak/core/routing/app_navigator.dart';
 import 'package:streak/core/routing/back_handlers.dart';
 import 'package:streak/core/utils/app_snackbar.dart';
 import 'package:streak/core/utils/responsive.dart';
+import 'package:streak/core/utils/share_origin.dart';
 import 'package:streak/core/widgets/app_confirm_dialog.dart';
 import 'package:streak/core/widgets/app_empty_state.dart';
 import 'package:streak/core/express/express_button.dart';
@@ -46,6 +50,7 @@ import 'package:streak/features/habits/widgets/today_progress.dart';
 import 'package:streak/features/habits/widgets/focus_only_dialog.dart';
 import 'package:streak/features/habits/widgets/unscheduled_day_dialog.dart';
 import 'package:streak/features/habits/widgets/vacation_sheet.dart';
+import 'package:streak/features/habits/widgets/habit_links_sheet.dart';
 import 'package:streak/features/settings/pages/settings_page.dart';
 import 'package:streak/features/habits/widgets/day_actions_sheet.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
@@ -79,10 +84,13 @@ class _HomePageState extends State<HomePage> {
   bool _peek = false;
   Set<String> _peeked = const {};
   final Map<String, Timer> _timers = {};
+  Offset? _clickAt;
+  DateTime _clickedAt = DateTime(0);
 
   @override
   void initState() {
     super.initState();
+    GestureBinding.instance.pointerRouter.addGlobalRoute(_trackClick);
     final settings = context.read<SettingsController>();
     _mode = HeatmapMode.values[settings.openingMode.clamp(0, 2)];
     if (settings.todayCategory.isNotEmpty) _category = settings.todayCategory;
@@ -91,6 +99,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    GestureBinding.instance.pointerRouter.removeGlobalRoute(_trackClick);
     BackHandlers.remove(_backOut);
     for (final timer in _timers.values) {
       timer.cancel();
@@ -140,12 +149,28 @@ class _HomePageState extends State<HomePage> {
     _coins.value++;
   }
 
+  void _trackClick(PointerEvent event) {
+    if (event is! PointerDownEvent) return;
+    if (event.buttons != kSecondaryMouseButton) return;
+    _clickAt = event.position;
+    _clickedAt = DateTime.now();
+  }
+
   void _showHabitActions(HabitsController controller, Habit habit) {
-    showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) {
+    final at = DateTime.now().difference(_clickedAt).inMilliseconds < 800
+        ? _clickAt
+        : null;
+    _clickedAt = DateTime(0);
+    Future<void> show(WidgetBuilder builder) => at == null
+        ? showModalBottomSheet<void>(
+            context: context,
+            showDragHandle: true,
+            isScrollControlled: true,
+            builder: builder,
+          )
+        : showPointerMenu(context, at: at, builder: builder);
+    show(
+      (sheetContext) {
         void run(VoidCallback action) {
           Navigator.of(sheetContext).pop();
           action();
@@ -206,6 +231,19 @@ class _HomePageState extends State<HomePage> {
                 )),
             false,
           ),
+          (
+            LucideIcons.fileDown,
+            context.l10n.export_habit,
+            () => run(() => _exportHabit(controller, habit)),
+            false,
+          ),
+          if (Platform.isAndroid)
+            (
+              LucideIcons.link,
+              context.l10n.habit_links,
+              () => run(() => showHabitLinksSheet(context, habit: habit)),
+              false,
+            ),
           (
             LucideIcons.archive,
             context.l10n.archive_habit,
@@ -286,6 +324,17 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  Future<void> _exportHabit(HabitsController controller, Habit habit) async {
+    final ok = await controller.exportBackup(
+      origin: shareOrigin(context),
+      only: habit,
+    );
+    if (!mounted) return;
+    ok
+        ? AppSnackbar.success(context, context.l10n.backup_saved)
+        : AppSnackbar.warning(context, context.l10n.export_cancelled);
   }
 
   Future<void> _confirmDelete(HabitsController controller, Habit habit) async {
@@ -646,9 +695,15 @@ class _HomePageState extends State<HomePage> {
               final scheduled = settings.todayOnly
                   ? all.where((h) => h.isScheduledOn(today)).toList()
                   : all;
-              final listed = settings.hideTracking
+              final tracked = settings.hideTracking
                   ? scheduled.where((h) => !h.tracking).toList()
                   : scheduled;
+              final listed = settings.hideClean
+                  ? tracked
+                      .where((h) =>
+                          h.kind != HabitKind.negative || h.isRelapseOn(today))
+                      .toList()
+                  : tracked;
               final filtered = _category == null
                   ? listed
                   : listed.where((h) => h.category == _category).toList();
@@ -685,7 +740,7 @@ class _HomePageState extends State<HomePage> {
                   ? _ReorderBanner(text: context.l10n.reorder_hint)
                   : express
                   ? ExpressTodayHeader(
-                      habits: active,
+                      habits: counted,
                       done: done,
                       total: total,
                       ratio: ratio,
@@ -953,11 +1008,11 @@ class _HomePageState extends State<HomePage> {
 
   String _foldLabel(List<Habit> hidden, DateTime today) {
     final count = hidden.length;
-    if (hidden.every((habit) => habit.isDoneForNow)) {
-      return context.l10n.today_fold_done(count);
-    }
     if (hidden.every((habit) => !habit.isScheduledOn(today))) {
       return context.l10n.today_fold_other(count);
+    }
+    if (hidden.every((habit) => habit.isDoneForNow)) {
+      return context.l10n.today_fold_done(count);
     }
     return context.l10n.today_fold_hidden(count);
   }

@@ -39,7 +39,9 @@ import 'package:streak/features/todos/widgets/todo_tile.dart';
 import 'package:streak/features/todos/widgets/todos_page_parts.dart';
 
 class TodosPage extends StatefulWidget {
-  const TodosPage({super.key});
+  const TodosPage({super.key, this.openId});
+
+  final String? openId;
 
   @override
   State<TodosPage> createState() => _TodosPageState();
@@ -99,6 +101,14 @@ class _TodosPageState extends State<TodosPage>
     super.initState();
     _ghost = AnimationController(vsync: this);
     BackHandlers.add(_backOut);
+    final todo = widget.openId == null
+        ? null
+        : context.read<TodosController>().byId(widget.openId!);
+    if (todo != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _open(todo);
+      });
+    }
   }
 
   @override
@@ -281,7 +291,7 @@ class _TodosPageState extends State<TodosPage>
             icon: LucideIcons.trash2,
             label: context.l10n.delete,
             danger: true,
-            onSelected: () => _trash([todo]),
+            onSelected: () => _confirmTrash([todo]),
           ),
         ],
         child: RepaintBoundary(
@@ -345,6 +355,10 @@ class _TodosPageState extends State<TodosPage>
         _collapsing = false;
       });
     });
+  }
+
+  Future<void> _confirmTrash(List<Todo> todos) async {
+    if (await confirmTrash(context, todos.length) && mounted) await _trash(todos);
   }
 
   Future<void> _trash(List<Todo> todos) async {
@@ -661,7 +675,7 @@ class _TodosPageState extends State<TodosPage>
     if (mounted) setState(() => _folders = context.read<SettingsController>().todoPapers);
   }
 
-  Future<void> _delete(Todo todo) => _trash([todo]);
+  Future<void> _delete(Todo todo) => _confirmTrash([todo]);
 
   Future<void> _clearCompleted(int count) async {
     final confirmed = await showAppConfirmDialog(
@@ -930,7 +944,7 @@ class _TodosPageState extends State<TodosPage>
                         onPin: () => _pin(_picked),
                         onEdit: () => editTodos(context, _selected.toList()),
                         onDone: () => _finish(_picked),
-                        onDelete: () => _trash(_picked),
+                        onDelete: () => _confirmTrash(_picked),
                       ),
               ),
             ),

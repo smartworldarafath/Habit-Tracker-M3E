@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:streak/app/app_lock_pin.dart';
 import 'package:streak/features/habits/data/habit.dart';
 import 'package:streak/app/theme/app_palette.dart';
@@ -64,6 +65,7 @@ class SettingsController extends ChangeNotifier {
     _verifiedBadge = LocalStore.setting('verifiedBadge', 1);
     _accentColor = LocalStore.setting('accentColor', AppPalette.brand.toARGB32());
     _colorTheme = LocalStore.setting('colorTheme', '');
+    _customTheme = ColorTheme.custom(LocalStore.settingMap('customTheme'));
     _heatmapMode = LocalStore.setting('heatmapMode', 0);
     _todayCategory = LocalStore.setting('todayCategory', '');
     _minimalShortcut = LocalStore.setting('minimalShortcut', '');
@@ -80,6 +82,7 @@ class SettingsController extends ChangeNotifier {
     _swipeCards = LocalStore.setting('swipeCards', false);
     _cardActivity = LocalStore.setting('cardActivity', true);
     _viewSwitcher = LocalStore.setting('viewSwitcher', true);
+    _checkSound = LocalStore.setting('checkSound', false);
     _compactCards = LocalStore.setting('compactCards', false);
     _glassEffects = LocalStore.setting('glassEffects', true);
     _animations = LocalStore.setting('animations', true);
@@ -90,6 +93,7 @@ class SettingsController extends ChangeNotifier {
     _hideDone = LocalStore.setting('hideDone', false);
     _pastFirst = LocalStore.setting('pastFirst', false);
     _hideTracking = LocalStore.setting('hideTracking', false);
+    _hideClean = LocalStore.setting('hideClean', false);
     _notesEnabled = LocalStore.setting('notesEnabled', true);
     _trackingOption = LocalStore.setting('trackingOption', false);
     _showTodayProgress = LocalStore.setting('showTodayProgress', true);
@@ -118,6 +122,8 @@ class SettingsController extends ChangeNotifier {
     _focusDailyGoal = LocalStore.setting('focusDailyGoal', 0);
     _focusKeepAwake = LocalStore.setting('focusKeepAwake', true);
     _focusLeadIn = LocalStore.setting('focusLeadIn', true);
+    _focusFullscreen = LocalStore.setting('focusFullscreen', false);
+    _habitLinks = LocalStore.setting('habitLinks', false);
     _focusAlert = LocalStore.setting('focusAlert', '');
     _focusHold = LocalStore.setting('focusHold', false);
     _focusWholeRounds = LocalStore.setting('focusWholeRounds', false);
@@ -168,6 +174,7 @@ class SettingsController extends ChangeNotifier {
   late int _verifiedBadge;
   late int _accentColor;
   late String _colorTheme;
+  ColorTheme? _customTheme;
   late int _heatmapMode;
   late String _todayCategory;
   late String _minimalShortcut;
@@ -182,6 +189,7 @@ class SettingsController extends ChangeNotifier {
   late bool _swipeCards;
   late bool _cardActivity;
   late bool _viewSwitcher;
+  late bool _checkSound;
   late bool _compactCards;
   late bool _glassEffects;
   late bool _animations;
@@ -192,6 +200,7 @@ class SettingsController extends ChangeNotifier {
   late bool _hideDone;
   late bool _pastFirst;
   late bool _hideTracking;
+  late bool _hideClean;
   late bool _notesEnabled;
   late bool _islandEnabled;
   late bool _trackingOption;
@@ -215,6 +224,8 @@ class SettingsController extends ChangeNotifier {
   late int _focusDailyGoal;
   late bool _focusKeepAwake;
   late bool _focusLeadIn;
+  late bool _focusFullscreen;
+  late bool _habitLinks;
   late String _focusAlert;
   late bool _focusHold;
   late bool _focusWholeRounds;
@@ -283,7 +294,20 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
-  ColorTheme? get colorTheme => ColorTheme.byId(_colorTheme);
+  ColorTheme? get colorTheme => _colorTheme == ColorTheme.customId
+      ? _customTheme
+      : ColorTheme.byId(_colorTheme);
+
+  ColorTheme? get customTheme => _customTheme;
+
+  Future<void> setCustomTheme(ThemeColors light, ThemeColors dark) async {
+    final saved = {'light': light.toMap(), 'dark': dark.toMap()};
+    _customTheme = ColorTheme.custom(saved);
+    _colorTheme = ColorTheme.customId;
+    await LocalStore.writeSetting('customTheme', saved);
+    await LocalStore.writeSetting('colorTheme', _colorTheme);
+    notifyListeners();
+  }
 
   Future<void> setColorTheme(ColorTheme? theme) async {
     _colorTheme = theme?.id ?? '';
@@ -403,6 +427,14 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool get checkSound => _checkSound;
+
+  Future<void> setCheckSound(bool value) async {
+    _checkSound = value;
+    await LocalStore.writeSetting('checkSound', value);
+    notifyListeners();
+  }
+
   bool get viewSwitcher => _viewSwitcher;
 
   Future<void> setViewSwitcher(bool value) async {
@@ -456,6 +488,7 @@ class SettingsController extends ChangeNotifier {
   bool get hideDone => _hideDone;
   bool get pastFirst => _pastFirst;
   bool get hideTracking => _hideTracking;
+  bool get hideClean => _hideClean;
   bool get notesEnabled => _notesEnabled;
 
   bool get focusEnabled => _focusEnabled;
@@ -516,6 +549,8 @@ class SettingsController extends ChangeNotifier {
   int get focusDailyGoal => _focusDailyGoal;
   bool get focusKeepAwake => _focusKeepAwake;
   bool get focusLeadIn => _focusLeadIn;
+  bool get focusFullscreen => _focusFullscreen;
+  bool get habitLinks => _habitLinks;
   String get focusAlert => _focusAlert;
   bool get focusHold => _focusHold;
   bool get focusWholeRounds => _focusWholeRounds;
@@ -593,6 +628,18 @@ class SettingsController extends ChangeNotifier {
     _focusLeadIn = value;
     await LocalStore.writeSetting('focusLeadIn', value);
     notifyListeners();
+  }
+
+  Future<void> setFocusFullscreen(bool value) async {
+    _focusFullscreen = value;
+    await LocalStore.writeSetting('focusFullscreen', value);
+  }
+
+  Future<void> setHabitLinks(bool value) async {
+    _habitLinks = value;
+    notifyListeners();
+    await LocalStore.writeSetting('habitLinks', value);
+    await HomeWidget.saveWidgetData<bool>('links_enabled', value);
   }
 
   Future<void> setFocusAlert(String value) async {
@@ -907,6 +954,12 @@ class SettingsController extends ChangeNotifier {
   Future<void> setHideTracking(bool value) async {
     _hideTracking = value;
     await LocalStore.writeSetting('hideTracking', value);
+    notifyListeners();
+  }
+
+  Future<void> setHideClean(bool value) async {
+    _hideClean = value;
+    await LocalStore.writeSetting('hideClean', value);
     notifyListeners();
   }
 

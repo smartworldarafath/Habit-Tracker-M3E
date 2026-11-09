@@ -125,6 +125,12 @@ Future<void> _startup() async {
       final page = call.arguments as String?;
       if (page != null) _openPage(page);
     }
+    if (call.method == 'link') {
+      final link = Uri.tryParse(call.arguments as String? ?? '');
+      final context = AppNavigator.key.currentContext;
+      if (link == null || context == null) throw StateError('No app to take the link');
+      await context.read<HabitsController>().applyLink(link);
+    }
     return null;
   });
 
@@ -133,7 +139,7 @@ Future<void> _startup() async {
     final pending = NotificationService().pendingHabitId;
     if (pending != null) {
       NotificationService().pendingHabitId = null;
-      _openHabit(pending);
+      NotificationService.openFromPayload(pending);
     }
     if (isMobile) {
       final launched =
@@ -194,8 +200,8 @@ void _reloadTodos() {
   AppNavigator.key.currentContext?.read<TodosController>().reload();
 }
 
-void _openTodos() {
-  AppNavigator.push(const TodosPage(), fade: true);
+void _openTodos([String? todoId]) {
+  AppNavigator.push(TodosPage(openId: todoId), fade: true);
 }
 
 void _openPage(String page) {

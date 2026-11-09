@@ -71,6 +71,8 @@ class Habit {
     this.bookPages = 0,
     this.bookSince,
     this.bookSkip = 0,
+    this.bookStart = 0,
+    this.readsBefore = 0,
     this.pastReads = const [],
     this.soundUri = '',
     this.soundName = '',
@@ -80,6 +82,7 @@ class Habit {
     this.tracking = false,
     this.healthSteps = false,
     this.anyAmount = false,
+    this.atMost = false,
     this.anySteps = false,
     this.stepsNeeded = 1,
     this.difficulty = 0,
@@ -223,6 +226,10 @@ class Habit {
 
   final double bookSkip;
 
+  final double bookStart;
+
+  final int readsBefore;
+
   final List<BookRead> pastReads;
 
   bool get tracksBook =>
@@ -235,6 +242,8 @@ class Habit {
     pages: bookPages,
     since: bookSince,
     skip: bookSkip,
+    atPage: bookStart,
+    before: readsBefore,
     past: pastReads,
   );
 
@@ -248,6 +257,14 @@ class Habit {
         bookPages: pages,
         bookSince: AppClock.today(),
         bookSkip: _readToday,
+        bookStart: 0,
+        pastReads: finishedReads,
+      );
+
+  Habit atPage(double page) => copyWith(
+        bookSince: AppClock.today(),
+        bookSkip: _readToday,
+        bookStart: page,
         pastReads: finishedReads,
       );
 
@@ -257,6 +274,7 @@ class Habit {
     return copyWith(
       bookSince: AppClock.today(),
       bookSkip: _readToday,
+      bookStart: 0,
       pastReads: before.finishedReads,
     );
   }
@@ -275,6 +293,8 @@ class Habit {
   bool get readsSteps => healthSteps && kind == HabitKind.quantitative;
 
   final bool anyAmount;
+
+  final bool atMost;
 
   final bool anySteps;
 
@@ -313,10 +333,10 @@ class Habit {
       isTimeAmount ? formatMinutes(value) : formatAmount(value);
 
   bool get needsFocusSession =>
-      focusOnly && kind == HabitKind.positive && substeps.isEmpty;
+      focusOnly && (kind == HabitKind.positive || isTimeAmount) && substeps.isEmpty;
 
   bool blocksManualCheck(DateTime date, {bool fromFocus = false}) =>
-      needsFocusSession && !fromFocus && !isCompletedOn(date);
+      needsFocusSession && !fromFocus && (isTimeAmount || !isCompletedOn(date));
 
   final List<Substep> substeps;
 
@@ -492,12 +512,19 @@ class Habit {
   bool get acceptsAnyAmount =>
       kind == HabitKind.quantitative && (anyAmount || !hasGoal);
 
+  bool get capsAmount => atMost && kind == HabitKind.quantitative && hasGoal;
+
   bool reaches(double count, {double? goal}) {
+    if (capsAmount) {
+      final limit = goal ?? perDayTarget;
+      return count > 0 && (limit <= 0 || count <= limit);
+    }
     if (goal != null) return goal <= 0 ? count > 0 : count >= goal;
     return acceptsAnyAmount ? count > 0 : count >= perDayTarget;
   }
 
   QuantProgress progressFor(double count, {double? goal}) {
+    if (capsAmount) return _capped(count, goal ?? perDayTarget);
     if (goal != null) {
       return goal <= 0
           ? QuantProgress(laps: count > 0 ? 1 : 0, fraction: 0)
@@ -510,11 +537,17 @@ class Habit {
 
   QuantProgress progressOn(DateTime date, double count) {
     final past = pastGoalOn(date);
+    if (capsAmount) return _capped(count, past ?? effectiveTarget);
     if (past != null) return progressFor(count, goal: past);
     return hasGoal
         ? QuantProgress.of(count: count, target: effectiveTarget)
         : progressFor(count);
   }
+
+  QuantProgress _capped(double count, double limit) =>
+      reaches(count, goal: limit)
+          ? const QuantProgress(laps: 1, fraction: 0)
+          : QuantProgress(laps: 0, fraction: count > 0 ? 1 : 0);
 
   double fillTargetOn(DateTime date) {
     final target = pastGoalOn(date) ?? effectiveTarget;
@@ -900,6 +933,8 @@ class Habit {
     double? bookPages,
     DateTime? bookSince,
     double? bookSkip,
+    double? bookStart,
+    int? readsBefore,
     List<BookRead>? pastReads,
     String? soundUri,
     String? soundName,
@@ -909,6 +944,7 @@ class Habit {
     bool? tracking,
     bool? healthSteps,
     bool? anyAmount,
+    bool? atMost,
     bool? anySteps,
     int? stepsNeeded,
     int? difficulty,
@@ -957,6 +993,8 @@ class Habit {
       bookPages: bookPages ?? this.bookPages,
       bookSince: bookSince ?? this.bookSince,
       bookSkip: bookSkip ?? this.bookSkip,
+      bookStart: bookStart ?? this.bookStart,
+      readsBefore: readsBefore ?? this.readsBefore,
       pastReads: pastReads ?? this.pastReads,
       soundUri: soundUri ?? this.soundUri,
       soundName: soundName ?? this.soundName,
@@ -965,6 +1003,7 @@ class Habit {
       tracking: tracking ?? this.tracking,
       healthSteps: healthSteps ?? this.healthSteps,
       anyAmount: anyAmount ?? this.anyAmount,
+      atMost: atMost ?? this.atMost,
       anySteps: anySteps ?? this.anySteps,
       stepsNeeded: stepsNeeded ?? this.stepsNeeded,
       difficulty: difficulty ?? this.difficulty,
@@ -1027,6 +1066,8 @@ class Habit {
         if (bookPages > 0) 'bookPages': bookPages,
         if (bookSince != null) 'bookSince': bookSince!.dayKey,
         if (bookSkip > 0) 'bookSkip': bookSkip,
+        if (bookStart > 0) 'bookStart': bookStart,
+        if (readsBefore > 0) 'readsBefore': readsBefore,
         if (pastReads.isNotEmpty)
           'pastReads': pastReads.map((read) => read.toMap()).toList(),
         if (soundUri.isNotEmpty) 'soundUri': soundUri,
@@ -1037,6 +1078,7 @@ class Habit {
         'tracking': tracking,
         if (healthSteps) 'healthSteps': true,
         'anyAmount': anyAmount,
+        if (atMost) 'atMost': true,
         'anySteps': anySteps,
         'stepsNeeded': stepsNeeded,
         'difficulty': difficulty,
@@ -1106,6 +1148,8 @@ class Habit {
             ? parseDayKey(map['bookSince'] as String)
             : null,
         bookSkip: (map['bookSkip'] as num?)?.toDouble() ?? 0,
+        bookStart: (map['bookStart'] as num?)?.toDouble() ?? 0,
+        readsBefore: (map['readsBefore'] as num?)?.toInt() ?? 0,
         pastReads: map['pastReads'] == null
             ? const []
             : (map['pastReads'] as List)
@@ -1120,6 +1164,7 @@ class Habit {
         tracking: (map['tracking'] ?? false) as bool,
         healthSteps: map['healthSteps'] == true,
         anyAmount: (map['anyAmount'] ?? false) as bool,
+        atMost: map['atMost'] == true,
         anySteps: (map['anySteps'] ?? false) as bool,
         stepsNeeded: (map['stepsNeeded'] as num?)?.toInt() ?? 1,
         difficulty: ((map['difficulty'] ?? 0) as num).toInt().clamp(0, 3),

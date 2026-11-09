@@ -72,6 +72,9 @@ class _FocusPageState extends State<FocusPage> {
   int _leadValue = 0;
   bool _immersive = false;
   bool _big = false;
+  bool _tip = false;
+  Timer? _tipTimer;
+  DateTime _tapsFrom = DateTime(0);
 
   @override
   void initState() {
@@ -79,6 +82,11 @@ class _FocusPageState extends State<FocusPage> {
     _focus.completedTick.addListener(_celebrate);
     if (context.read<SettingsController>().focusKeepAwake) {
       WakelockPlus.enable();
+    }
+    if ((Platform.isWindows || Platform.isLinux) &&
+        context.read<SettingsController>().focusFullscreen) {
+      _immersive = true;
+      DesktopWindow.setFullscreen(true);
     }
     if (widget.startMinutes != null) {
       _leadValue = 3;
@@ -89,6 +97,7 @@ class _FocusPageState extends State<FocusPage> {
   Future<void> _begin() async {
     await NotificationService().requestNotifications();
     if (!mounted) return;
+    _tapsFrom = DateTime.now().add(const Duration(milliseconds: 800));
     _runLead(() {
       _focus.start(
         habitId: widget.startHabitId ?? '',
@@ -144,13 +153,14 @@ class _FocusPageState extends State<FocusPage> {
     if (_immersive) DesktopWindow.setFullscreen(false);
     WakelockPlus.disable();
     _lead?.cancel();
+    _tipTimer?.cancel();
     _confetti.dispose();
     _focus.completedTick.removeListener(_celebrate);
     super.dispose();
   }
 
   Future<void> _restart() async {
-    if (_focus.elapsedSeconds >= 60) {
+    if (_focus.elapsedSeconds > 0) {
       final confirmed = await showAppConfirmDialog(
         context,
         title: context.l10n.focus_restart_title,
@@ -165,6 +175,7 @@ class _FocusPageState extends State<FocusPage> {
 
   void _toggleRunning() {
     if (!_focus.isActive || _leadValue > 0) return;
+    if (DateTime.now().isBefore(_tapsFrom)) return;
     if (_focus.isFinished) {
       _confirmStop();
       return;
@@ -178,10 +189,22 @@ class _FocusPageState extends State<FocusPage> {
   }
 
   void _toggleBig() {
-    setState(() => _big = !_big);
+    _tipTimer?.cancel();
+    setState(() {
+      _big = !_big;
+      _tip = false;
+    });
     SystemChrome.setEnabledSystemUIMode(
       _big || _immersive ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge,
     );
+  }
+
+  void _openSimple() {
+    _toggleBig();
+    setState(() => _tip = true);
+    _tipTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) setState(() => _tip = false);
+    });
   }
 
   double _clockSize(BoxConstraints box, bool landscape) {
@@ -193,6 +216,7 @@ class _FocusPageState extends State<FocusPage> {
   void _toggleImmersive() {
     setState(() => _immersive = !_immersive);
     DesktopWindow.setFullscreen(_immersive);
+    context.read<SettingsController>().setFocusFullscreen(_immersive);
     SystemChrome.setEnabledSystemUIMode(
       _immersive || _big ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge,
     );
@@ -332,7 +356,6 @@ class _FocusPageState extends State<FocusPage> {
               Positioned.fill(
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: _toggleRunning,
                   onDoubleTap: _toggleBig,
                 ),
               ),
@@ -356,10 +379,11 @@ class _FocusPageState extends State<FocusPage> {
                   builder: (context, _) => _TopBar(
                     immersive: _immersive,
                     onImmersive: _toggleImmersive,
+                    onBig: _openSimple,
                     onTarget: leading || !focus.isActive || focus.isBreak
                         ? null
                         : () => showFocusRetimeSheet(context),
-                    title: label,
+                    title: title,
                     target: (leading ? leadMinutes : focus.targetMinutes) <= 0
                         ? context.l10n.focus_flowtime
                         : focus.isPomodoro && !leading
@@ -394,6 +418,7 @@ class _FocusPageState extends State<FocusPage> {
                           label: paused ? context.l10n.focus_paused : label,
                           size: _clockSize(constraints, landscape),
                           paused: paused,
+                          resting: onBreak && switchIn == 0 && !leading,
                         ),
                       ),
                     );
@@ -424,13 +449,25 @@ class _FocusPageState extends State<FocusPage> {
                 if (_big) {
                   final face = Column(
                     children: [
-                      _ZenLabel(
-                        text: label,
-                        color: habit?.color.shownIn(context) ?? context.colors.primary,
+                      SizedBox(
+                        width: double.infinity,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 400),
+                          child: _tip
+                              ? const _ZenTip()
+                              : _ZenLabel(
+                                  text: title,
+                                  color: habit?.color.shownIn(context) ?? context.colors.primary,
+                                ),
+                        ),
                       ),
                       const SizedBox(height: 10),
                       Expanded(
-                        child: FittedBox(fit: BoxFit.contain, child: clock),
+                        child: FractionallySizedBox(
+                          widthFactor: 0.92,
+                          heightFactor: 0.92,
+                          child: FittedBox(fit: BoxFit.contain, child: clock),
+                        ),
                       ),
                     ],
                   );
@@ -573,6 +610,7 @@ class _TopBar extends StatelessWidget {
     required this.target,
     required this.immersive,
     required this.onImmersive,
+    required this.onBig,
     this.onTarget,
   });
 
@@ -580,6 +618,7 @@ class _TopBar extends StatelessWidget {
   final String target;
   final bool immersive;
   final VoidCallback onImmersive;
+  final VoidCallback onBig;
   final VoidCallback? onTarget;
 
   Future<void> _pickStyle(BuildContext context) async {
@@ -916,10 +955,7 @@ class _TopBar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 1),
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: onTarget,
-                  child: Row(
+                Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Flexible(
@@ -929,30 +965,14 @@ class _TopBar extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 12.5,
-                            color: Colors.white.withValues(
-                              alpha: onTarget == null ? 0.55 : 0.75,
-                            ),
+                            color: Colors.white.withValues(alpha: 0.75),
                           ),
                         ),
                       ),
-                      if (onTarget != null) ...[
-                        const SizedBox(width: 2),
-                        Icon(
-                          LucideIcons.chevronDown,
-                          size: 14,
-                          color: Colors.white.withValues(alpha: 0.75),
-                        ),
-                      ],
                     ],
                   ),
-                ),
               ],
             ),
-          ),
-          IconButton(
-            icon: Icon(LucideIcons.circleHelp, color: Colors.white.withValues(alpha: 0.8)),
-            tooltip: context.l10n.focus_resources,
-            onPressed: () => SettingsActions.openUrl(context, '$kSiteUrl/resources/'),
           ),
           Padding(
             padding: const EdgeInsets.only(right: 6),
@@ -982,12 +1002,23 @@ class _TopBar extends StatelessWidget {
                   label: context.l10n.focus_style,
                   onTap: () => _pickStyle(context),
                 ),
+                if (!isMobile)
+                  (
+                    icon: immersive ? LucideIcons.minimize2 : LucideIcons.maximize2,
+                    label: immersive
+                        ? context.l10n.focus_exit_fullscreen
+                        : context.l10n.focus_fullscreen,
+                    onTap: onImmersive,
+                  ),
                 (
-                  icon: immersive ? LucideIcons.minimize2 : LucideIcons.maximize2,
-                  label: immersive
-                      ? context.l10n.focus_exit_fullscreen
-                      : context.l10n.focus_fullscreen,
-                  onTap: onImmersive,
+                  icon: LucideIcons.scan,
+                  label: context.l10n.focus_simple_view,
+                  onTap: onBig,
+                ),
+                (
+                  icon: LucideIcons.circleHelp,
+                  label: context.l10n.focus_resources,
+                  onTap: () => SettingsActions.openUrl(context, '$kSiteUrl/resources/'),
                 ),
               ],
             ),
@@ -1166,6 +1197,71 @@ class _ZenLabel extends StatelessWidget {
   }
 }
 
+class _ZenTip extends StatefulWidget {
+  const _ZenTip();
+
+  @override
+  State<_ZenTip> createState() => _ZenTipState();
+}
+
+class _ZenTipState extends State<_ZenTip> with SingleTickerProviderStateMixin {
+  late final _blink = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
+  late final _opacity = TweenSequence<double>([
+    TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.45), weight: 1),
+    TweenSequenceItem(tween: Tween(begin: 0.45, end: 1.0), weight: 1),
+  ]).animate(CurvedAnimation(parent: _blink, curve: Curves.easeInOut));
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) _blink.repeat(count: 2);
+    });
+  }
+
+  @override
+  void dispose() {
+    _blink.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(99),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(LucideIcons.pointer, size: 16, color: Colors.white),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                context.l10n.focus_double_tap_tip,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ZenControls extends StatelessWidget {
   const _ZenControls({
     required this.vertical,
@@ -1196,6 +1292,7 @@ class _ZenControls extends StatelessWidget {
         icon: _toggleIcon(running: running, awaiting: awaiting, finished: finished),
         label: _toggleLabel(context, running: running, awaiting: awaiting, finished: finished),
         onTap: onToggle,
+        big: true,
       ),
       if (skip != null)
         _ZenButton(
@@ -1235,11 +1332,13 @@ class _ZenButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.big = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final bool big;
 
   @override
   Widget build(BuildContext context) {
@@ -1250,13 +1349,13 @@ class _ZenButton extends StatelessWidget {
         scale: 0.9,
         onTap: onTap,
         child: Container(
-          width: 52,
-          height: 52,
+          width: big ? 60 : 52,
+          height: big ? 60 : 52,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(18),
+            color: Colors.white.withValues(alpha: big ? 0.14 : 0.08),
+            borderRadius: BorderRadius.circular(big ? 21 : 18),
           ),
-          child: Icon(icon, size: 20, color: Colors.white),
+          child: Icon(icon, size: big ? 24 : 20, color: Colors.white),
         ),
       ),
     );

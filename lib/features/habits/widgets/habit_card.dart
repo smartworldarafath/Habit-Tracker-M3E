@@ -23,6 +23,7 @@ import 'package:streak/features/habits/widgets/compact_activity_strip.dart';
 import 'package:streak/features/habits/widgets/habit_checklist.dart';
 import 'package:streak/features/habits/widgets/habit_heatmap.dart';
 import 'package:streak/features/habits/widgets/strength_bar.dart';
+import 'package:streak/features/habits/widgets/focus_only_dialog.dart';
 import 'package:streak/features/habits/widgets/unscheduled_day_dialog.dart';
 import 'package:streak/features/habits/widgets/water_cup.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
@@ -74,6 +75,7 @@ class HabitCard extends StatelessWidget {
         child: InkWell(
           onTap: onOpen,
           hoverColor: Colors.transparent,
+          onSecondaryTap: onLongPress,
           onLongPress: onLongPress == null
               ? null
               : () {
@@ -479,6 +481,8 @@ class _ActionButton extends StatelessWidget {
             : count / habit.perDayTarget;
         Future<void> addProgress() async {
           final controller = context.read<HabitsController>();
+          if (!await allowManualCheck(context, habit: habit, date: today)) return;
+          if (!context.mounted) return;
           final allowed =
               await confirmUnscheduledDay(context, habit: habit, date: today);
           if (!allowed) return;
