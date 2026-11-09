@@ -53,3 +53,5 @@ app.*.map.json
 # Release bundles
 release_assets*/
 
+release_notes*.md
+RELEASE*.md
