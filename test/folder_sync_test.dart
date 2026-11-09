@@ -6,6 +6,7 @@ import 'package:streak/core/database/local_store.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/features/habits/data/completion.dart';
 import 'package:streak/features/habits/data/habit.dart';
+import 'package:streak/features/island/data/island_piece.dart';
 import 'package:streak/features/todos/data/todo.dart';
 import 'package:streak/services/folder_sync.dart';
 
@@ -39,6 +40,7 @@ Future<void> _drop(
   Map<String, int>? cleared,
   Map<String, int>? days,
   String device = '',
+  Map<String, Object?>? settings,
 }) async {
   final payload = {
     'app': 'streak',
@@ -51,6 +53,7 @@ Future<void> _drop(
     'days': ?days,
     'habits': habits.map((h) => h.toMap()).toList(),
     'todos': todos.map((t) => t.toMap()).toList(),
+    'settings': ?settings,
   };
   final suffix = device.isEmpty ? '' : '_$device';
   File('${dir.path}/streak_backup_$stamp$suffix.json')
@@ -145,6 +148,23 @@ void main() {
       final data = FolderSync.incoming(dir, null);
       expect(data, hasLength(1));
       expect(data.single.habits.single.id, 'run');
+    });
+
+    test('a file that could not be read is tried again, even unchanged', () async {
+      final dir = await _folder();
+      await _drop(dir, [_run()],
+          at: DateTime(2026, 3, 3, 10), stamp: '2026-03-03_10-00-00');
+      final file = File('${dir.path}/streak_backup_2026-03-03_10-00-00.json');
+      final good = file.readAsStringSync();
+      final modified = file.lastModifiedSync();
+
+      file.writeAsStringSync('{ half downloaded');
+      file.setLastModifiedSync(modified);
+      expect(FolderSync.incoming(dir, null), isEmpty);
+
+      file.writeAsStringSync(good);
+      file.setLastModifiedSync(modified);
+      expect(FolderSync.incoming(dir, null), hasLength(1));
     });
 
     test('an empty folder is simply nothing to do', () async {
@@ -310,6 +330,28 @@ void main() {
 
       expect(await FolderSync.pull(), 0);
       expect(LocalStore.readHabits()['ghost'], isNull);
+    });
+  });
+
+  group('island', () {
+    test('pieces bought on the other device arrive and are paid once', () async {
+      final dir = await _folder();
+      final ours = islandPieces[0];
+      final theirs = islandPieces[1];
+      await LocalStore.writeSetting('islandOwned', [ours.id]);
+      await LocalStore.writeSetting('islandSpent', ours.price);
+      await _drop(dir, [_run()], at: DateTime(2026, 3, 3, 10), settings: {
+        'islandOwned': [ours.id, theirs.id],
+        'islandSpent': ours.price + theirs.price,
+      });
+
+      expect(await FolderSync.pull(), 2);
+      expect(
+        LocalStore.setting<List<dynamic>>('islandOwned', const []),
+        unorderedEquals([ours.id, theirs.id]),
+      );
+      expect(LocalStore.setting('islandSpent', 0), ours.price + theirs.price);
+      expect(await FolderSync.pull(), 0);
     });
   });
 

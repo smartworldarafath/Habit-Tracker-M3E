@@ -34,6 +34,7 @@ import 'package:streak/core/widgets/glass.dart';
 import 'package:streak/features/todos/widgets/todo_paper.dart';
 import 'package:streak/features/todos/widgets/todo_labels.dart';
 import 'package:streak/features/todos/widgets/todo_projects.dart';
+import 'package:streak/features/habits/widgets/focus_only_dialog.dart';
 import 'package:streak/features/todos/widgets/todo_tag_sheet.dart';
 import 'package:streak/features/todos/widgets/todo_tile.dart';
 import 'package:streak/features/todos/widgets/todos_page_parts.dart';
@@ -168,6 +169,7 @@ class _TodosPageState extends State<TodosPage>
   Future<void> _toggle(Todo todo) async {
     final todos = context.read<TodosController>();
     if (todo.done) return todos.toggle(todo.id);
+    if (!await allowManualTodo(context, todo) || !mounted) return;
     if (!_completing.add(todo.id)) return;
     setState(() {});
     await Future<void>.delayed(const Duration(milliseconds: 380));
@@ -331,7 +333,7 @@ class _TodosPageState extends State<TodosPage>
   Future<void> _finish(List<Todo> todos) async {
     final controller = context.read<TodosController>();
     setState(_selected.clear);
-    for (final todo in todos.where((todo) => !todo.done)) {
+    for (final todo in todos.where((todo) => !todo.done && !todo.blocksManualCheck)) {
       await controller.toggle(todo.id);
     }
   }
@@ -652,9 +654,28 @@ class _TodosPageState extends State<TodosPage>
         options: [
           context.l10n.todo_sort_high_first,
           context.l10n.todo_sort_low_first,
+          context.l10n.todo_sort_time,
+          context.l10n.todo_sort_name,
         ],
-        index: todos.lowFirst ? 1 : 0,
-        onSelected: (index) => todos.setLowFirst(index == 1),
+        icons: const [
+          LucideIcons.arrowUpNarrowWide,
+          LucideIcons.arrowDownWideNarrow,
+          LucideIcons.clock,
+          LucideIcons.arrowDownAZ,
+        ],
+        index: switch (todos.sort) {
+          TodoSort.urgency => todos.lowFirst ? 1 : 0,
+          TodoSort.time => 2,
+          TodoSort.name => 3,
+        },
+        onSelected: (index) => todos.setOrder(
+          switch (index) {
+            2 => TodoSort.time,
+            3 => TodoSort.name,
+            _ => TodoSort.urgency,
+          },
+          lowFirst: index == 1,
+        ),
       );
 
   Future<void> _add() async {

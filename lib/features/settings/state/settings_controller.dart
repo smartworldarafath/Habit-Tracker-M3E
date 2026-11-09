@@ -123,6 +123,7 @@ class SettingsController extends ChangeNotifier {
     _focusKeepAwake = LocalStore.setting('focusKeepAwake', true);
     _focusLeadIn = LocalStore.setting('focusLeadIn', true);
     _focusFullscreen = LocalStore.setting('focusFullscreen', false);
+    _focusSimple = LocalStore.setting('focusSimple', false);
     _habitLinks = LocalStore.setting('habitLinks', false);
     _focusAlert = LocalStore.setting('focusAlert', '');
     _focusHold = LocalStore.setting('focusHold', false);
@@ -225,6 +226,7 @@ class SettingsController extends ChangeNotifier {
   late bool _focusKeepAwake;
   late bool _focusLeadIn;
   late bool _focusFullscreen;
+  late bool _focusSimple;
   late bool _habitLinks;
   late String _focusAlert;
   late bool _focusHold;
@@ -550,6 +552,7 @@ class SettingsController extends ChangeNotifier {
   bool get focusKeepAwake => _focusKeepAwake;
   bool get focusLeadIn => _focusLeadIn;
   bool get focusFullscreen => _focusFullscreen;
+  bool get focusSimple => _focusSimple;
   bool get habitLinks => _habitLinks;
   String get focusAlert => _focusAlert;
   bool get focusHold => _focusHold;
@@ -633,6 +636,11 @@ class SettingsController extends ChangeNotifier {
   Future<void> setFocusFullscreen(bool value) async {
     _focusFullscreen = value;
     await LocalStore.writeSetting('focusFullscreen', value);
+  }
+
+  Future<void> setFocusSimple(bool value) async {
+    _focusSimple = value;
+    await LocalStore.writeSetting('focusSimple', value);
   }
 
   Future<void> setHabitLinks(bool value) async {

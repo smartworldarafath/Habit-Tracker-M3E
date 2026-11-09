@@ -23,6 +23,7 @@ class TodosController extends ChangeNotifier {
 
   late List<Todo> _todos;
   bool _lowFirst = LocalStore.setting('todoLowFirst', false);
+  TodoSort _sort = todoSortOf(LocalStore.setting('todoSortBy', 0));
 
   List<Todo>? _view;
   List<TodoSection>? _sections;
@@ -52,19 +53,23 @@ class TodosController extends ChangeNotifier {
     final today = AppClock.today();
     if (_sections == null || _sectionsDay != today.epochDay) {
       _sectionsDay = today.epochDay;
-      _sections = groupPending(_todos, today, lowFirst: _lowFirst);
+      _sections = groupPending(_todos, today, lowFirst: _lowFirst, sort: _sort);
     }
     return _sections!;
   }
 
   bool get lowFirst => _lowFirst;
 
-  Future<void> setLowFirst(bool value) async {
-    if (_lowFirst == value) return;
-    _lowFirst = value;
+  TodoSort get sort => _sort;
+
+  Future<void> setOrder(TodoSort sort, {bool lowFirst = false}) async {
+    if (_sort == sort && _lowFirst == lowFirst) return;
+    _sort = sort;
+    _lowFirst = lowFirst;
     notifyListeners();
     TodosWidgetService.syncSoon(_todos);
-    await LocalStore.writeSetting('todoLowFirst', value);
+    await LocalStore.writeSetting('todoLowFirst', lowFirst);
+    await LocalStore.writeSetting('todoSortBy', sort.index);
   }
 
   List<Todo> get completed => _completed ??= sortCompleted(_todos);
@@ -74,9 +79,24 @@ class TodosController extends ChangeNotifier {
   int get doneCount => _counts.done;
 
   void reload() {
+    final before = {for (final todo in _todos) todo.id: todo};
     _todos = LocalStore.readTodos();
     notifyListeners();
     TodosWidgetService.syncSoon(_todos);
+    unawaited(_rescheduleChanged(before));
+  }
+
+  Future<void> _rescheduleChanged(Map<String, Todo> before) async {
+    final now = {for (final todo in _todos) todo.id};
+    for (final id in before.keys) {
+      if (!now.contains(id)) await _notifications.cancelTodo(id);
+    }
+    for (final todo in _todos) {
+      final old = before[todo.id];
+      if (old == null || _remindsDifferently(old, todo)) {
+        await _notifications.scheduleTodo(todo);
+      }
+    }
   }
 
   Future<void> refresh() async {
@@ -99,6 +119,7 @@ class TodosController extends ChangeNotifier {
     String cover = '',
     bool pinned = false,
     TodoRepeat? repeat,
+    bool focusOnly = false,
   }) async {
     final todo = Todo(
       id: const Uuid().v4(),
@@ -115,6 +136,7 @@ class TodosController extends ChangeNotifier {
       cover: cover,
       pinned: pinned,
       repeat: repeat,
+      focusOnly: focusOnly,
       createdAt: DateTime.now(),
     );
     _todos.add(todo);
@@ -147,9 +169,10 @@ class TodosController extends ChangeNotifier {
       a.done != b.done ||
       a.text != b.text;
 
-  Future<void> toggle(String id) async {
+  Future<void> toggle(String id, {bool fromFocus = false}) async {
     final index = _counts.at[id];
     if (index == null) return;
+    if (_todos[index].blocksManualCheck && !fromFocus) return;
     if (!_todos[index].done && _todos[index].repeats) {
       return _finishRepeating(index);
     }

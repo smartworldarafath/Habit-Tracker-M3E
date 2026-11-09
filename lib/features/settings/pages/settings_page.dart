@@ -23,6 +23,7 @@ import 'package:streak/features/settings/pages/quotes_page.dart';
 import 'package:streak/features/settings/settings_actions.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
 import 'package:streak/features/settings/widgets/settings_rows.dart';
+import 'package:streak/features/settings/widgets/import_apps_card.dart';
 import 'package:streak/features/settings/widgets/minimal_settings_widgets.dart';
 import 'package:streak/core/widgets/verified_badge.dart';
 import 'package:streak/features/settings/widgets/color_theme_sheet.dart';
@@ -167,11 +168,13 @@ class _ClassicSection extends StatelessWidget {
     required this.title,
     required this.label,
     required this.children,
+    this.lead,
   });
 
   final String title;
   final String label;
   final List<Widget> children;
+  final Widget? lead;
 
   @override
   Widget build(BuildContext context) {
@@ -181,6 +184,8 @@ class _ClassicSection extends StatelessWidget {
         padding: context.pagePadding(16, 8, 16, 24),
         children: [
           Entrance(child: SectionLabel(label)),
+          if (lead != null) Entrance(index: 1, child: lead!),
+          if (lead != null) const SizedBox(height: 12),
           Entrance(index: 1, child: Card(child: Column(children: children))),
         ],
       ),
@@ -856,15 +861,10 @@ class _ClassicDataPage extends StatelessWidget {
     return _ClassicSection(
       title: context.l10n.data,
       label: context.l10n.data_sub,
+      lead: ImportAppsCard(
+        onTap: () => SettingsActions.importFromApp(context),
+      ),
       children: [
-        NavRow(
-          icon: LucideIcons.import,
-          title: context.l10n.import_from_app,
-          subtitle: context.l10n.import_from_app_sub,
-          badge: 'Beta',
-          onTap: () => SettingsActions.importFromApp(context),
-        ),
-        settingsDivider(context),
         NavRow(
           icon: LucideIcons.upload,
           title: context.l10n.import_backup,
@@ -1022,78 +1022,73 @@ class _ProfileHeader extends StatelessWidget {
           label: context.l10n.change_photo,
           child: GestureDetector(
             onTap: () => ProfileAvatarView.show(context),
-            child: Stack(
-              children: [
-                Hero(
-                  tag: 'settings_profile_avatar',
-                  child: Container(
-                    width: 88,
-                    height: 88,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: scheme.surfaceContainerHighest,
-                      image: DecorationImage(
-                        image: hasPhoto
-                            ? FileImage(File(filePath)) as ImageProvider
-                            : const AssetImage('assets/profile_default.jpg'),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+            child: Hero(
+              tag: 'settings_profile_avatar',
+              child: Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: scheme.surfaceContainerHighest,
+                  image: DecorationImage(
+                    image: hasPhoto
+                        ? FileImage(File(filePath)) as ImageProvider
+                        : const AssetImage('assets/profile_default.jpg'),
+                    fit: BoxFit.cover,
                   ),
                 ),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: scheme.primary,
-                      border: Border.all(color: scheme.surface, width: 2),
-                    ),
-                    child: Icon(
-                      LucideIcons.pencil,
-                      size: 12,
-                      color: scheme.onPrimary,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
         const SizedBox(height: 12),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: scheme.onSurface,
+              ),
+            ),
+            Consumer<SettingsController>(
+              builder: (context, s, _) {
+                if (s.verifiedBadge <= 0) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: VerifiedBadge(
+                    color: VerifiedBadgeType.fromId(s.verifiedBadge).color,
+                    size: 18,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
         Semantics(
           button: true,
-          label: context.l10n.edit_name,
-          child: GestureDetector(
-            onTap: () => SettingsActions.editName(context),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  name,
+          child: Material(
+            color: scheme.primary.withValues(alpha: 0.12),
+            shape: const StadiumBorder(),
+            child: InkWell(
+              customBorder: const StadiumBorder(),
+              onTap: () => SettingsActions.editProfile(context),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                child: Text(
+                  context.l10n.edit_profile,
                   style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                    color: scheme.onSurface,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.primary,
                   ),
                 ),
-                Consumer<SettingsController>(
-                  builder: (context, s, _) {
-                    if (s.verifiedBadge <= 0) return const SizedBox.shrink();
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: VerifiedBadge(
-                        color: VerifiedBadgeType.fromId(s.verifiedBadge).color,
-                        size: 18,
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 6),
-                Icon(LucideIcons.pencil, size: 15, color: context.tokens.muted),
-              ],
+              ),
             ),
           ),
         ),

@@ -118,6 +118,7 @@
   "import_backup_sub": "Restore habits from a file",
   "import_from_app": "Import from another app",
   "import_from_app_sub": "Loop Habit Tracker, HabitKit…",
+  "import_card_body": "Bring your habits and history from other apps",
   "import_from_app_done": "Imported {habits} habits ({days} days) from {source}",
   "@import_from_app_done": {
     "placeholders": {
@@ -395,6 +396,19 @@
       "n": { "type": "String" }
     }
   },
+  "every_n_minutes": "Every {n} min",
+  "@every_n_minutes": {
+    "placeholders": {
+      "n": { "type": "String" }
+    }
+  },
+  "every_hours_minutes": "Every {h} h {m} min",
+  "@every_hours_minutes": {
+    "placeholders": {
+      "h": { "type": "String" },
+      "m": { "type": "String" }
+    }
+  },
   "repeat_weekly": "Specific days",
   "repeat_interval": "Every N days",
   "every_n_days": "Every {n} days",
@@ -662,6 +676,14 @@
   "todo_repeat_from_done": "Count from when I finish it",
   "todo_repeat_skip": "Skip this one",
   "todo_estimate": "Duration",
+  "todo_focus_only": "Only with a focus session",
+  "todo_focus_only_body": "\"{name}\" is completed by finishing a {minutes} minute focus session.",
+  "@todo_focus_only_body": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "minutes": { "type": "String" }
+    }
+  },
   "todo_estimate_none": "No duration",
   "todo_priority": "Priority",
   "todo_paper": "Color",
@@ -669,7 +691,7 @@
   "todo_list_item": "List item",
   "todo_title_hint": "Title",
   "todo_body_hint": "Note",
-  "todo_sort": "Priority order",
+  "todo_sort": "Sort tasks",
   "todo_sort_high_first": "High priority first",
   "todo_sort_low_first": "Low priority first",
   "todo_project_empty": "Nothing in this folder yet",
@@ -894,6 +916,8 @@
   "habit_time": "Time of day",
   "habit_time_none": "Anytime",
   "habit_time_sub": "Places the habit in Plan at this time. It still shows in Today all day.",
+  "habit_time_more": "Add another time",
+  "habit_time_again": "Again",
   "habit_duration": "Duration",
   "habit_duration_none": "No duration",
   "day_timeline": "Day",
@@ -954,6 +978,7 @@
   "default_user": "Arafath",
   "your_name": "Your name",
   "edit_name": "Edit name",
+  "edit_profile": "Edit profile",
   "change_photo": "Change photo",
   "remove_photo": "Remove photo",
   "notif_greeting": "Hi {name}, ",
@@ -1228,6 +1253,8 @@
   "widget_cfg_compact_hint": "Smaller rows, streak next to the name",
   "widget_cfg_compact_todos_hint": "Smaller rows, time next to the task",
   "widget_cfg_today_band": "Highlight today",
+  "widget_cfg_habit_colors": "Habit colors",
+  "widget_cfg_habit_colors_hint": "Each bar shows the time of each habit in its color",
   "widget_cfg_show_activity": "Show activity of",
   "widget_cfg_dot_color": "Dot color",
   "widget_cfg_style": "Style",
@@ -1656,7 +1683,26 @@
   "focus_busiest": "Most focused at {hour}",
   "@focus_busiest": {
     "placeholders": { "hour": { "type": "String" } }
-  }
+  },
+  "notif_quote_1": "Today's a great day to keep the streak alive! 🔥",
+  "notif_quote_2": "One more day, one step closer to who you want to be.",
+  "notif_quote_3": "Your future self will thank you.",
+  "notif_quote_4": "Small steps, big changes. Let's go!",
+  "notif_quote_5": "Consistency beats talent.",
+  "notif_quote_6": "It doesn't have to be perfect, it just has to happen.",
+  "notif_quote_7": "Two minutes now beat an hour tomorrow.",
+  "notif_quote_8": "Streaks are built one day at a time.",
+  "notif_quote_9": "Do it for you. You deserve it.",
+  "notif_quote_10": "The perfect moment is now.",
+  "notif_quote_11": "Every mark counts. Add one more.",
+  "notif_quote_12": "Today's discipline is tomorrow's freedom.",
+  "notif_quote_13": "Keep showing up. That's where the magic is.",
+  "notif_quote_14": "The hard part is what makes it worth it.",
+  "notif_quote_15": "One habit at a time, that's how a life changes.",
+  "app_lock_biometric_sub": "The fingerprint, face or lock you already use on this phone",
+  "todo_repeat_last_day": "On the last day",
+  "todo_sort_time": "By date and time",
+  "todo_sort_name": "A to Z"
 }
 
 

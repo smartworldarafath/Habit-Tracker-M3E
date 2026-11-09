@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:streak/core/database/local_store.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
@@ -86,10 +88,32 @@ class HabitsController extends ChangeNotifier {
 
   Future<void> reload() async {
     if (LocalStore.isWriting) return;
+    final before = _habits;
     await LocalStore.reloadHabits();
     _habits = LocalStore.readHabits();
     _countedOn = AppClock.today().epochDay;
     notifyListeners();
+    await _rescheduleChanged(before);
+  }
+
+  Future<void> _rescheduleChanged(Map<String, Habit> before) async {
+    String plan(Habit habit) => jsonEncode(habit.toMap()
+      ..remove('completions')
+      ..remove('missReasons'));
+    try {
+      for (final id in before.keys) {
+        if (!_habits.containsKey(id)) await _notifications.cancelFor(id);
+      }
+      for (final habit in _habits.values) {
+        final old = before[habit.id];
+        if (old == null ? habit.reminders.isEmpty : plan(old) == plan(habit)) {
+          continue;
+        }
+        await _notifications.scheduleFor(habit);
+      }
+    } catch (e) {
+      debugPrint('Could not reschedule synced reminders: $e');
+    }
   }
 
   void recount() {
@@ -157,6 +181,7 @@ class HabitsController extends ChangeNotifier {
     int focusBreakMinutes = 0,
     int startMinute = -1,
     int durationMinutes = 0,
+    List<(int, int)> moreTimes = const [],
     List<Substep> substeps = const [],
     List<int> restDays = const [],
   }) async {
@@ -205,6 +230,7 @@ class HabitsController extends ChangeNotifier {
       focusBreakMinutes: focusBreakMinutes,
       startMinute: startMinute,
       durationMinutes: durationMinutes,
+      moreTimes: moreTimes,
       substeps: substeps,
       restDays: restDays,
     );

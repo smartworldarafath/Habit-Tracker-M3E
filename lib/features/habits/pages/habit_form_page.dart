@@ -25,6 +25,7 @@ import 'package:streak/features/habits/state/habits_controller.dart';
 import 'package:streak/features/habits/widgets/color_picker.dart';
 import 'package:streak/features/habits/widgets/habit_form_basics.dart';
 import 'package:streak/features/focus/widgets/focus_duration_fields.dart';
+import 'package:streak/features/habits/widgets/flag_group.dart';
 import 'package:streak/features/habits/widgets/habit_form_kind.dart';
 import 'package:streak/features/habits/widgets/habit_form_schedule.dart';
 import 'package:streak/features/habits/widgets/habit_time_fields.dart';
@@ -109,6 +110,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
   int _breakMinutes = 5;
   int _startMinute = -1;
   int _durationMinutes = 0;
+  List<(int, int)> _moreTimes = const [];
   late List<Substep> _substeps;
   late final String _opened;
 
@@ -231,6 +233,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
       if (_pomodoro) _breakMinutes = habit.focusBreakMinutes;
       _startMinute = habit.startMinute;
       _durationMinutes = habit.durationMinutes;
+      _moreTimes = habit.moreTimes;
       _substeps = List.of(habit.substeps);
     } else {
       _reminders = [];
@@ -282,6 +285,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
         _breakMinutes,
         _startMinute,
         _durationMinutes,
+        [for (final (start, minutes) in _moreTimes) '$start-$minutes'],
         [for (final step in _substeps) step.toMap()],
       ]);
 
@@ -434,6 +438,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
           focusBreakMinutes: _pomodoro ? _breakMinutes : 0,
           startMinute: negative ? -1 : _startMinute,
           durationMinutes: negative ? 0 : _durationMinutes,
+          moreTimes: negative || _startMinute < 0 ? const [] : _moreTimes,
           substeps: substeps,
         ).rememberGoal(widget.habit!).keepBook(widget.habit!),
       );
@@ -487,6 +492,7 @@ class _HabitFormPageState extends State<HabitFormPage> {
         focusBreakMinutes: _pomodoro ? _breakMinutes : 0,
         startMinute: negative ? -1 : _startMinute,
         durationMinutes: negative ? 0 : _durationMinutes,
+        moreTimes: negative || _startMinute < 0 ? const [] : _moreTimes,
         substeps: substeps,
         restDays: template?.restDays ?? const [],
       );
@@ -707,23 +713,23 @@ class _HabitFormPageState extends State<HabitFormPage> {
           step: _quantStep,
         ),
         const SizedBox(height: 12),
+        FlagGroup(children: [
         NoGoalToggle(
           value: _noGoal,
           color: _color,
           onChanged: (v) => setState(() => _noGoal = v),
         ),
-        if (!_noGoal) const SizedBox(height: 12),
         if (!_noGoal) AtMostToggle(
           value: _atMost,
           color: _color,
           onChanged: (v) => setState(() => _atMost = v),
         ),
-        if (!_noGoal && !_atMost) const SizedBox(height: 12),
         if (!_noGoal && !_atMost) AnyAmountToggle(
           value: _anyAmount,
           color: _color,
           onChanged: (v) => setState(() => _anyAmount = v),
         ),
+        ]),
         if (_quantKind == QuantKind.reading) ...[
           const SizedBox(height: 20),
           SectionLabel(context.l10n.book_cover),
@@ -751,15 +757,16 @@ class _HabitFormPageState extends State<HabitFormPage> {
       ],
       if (_kind != HabitKind.negative) ...[
         const SizedBox(height: 12),
+        FlagGroup(children: [
         _totalGoalField(),
-      ],
-      if (_kind == HabitKind.positive) ...[
-        const SizedBox(height: 12),
-        FocusOnlyToggle(
+        if (_kind == HabitKind.positive) FocusOnlyToggle(
           value: _focusOnly,
           color: _color,
           onChanged: (v) => setState(() => _focusOnly = v),
         ),
+        ]),
+      ],
+      if (_kind == HabitKind.positive) ...[
         if (_focusOnly) ...[
           const SizedBox(height: 20),
           SectionLabel(context.l10n.focus_duration),
@@ -808,20 +815,19 @@ class _HabitFormPageState extends State<HabitFormPage> {
         ),
         if (_interval == HabitInterval.everyXDays) ...[
           const SizedBox(height: 8),
+          FlagGroup(children: [
           FromLastDoneToggle(
             value: _fromLastDone,
             color: _color,
             onChanged: (v) => setState(() => _fromLastDone = v),
           ),
-          if (_monthly) ...[
-            const SizedBox(height: 8),
-            MonthWeekdayToggle(
+          if (_monthly) MonthWeekdayToggle(
               value: _monthWeekday,
               start: _startShown,
               color: _color,
               onChanged: (v) => setState(() => _monthWeekday = v),
             ),
-          ],
+          ]),
         ],
         if (_noDays) _NoDaysHint(key: _noDaysKey),
       ],
@@ -836,6 +842,8 @@ class _HabitFormPageState extends State<HabitFormPage> {
             _startMinute = start;
             _durationMinutes = duration;
           }),
+          more: _moreTimes,
+          onMore: (times) => setState(() => _moreTimes = times),
         ),
       ],
       const SizedBox(height: 26),
@@ -870,21 +878,20 @@ class _HabitFormPageState extends State<HabitFormPage> {
           onNeeded: (n) => setState(() => _stepsNeeded = n),
         ),
       ],
-      if (_offersTracking) ...[
+      if (_offersTracking || _offersDifficulty) ...[
         const SizedBox(height: 12),
-        TrackingToggle(
+        FlagGroup(children: [
+        if (_offersTracking) TrackingToggle(
           value: _tracking,
           color: _color,
           onChanged: (v) => setState(() => _tracking = v),
         ),
-      ],
-      if (_offersDifficulty) ...[
-        const SizedBox(height: 12),
-        DifficultyPicker(
+        if (_offersDifficulty) DifficultyPicker(
           value: _difficulty,
           color: _color,
           onChanged: (v) => setState(() => _difficulty = v),
         ),
+        ]),
       ],
       const SizedBox(height: 26),
       SectionLabel(context.l10n.category),
@@ -1051,26 +1058,26 @@ class _HabitFormPageState extends State<HabitFormPage> {
           ),
         ),
         const SizedBox(height: 16),
+        FlagGroup(children: [
         NoGoalToggle(
           value: _noGoal,
           color: _color,
           compact: true,
           onChanged: (v) => setState(() => _noGoal = v),
         ),
-        if (!_noGoal) const SizedBox(height: 16),
         if (!_noGoal) AtMostToggle(
           value: _atMost,
           color: _color,
           compact: true,
           onChanged: (v) => setState(() => _atMost = v),
         ),
-        if (!_noGoal && !_atMost) const SizedBox(height: 16),
         if (!_noGoal && !_atMost) AnyAmountToggle(
           value: _anyAmount,
           color: _color,
           compact: true,
           onChanged: (v) => setState(() => _anyAmount = v),
         ),
+        ]),
         if (_quantKind == QuantKind.reading) ...[
           const SizedBox(height: 16),
           SectionLabel(context.l10n.book_cover),
@@ -1100,16 +1107,17 @@ class _HabitFormPageState extends State<HabitFormPage> {
       ],
       if (_kind != HabitKind.negative) ...[
         const SizedBox(height: 10),
+        FlagGroup(children: [
         _totalGoalField(compact: true),
-      ],
-      if (_kind == HabitKind.positive) ...[
-        const SizedBox(height: 16),
-        FocusOnlyToggle(
+        if (_kind == HabitKind.positive) FocusOnlyToggle(
           value: _focusOnly,
           color: _color,
           compact: true,
           onChanged: (v) => setState(() => _focusOnly = v),
         ),
+        ]),
+      ],
+      if (_kind == HabitKind.positive) ...[
         if (_focusOnly) ...[
           const SizedBox(height: 16),
           SectionLabel(context.l10n.focus_duration),
@@ -1184,22 +1192,21 @@ class _HabitFormPageState extends State<HabitFormPage> {
             onChanged: (day) => setState(() => _scheduleStart = day),
           ),
           const SizedBox(height: 8),
+          FlagGroup(children: [
           FromLastDoneToggle(
             value: _fromLastDone,
             color: _color,
             compact: true,
             onChanged: (v) => setState(() => _fromLastDone = v),
           ),
-          if (_monthly) ...[
-            const SizedBox(height: 8),
-            MonthWeekdayToggle(
+          if (_monthly) MonthWeekdayToggle(
               value: _monthWeekday,
               start: _startShown,
               color: _color,
               compact: true,
               onChanged: (v) => setState(() => _monthWeekday = v),
             ),
-          ],
+          ]),
         ] else if (_interval == HabitInterval.weekdays) ...[
           const SizedBox(height: 12),
           CompactWeekdays(
@@ -1221,6 +1228,8 @@ class _HabitFormPageState extends State<HabitFormPage> {
             _startMinute = start;
             _durationMinutes = duration;
           }),
+          more: _moreTimes,
+          onMore: (times) => setState(() => _moreTimes = times),
         ),
       ],
       const SizedBox(height: 16),
@@ -1256,23 +1265,22 @@ class _HabitFormPageState extends State<HabitFormPage> {
           onNeeded: (n) => setState(() => _stepsNeeded = n),
         ),
       ],
-      if (_offersTracking) ...[
+      if (_offersTracking || _offersDifficulty) ...[
         const SizedBox(height: 16),
-        TrackingToggle(
+        FlagGroup(children: [
+        if (_offersTracking) TrackingToggle(
           value: _tracking,
           color: _color,
           compact: true,
           onChanged: (v) => setState(() => _tracking = v),
         ),
-      ],
-      if (_offersDifficulty) ...[
-        const SizedBox(height: 16),
-        DifficultyPicker(
+        if (_offersDifficulty) DifficultyPicker(
           value: _difficulty,
           color: _color,
           compact: true,
           onChanged: (v) => setState(() => _difficulty = v),
         ),
+        ]),
       ],
       const SizedBox(height: 16),
       SectionLabel(context.l10n.category),
@@ -1464,23 +1472,23 @@ class _HabitFormPageState extends State<HabitFormPage> {
                 step: _quantStep,
               ),
               const SizedBox(height: 12),
+              FlagGroup(children: [
               NoGoalToggle(
                 value: _noGoal,
                 color: _color,
                 onChanged: (v) => setState(() => _noGoal = v),
               ),
-              if (!_noGoal) const SizedBox(height: 12),
               if (!_noGoal) AtMostToggle(
                 value: _atMost,
                 color: _color,
                 onChanged: (v) => setState(() => _atMost = v),
               ),
-              if (!_noGoal && !_atMost) const SizedBox(height: 12),
               if (!_noGoal && !_atMost) AnyAmountToggle(
                 value: _anyAmount,
                 color: _color,
                 onChanged: (v) => setState(() => _anyAmount = v),
               ),
+              ]),
               if (_quantKind == QuantKind.reading) ...[
                 const SizedBox(height: 20),
                 SectionLabel(context.l10n.book_cover),
@@ -1510,15 +1518,16 @@ class _HabitFormPageState extends State<HabitFormPage> {
             ],
             if (_kind != HabitKind.negative) ...[
               const SizedBox(height: 12),
+              FlagGroup(children: [
               _totalGoalField(),
-            ],
-            if (_kind == HabitKind.positive) ...[
-              const SizedBox(height: 20),
-              FocusOnlyToggle(
+              if (_kind == HabitKind.positive) FocusOnlyToggle(
                 value: _focusOnly,
                 color: _color,
                 onChanged: (v) => setState(() => _focusOnly = v),
               ),
+              ]),
+            ],
+            if (_kind == HabitKind.positive) ...[
               if (_focusOnly) ...[
                 const SizedBox(height: 20),
                 SectionLabel(context.l10n.focus_duration),
@@ -1569,20 +1578,19 @@ class _HabitFormPageState extends State<HabitFormPage> {
               ),
               if (_interval == HabitInterval.everyXDays) ...[
                 const SizedBox(height: 8),
+                FlagGroup(children: [
                 FromLastDoneToggle(
                   value: _fromLastDone,
                   color: _color,
                   onChanged: (v) => setState(() => _fromLastDone = v),
                 ),
-                if (_monthly) ...[
-                  const SizedBox(height: 8),
-                  MonthWeekdayToggle(
+                if (_monthly) MonthWeekdayToggle(
                     value: _monthWeekday,
                     start: _startShown,
                     color: _color,
                     onChanged: (v) => setState(() => _monthWeekday = v),
                   ),
-                ],
+                ]),
               ],
               if (_noDays) _NoDaysHint(key: _noDaysKey),
             ],
@@ -1597,6 +1605,8 @@ class _HabitFormPageState extends State<HabitFormPage> {
                   _startMinute = start;
                   _durationMinutes = duration;
                 }),
+                more: _moreTimes,
+                onMore: (times) => setState(() => _moreTimes = times),
               ),
             ],
             const SizedBox(height: 20),
@@ -1632,21 +1642,20 @@ class _HabitFormPageState extends State<HabitFormPage> {
                 onNeeded: (n) => setState(() => _stepsNeeded = n),
               ),
             ],
-            if (_offersTracking) ...[
+            if (_offersTracking || _offersDifficulty) ...[
               const SizedBox(height: 20),
-              TrackingToggle(
+              FlagGroup(children: [
+              if (_offersTracking) TrackingToggle(
                 value: _tracking,
                 color: _color,
                 onChanged: (v) => setState(() => _tracking = v),
               ),
-            ],
-            if (_offersDifficulty) ...[
-              const SizedBox(height: 20),
-              DifficultyPicker(
+              if (_offersDifficulty) DifficultyPicker(
                 value: _difficulty,
                 color: _color,
                 onChanged: (v) => setState(() => _difficulty = v),
               ),
+              ]),
             ],
             const SizedBox(height: 20),
             SectionLabel(context.l10n.category),

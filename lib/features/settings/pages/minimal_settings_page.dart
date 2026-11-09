@@ -18,6 +18,7 @@ import 'package:streak/features/settings/pages/app_style_page.dart';
 import 'package:streak/features/settings/pages/archived_habits_page.dart';
 import 'package:streak/features/settings/settings_actions.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
+import 'package:streak/features/settings/widgets/import_apps_card.dart';
 import 'package:streak/features/settings/widgets/minimal_settings_widgets.dart';
 import 'package:streak/features/settings/widgets/settings_rows.dart';
 import 'package:streak/core/widgets/verified_badge.dart';
@@ -217,9 +218,9 @@ class _ProfileRow extends StatelessWidget {
         Expanded(
           child: Semantics(
             button: true,
-            label: context.l10n.edit_name,
+            label: context.l10n.edit_profile,
             child: GestureDetector(
-              onTap: () => SettingsActions.editName(context),
+              onTap: () => SettingsActions.editProfile(context),
               behavior: HitTestBehavior.opaque,
               child: Row(
                 children: [
@@ -229,11 +230,9 @@ class _ProfileRow extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontFamily: 'PlayfairDisplay',
-                        fontSize: 30,
+                        fontSize: 24,
                         fontWeight: FontWeight.w700,
-                        height: 1.1,
-                        letterSpacing: -0.6,
+                        height: 1.2,
                         color: context.colors.onSurface,
                       ),
                     ),
@@ -250,8 +249,12 @@ class _ProfileRow extends StatelessWidget {
                       );
                     },
                   ),
-                  const SizedBox(width: 9),
-                  Icon(LucideIcons.pencil, size: 14, color: context.tokens.muted),
+                  const SizedBox(width: 8),
+                  Icon(
+                    LucideIcons.pencil,
+                    size: 13,
+                    color: context.tokens.muted.withValues(alpha: 0.7),
+                  ),
                 ],
               ),
             ),
@@ -784,14 +787,10 @@ class _DataPage extends StatelessWidget {
       title: context.l10n.data,
       subtitle: context.l10n.data_sub,
       children: [
+        ImportAppsCard(onTap: () => SettingsActions.importFromApp(context)),
+        const SizedBox(height: 12),
         SoftCard(
           children: [
-            SoftRow(
-              icon: LucideIcons.import,
-              title: context.l10n.import_from_app,
-              subtitle: context.l10n.import_from_app_sub,
-              onTap: () => SettingsActions.importFromApp(context),
-            ),
             SoftRow(
               icon: LucideIcons.upload,
               title: context.l10n.import_backup,

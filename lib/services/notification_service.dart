@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -7,7 +8,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:streak/core/i18n/app_locale.dart';
-import 'package:streak/core/constants/motivational_quotes.dart';
 import 'package:streak/core/database/local_store.dart';
 import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/core/utils/amount_format.dart';
@@ -242,6 +242,7 @@ class NotificationService {
     }
 
     if (isPortable) await _plugin.cancelAll();
+    if (_keepsPayloads) await _loadPayloads();
     await _repairStore();
 
     _ready = true;
@@ -334,15 +335,14 @@ class NotificationService {
   }
 
   String _bodyFor(Habit habit, Reminder? reminder, AppLocalizations strings) {
-    final lang = strings.localeName == 'es' ? 'es' : 'en';
     final message = reminder?.message.trim() ?? '';
     final quotesOff = LocalStore.setting('quoteSource', 0) == 3;
     var body = message.isNotEmpty
         ? message
-        : (quotesOff ? '' : MotivationalQuotes.random(lang));
+        : (quotesOff ? '' : _quoteOf(strings));
     final name = LocalStore.setting('profileName', '').trim();
     if (name.isNotEmpty && body.isNotEmpty) {
-      body = (lang == 'es' ? 'Hola $name, ' : 'Hi $name, ') + body;
+      body = strings.notif_greeting(name) + body;
     }
     final streak = habit.currentStreak;
     if (streak > 0) {
@@ -354,6 +354,29 @@ class NotificationService {
       body = '$body\n$line';
     }
     return body;
+  }
+
+  static final _random = Random();
+
+  String _quoteOf(AppLocalizations strings) {
+    final quotes = [
+      strings.notif_quote_1,
+      strings.notif_quote_2,
+      strings.notif_quote_3,
+      strings.notif_quote_4,
+      strings.notif_quote_5,
+      strings.notif_quote_6,
+      strings.notif_quote_7,
+      strings.notif_quote_8,
+      strings.notif_quote_9,
+      strings.notif_quote_10,
+      strings.notif_quote_11,
+      strings.notif_quote_12,
+      strings.notif_quote_13,
+      strings.notif_quote_14,
+      strings.notif_quote_15,
+    ];
+    return quotes[_random.nextInt(quotes.length)];
   }
 
   bool _quietToday(Habit habit) =>
@@ -418,7 +441,7 @@ class NotificationService {
     final slots = ReminderSchedule.hourlySlots(
       hour: reminder.hour,
       minute: reminder.minute,
-      everyHours: reminder.everyHours,
+      everyMinutes: reminder.everyMinutes,
       until: reminder.untilMinute,
       cap: cap,
     );
@@ -574,7 +597,7 @@ class NotificationService {
         ? ReminderSchedule.hourlySlots(
             hour: reminder.hour,
             minute: reminder.minute,
-            everyHours: reminder.everyHours,
+            everyMinutes: reminder.everyMinutes,
             until: reminder.untilMinute,
           )
         : [reminder.hour * 60 + reminder.minute];
@@ -746,7 +769,7 @@ class NotificationService {
           styleInformation: BigTextStyleInformation(body),
           largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
           timeoutAfter: reminder != null && reminder.isHourly
-              ? reminder.everyHours * Duration.millisecondsPerHour
+              ? reminder.everyMinutes * Duration.millisecondsPerMinute
               : null,
           actions: [
             if (habit.kind != HabitKind.negative)
@@ -974,6 +997,10 @@ class NotificationService {
   Future<void> cancelAll() async {
     if (_queuesInApp) _inApp.cancelAll();
     await _plugin.cancelAll();
+    if (_keepsPayloads) {
+      _payloads.clear();
+      await _savePayloads();
+    }
   }
 
   Future<void> _cancelExcept(String habitId, Set<int> keep) async {
@@ -1021,7 +1048,33 @@ class NotificationService {
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: matchDateTimeComponents,
     );
+    if (_keepsPayloads && payload != null) {
+      _payloads['$id'] = payload;
+      await _savePayloads();
+    }
   }
+
+  static const _payloadsKey = 'windowsReminderPayloads';
+
+  final _payloads = <String, String>{};
+
+  bool get _keepsPayloads => Platform.isWindows && !isPortable;
+
+  Future<void> _loadPayloads() async {
+    if (LocalStore.setting<Object?>(_payloadsKey, null) == null) {
+      await _plugin.cancelAll();
+      await _savePayloads();
+      await LocalStore.writeSetting('habitRemindersArmedOn', '');
+      await LocalStore.writeSetting('todoRemindersArmedOn', '');
+      return;
+    }
+    for (final MapEntry(:key, :value) in LocalStore.settingMap(_payloadsKey).entries) {
+      if (value is String) _payloads[key] = value;
+    }
+  }
+
+  Future<void> _savePayloads() =>
+      LocalStore.writeSetting(_payloadsKey, Map<String, String>.of(_payloads));
 
   static const _windowsReadyId = -987653;
 
@@ -1050,12 +1103,22 @@ class NotificationService {
   Future<void> _cancel(int id) async {
     if (_queuesInApp) _inApp.cancel(id);
     await _plugin.cancel(id);
+    if (_keepsPayloads && _payloads.remove('$id') != null) await _savePayloads();
   }
 
-  Future<List<PendingNotificationRequest>> _pending() =>
-      _queuesInApp
-          ? Future.value(_inApp.pending)
-          : _plugin.pendingNotificationRequests();
+  Future<List<PendingNotificationRequest>> _pending() async {
+    if (_queuesInApp) return _inApp.pending;
+    final pending = await _plugin.pendingNotificationRequests();
+    if (!_keepsPayloads) return pending;
+    final live = {for (final n in pending) '${n.id}'};
+    final before = _payloads.length;
+    _payloads.removeWhere((id, _) => !live.contains(id));
+    if (_payloads.length != before) await _savePayloads();
+    return [
+      for (final n in pending)
+        PendingNotificationRequest(n.id, n.title, n.body, n.payload ?? _payloads['${n.id}']),
+    ];
+  }
 
   int _notificationId(String habitId, String reminderId, int slot) =>
       ReminderSchedule.notificationId(habitId, reminderId, slot);

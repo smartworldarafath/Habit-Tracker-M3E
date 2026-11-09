@@ -42,6 +42,13 @@ class DayPlan {
       !habit.isPausedOn(day) &&
       !habit.isDoneAheadOn(day);
 
+  static int _freeFrom(DaySlot slot, DateTime day) {
+    final doneAt = slot.todo?.doneAt;
+    if (doneAt == null || doneAt.atMidnight != day.atMidnight) return slot.end;
+    final minute = doneAt.hour * 60 + doneAt.minute;
+    return minute.clamp(slot.start, slot.end);
+  }
+
   static DayPlan of(
     List<Habit> habits,
     DateTime day, {
@@ -50,8 +57,13 @@ class DayPlan {
     final due = habits.where((h) => isDueOn(h, day)).toList();
 
     final planned = [
-      for (final habit in due.where((h) => h.isPlanned))
-        DaySlot(start: habit.startMinute, end: habit.endMinute, habit: habit),
+      for (final habit in due)
+        for (final (start, minutes) in habit.planTimes)
+          DaySlot(
+            start: start,
+            end: (start + minutes).clamp(start, Habit.dayMinutes),
+            habit: habit,
+          ),
       for (final todo in todos.where((t) => t.minutes != null))
         DaySlot(
           start: todo.minutes!,
@@ -76,7 +88,8 @@ class DayPlan {
         slots.add(DaySlot(start: reached, end: slot.start));
       }
       slots.add(slot);
-      if (slot.end > reached) reached = slot.end;
+      final free = _freeFrom(slot, day);
+      if (free > reached) reached = free;
     }
 
     return DayPlan(

@@ -7,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:streak/app/app_lock.dart';
+import 'package:streak/app/lock_design.dart';
 import 'package:streak/app/pin_setup_page.dart';
 import 'package:streak/app/theme/app_tokens.dart';
 import 'package:streak/core/database/local_store.dart';
@@ -136,6 +137,7 @@ class SettingsActions {
     context.read<TodosController>().reload();
     context.read<TodoTagsController>().reload();
     context.read<CategoriesController>().reload();
+    context.read<IslandController>().reload();
     await HomeWidgetService.sync(habits.asMap);
   }
 
@@ -444,10 +446,8 @@ class SettingsActions {
   static Future<void> chooseLockMethod(BuildContext context) async {
     final settings = context.read<SettingsController>();
     final reason = context.l10n.app_lock_sub;
-    await showOptionSheet(
+    await showLockMethodSheet(
       context,
-      title: context.l10n.app_lock_method,
-      options: [context.l10n.app_lock_biometric, context.l10n.pin_lock],
       index: settings.appLockMode,
       onSelected: (i) async {
         if (i == settings.appLockMode) return;
@@ -572,6 +572,17 @@ class SettingsActions {
       return;
     }
     await settings.setVacationAll(true, await habits.pauseAll());
+  }
+
+  static Future<void> editProfile(BuildContext context) {
+    return showOptionSheet(
+      context,
+      title: context.l10n.edit_profile,
+      options: [context.l10n.change_photo, context.l10n.edit_name],
+      icons: const [LucideIcons.image, LucideIcons.userPen],
+      index: -1,
+      onSelected: (i) => i == 0 ? pickProfilePhoto(context) : editName(context),
+    );
   }
 
   static Future<void> editName(BuildContext context) async {
