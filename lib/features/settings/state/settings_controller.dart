@@ -97,6 +97,7 @@ class SettingsController extends ChangeNotifier {
     _notesEnabled = LocalStore.setting('notesEnabled', true);
     _trackingOption = LocalStore.setting('trackingOption', false);
     _showTodayProgress = LocalStore.setting('showTodayProgress', true);
+    _todayWeekStrip = LocalStore.setting('todayWeekStrip', false);
     _quietWhenDone = LocalStore.setting('quietWhenDone', true);
     _difficultyOption = LocalStore.setting('difficultyOption', false);
     Habit.weighDifficulty = _difficultyOption;
@@ -206,6 +207,7 @@ class SettingsController extends ChangeNotifier {
   late bool _islandEnabled;
   late bool _trackingOption;
   late bool _showTodayProgress;
+  late bool _todayWeekStrip;
   late bool _quietWhenDone;
   late bool _difficultyOption;
   late int _appLockMode;
@@ -851,6 +853,14 @@ class SettingsController extends ChangeNotifier {
   Future<void> setShowTodayProgress(bool value) async {
     _showTodayProgress = value;
     await LocalStore.writeSetting('showTodayProgress', value);
+    notifyListeners();
+  }
+
+  bool get todayWeekStrip => _todayWeekStrip;
+
+  Future<void> setTodayWeekStrip(bool value) async {
+    _todayWeekStrip = value;
+    await LocalStore.writeSetting('todayWeekStrip', value);
     notifyListeners();
   }
 

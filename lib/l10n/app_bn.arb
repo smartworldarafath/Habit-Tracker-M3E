@@ -46,5 +46,29 @@
   "onb_yours_body": "এর ব্যাকআপ নিন অথবা যখন খুশি সাথে নিয়ে যান।",
   "statistics": "পরিসংখ্যান",
   "best_streak": "সেরা ধারা",
-  "active_habits": "সক্রিয় অভ্যাস"
+  "active_habits": "সক্রিয় অভ্যাস",
+  "focus_change_habit": "অভ্যাস পরিবর্তন করুন",
+  "today_week_strip": "সাপ্তাহিক স্ট্রিপ",
+  "today_week_strip_sub": "আজকের শীর্ষে সপ্তাহের সাত দিন। অভ্যাস দেখতে একটি দিনে আলতো চাপুন।",
+  "shortcuts_title": "কিবোর্ড শর্টকাট",
+  "shortcuts_sub": "এক নজরে সব শর্টকাট",
+  "shortcuts_hint": "{keys} দিয়ে যেকোনো সময় এই তালিকাটি খুলুন",
+  "@shortcuts_hint": {
+    "placeholders": { "keys": { "type": "String" } }
+  },
+  "shortcuts_group_nav": "ন্যাভিগেশন",
+  "shortcuts_group_create": "তৈরি ও সম্পাদনা",
+  "shortcuts_group_focus": "ফোকাস",
+  "shortcuts_go_tab": "ট্যাব ১ থেকে ৫ এ যান",
+  "shortcuts_next_tab": "পরবর্তী ট্যাব",
+  "shortcuts_prev_tab": "পূর্ববর্তী ট্যাব",
+  "shortcuts_settings": "সেটিংস খুলুন",
+  "shortcuts_back": "ফিরে যান বা বন্ধ করুন",
+  "shortcuts_help": "এই তালিকা দেখান",
+  "shortcuts_new": "নতুন অভ্যাস বা কাজ",
+  "shortcuts_new_project": "নতুন প্রজেক্ট",
+  "shortcuts_search": "কাজ অনুসন্ধান",
+  "shortcuts_save": "সংরক্ষণ",
+  "shortcuts_toggle": "টাইমার শুরু বা বিরতি",
+  "shortcuts_start": "সেশন শুরু করুন"
 }

@@ -32,6 +32,9 @@ import 'package:streak/features/habits/pages/habit_form_page.dart';
 import 'package:streak/features/habits/pages/note_editor_page.dart';
 import 'package:streak/features/focus/widgets/focus_pill.dart';
 import 'package:streak/features/habits/state/categories_controller.dart';
+import 'package:streak/core/shortcuts/app_shortcuts.dart';
+import 'package:streak/features/habits/widgets/today_day_sheet.dart';
+import 'package:streak/features/habits/widgets/today_week_strip.dart';
 import 'package:streak/features/habits/widgets/category_editor_sheet.dart';
 import 'package:streak/features/habits/state/habits_controller.dart';
 import 'package:streak/features/island/data/island_ledger.dart';
@@ -71,7 +74,15 @@ class HomePage extends StatefulWidget {
 
 const _sinkDelay = Duration(milliseconds: 2500);
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with ShortcutHost {
+  @override
+  Map<AppShortcut, VoidCallback> get shortcuts => {
+        AppShortcut.create: () => AppNavigator.push(
+              const HabitFormPage(),
+              fullscreenDialog: true,
+            ),
+      };
+
   final _confetti = ValueNotifier(0);
   final _scrolled = ValueNotifier(false);
   String? _category;
@@ -784,6 +795,23 @@ class _HomePageState extends State<HomePage> {
                       ],
                     );
 
+              final strip = settings.todayWeekStrip && !_reordering
+                  ? TodayWeekStrip(
+                      habits: all,
+                      onSelected: (day) => showTodayDaySheet(
+                        context,
+                        day: day,
+                        onToggle: _toggle,
+                      ),
+                    )
+                  : null;
+              final headed = strip == null
+                  ? header
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [strip, header],
+                    );
+
               final ValueChanged<Habit>? swipe = settings.swipeCards
                   ? (habit) => _toggle(habit, today)
                   : null;
@@ -809,7 +837,7 @@ class _HomePageState extends State<HomePage> {
                         habits: visible,
                         mode: _mode,
                         reordering: _reordering,
-                        header: header,
+                        header: headed,
                         fold: fold,
                         more: more,
                         onReorder: (oldIndex, newIndex) =>
@@ -826,7 +854,7 @@ class _HomePageState extends State<HomePage> {
                     ? MinimalHabitList(
                         habits: visible,
                         mode: _mode,
-                        header: header,
+                        header: headed,
                         fold: fold,
                         more: more,
                         onOpen: _openDetails,
@@ -841,7 +869,7 @@ class _HomePageState extends State<HomePage> {
                         habits: visible,
                         mode: _mode,
                         reordering: _reordering,
-                        header: header,
+                        header: headed,
                         fold: fold,
                         more: more,
                         onReorder: (oldIndex, newIndex) =>

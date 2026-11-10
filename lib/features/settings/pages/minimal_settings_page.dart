@@ -9,6 +9,7 @@ import 'package:streak/core/extensions/inset_extensions.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/routing/app_navigator.dart';
 import 'package:streak/core/utils/app_dirs.dart';
+import 'package:streak/core/shortcuts/app_shortcuts.dart';
 import 'package:streak/core/utils/app_platform.dart';
 import 'package:streak/core/widgets/section_label.dart';
 import 'package:streak/features/settings/data_folder_actions.dart';
@@ -449,6 +450,13 @@ class _PreferencesPage extends StatelessWidget {
               value: SettingsActions.languageLabel(context, settings.localeCode),
               onTap: () => showLanguageSheet(context),
             ),
+            if (!isMobile)
+              SoftRow(
+                icon: LucideIcons.keyboard,
+                title: context.l10n.shortcuts_title,
+                subtitle: context.l10n.shortcuts_sub,
+                onTap: AppShortcuts.showHelp,
+              ),
             SoftRow(
               icon: LucideIcons.calendarDays,
               title: context.l10n.week_starts_on,
@@ -693,6 +701,15 @@ class _PreferencesPage extends StatelessWidget {
               trailing: _SoftSwitch(
                 value: settings.showTodayProgress,
                 onChanged: settings.setShowTodayProgress,
+              ),
+            ),
+            SoftRow(
+              icon: LucideIcons.calendarRange,
+              title: context.l10n.today_week_strip,
+              subtitle: context.l10n.today_week_strip_sub,
+              trailing: _SoftSwitch(
+                value: settings.todayWeekStrip,
+                onChanged: settings.setTodayWeekStrip,
               ),
             ),
             SoftRow(
