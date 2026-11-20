@@ -13,7 +13,11 @@
   "todo_discard_body": "The changes you made to this to-do will be lost.",
   "todo_delete_title": "{count, plural, =1{Delete this to-do?} other{Delete {count} to-dos?}}",
   "@todo_delete_title": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "todo_delete_body": "You'll have a few seconds to undo it.",
   "keep_editing": "Keep editing",
@@ -57,7 +61,14 @@
   "onb_yours_body": "Back it up or take it with you whenever you want.",
   "onb_step": "Step {step} of {total}",
   "@onb_step": {
-    "placeholders": { "step": { "type": "int" }, "total": { "type": "int" } }
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
   },
   "statistics": "Statistics",
   "done_today": "Done today",
@@ -109,7 +120,9 @@
   "data_folder_move_confirm": "Move and close",
   "@data_folder_move_body": {
     "placeholders": {
-      "path": { "type": "String" }
+      "path": {
+        "type": "String"
+      }
     }
   },
   "refresh_brought": "Your habits are up to date",
@@ -122,9 +135,15 @@
   "import_from_app_done": "Imported {habits} habits ({days} days) from {source}",
   "@import_from_app_done": {
     "placeholders": {
-      "habits": { "type": "int" },
-      "days": { "type": "int" },
-      "source": { "type": "String" }
+      "habits": {
+        "type": "int"
+      },
+      "days": {
+        "type": "int"
+      },
+      "source": {
+        "type": "String"
+      }
     }
   },
   "import_failed": "Couldn't import that file",
@@ -149,30 +168,50 @@
   "category_finance": "Finance",
   "count_days": "{count, plural, =1{1 day} other{{count} days}}",
   "@count_days": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "count_weeks": "{count, plural, =1{1 week} other{{count} weeks}}",
   "@count_weeks": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "count_months": "{count, plural, =1{1 month} other{{count} months}}",
   "@count_months": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "streak_unit_week": "{count}w",
   "@streak_unit_week": {
-    "placeholders": { "count": { "type": "String" } }
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
   },
   "streak_unit_month": "{count}mo",
   "@streak_unit_month": {
-    "placeholders": { "count": { "type": "String" } }
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
   },
   "habit_kind": "Habit type",
   "kind_positive": "Normal",
   "kind_negative": "Avoid",
   "kind_quantitative": "Amount",
   "kind_locked_hint": "Type can't be changed after creating the habit.",
-  "kind_negative_hint": "Every day counts as clean by default — your streak grows on its own. Tap the check only if you slip; that day turns red and you can undo it.",
+  "kind_negative_hint": "Every day counts as clean by default: your habit tracker m3e grows on its own. Tap the check only if you slip; that day turns red and you can undo it.",
   "cost_per_day": "Cost per day",
   "cost_note": "Optional. Leave it empty if this habit does not cost money.",
   "currency": "Currency",
@@ -205,13 +244,25 @@
   "focus_label_hint": "Maths, reading, work...",
   "focus_label_remove": "Remove label",
   "focus_label_remove_body": "{label} leaves the list. Your past sessions keep it.",
-  "@focus_label_remove_body": {"placeholders": {"label": {"type": "String"}}},
+  "@focus_label_remove_body": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "focus_label_remove_confirm": "Remove",
   "by_label": "By label",
   "tracking_hide": "Hide just tracking",
   "tracking_hide_sub": "Habits you only track stay out of this list",
   "tracking_show": "Show just tracking ({count})",
-  "@tracking_show": {"placeholders": {"count": {"type": "int"}}},
+  "@tracking_show": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "daily": "Daily",
   "weekly": "Weekly",
   "monthly": "Monthly",
@@ -275,7 +326,11 @@
   "app_lock_delay_instant": "Immediately",
   "app_lock_delay_seconds": "{value} seconds",
   "@app_lock_delay_seconds": {
-    "placeholders": { "value": { "type": "String" } }
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
   },
   "note_photos": "Photos",
   "note_take_photo": "Camera",
@@ -283,13 +338,21 @@
   "journey": "Journey",
   "journey_sub": "{count, plural, =1{1 photo} other{{count} photos}}",
   "@journey_sub": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "journey_empty": "No photos yet",
   "journey_empty_sub": "Add a photo to a note and it shows up here.",
   "archive_habit_body": "Move \"{name}\" to the archive? Its history is kept and you can restore it from Settings.",
   "@archive_habit_body": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "archived_habits": "Archived habits",
   "archived_habits_sub": "Restore them or delete them for good",
@@ -300,7 +363,11 @@
   "delete_forever": "Delete for good",
   "delete_forever_body": "Delete \"{name}\" and all of its history? This cannot be undone.",
   "@delete_forever_body": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "deleted_forever": "Habit deleted",
   "clear_progress": "Clear progress",
@@ -320,7 +387,11 @@
   "day_start_midnight": "Midnight",
   "day_start_hour": "{hour}:00 AM",
   "@day_start_hour": {
-    "placeholders": { "hour": { "type": "String" } }
+    "placeholders": {
+      "hour": {
+        "type": "String"
+      }
+    }
   },
   "share_photo": "Photo",
   "share_stats_short": "Stats",
@@ -335,7 +406,11 @@
   "habit_link_undo": "Clear the day",
   "habit_link_add": "Add {amount}",
   "@habit_link_add": {
-    "placeholders": { "amount": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
   "habit_link_relapse": "Log a relapse",
   "habit_link_focus": "Start a focus session",
@@ -393,20 +468,28 @@
   "every_n_hours": "Every {n} h",
   "@every_n_hours": {
     "placeholders": {
-      "n": { "type": "String" }
+      "n": {
+        "type": "String"
+      }
     }
   },
   "every_n_minutes": "Every {n} min",
   "@every_n_minutes": {
     "placeholders": {
-      "n": { "type": "String" }
+      "n": {
+        "type": "String"
+      }
     }
   },
   "every_hours_minutes": "Every {h} h {m} min",
   "@every_hours_minutes": {
     "placeholders": {
-      "h": { "type": "String" },
-      "m": { "type": "String" }
+      "h": {
+        "type": "String"
+      },
+      "m": {
+        "type": "String"
+      }
     }
   },
   "repeat_weekly": "Specific days",
@@ -420,9 +503,21 @@
     }
   },
   "every_n_weeks": "{n, plural, =1{Every week} other{Every {n} weeks}}",
-  "@every_n_weeks": {"placeholders": {"n": {"type": "int"}}},
+  "@every_n_weeks": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "every_n_months": "{n, plural, =1{Every month} other{Every {n} months}}",
-  "@every_n_months": {"placeholders": {"n": {"type": "int"}}},
+  "@every_n_months": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "sched_unit_days": "Days",
   "sched_unit_weeks": "Weeks",
   "sched_unit_months": "Months",
@@ -450,11 +545,23 @@
   "todo_tag_folders": "Folders",
   "todo_tag_list": "List",
   "todo_tag_count": "{n} open",
-  "@todo_tag_count": {"placeholders": {"n": {"type": "int"}}},
+  "@todo_tag_count": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "todo_tag_icon": "Icon",
   "todo_tag_pick": "Pick tags",
   "todo_tag_filtered": "Filtered by {name}",
-  "@todo_tag_filtered": {"placeholders": {"name": {"type": "String"}}},
+  "@todo_tag_filtered": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "uncategorized": "Uncategorized",
   "more_icons": "More icons",
   "less_icons": "Fewer icons",
@@ -511,15 +618,37 @@
   "any_step_sub": "Checking one step marks the day as done, without doing them all.",
   "steps_needed_sub": "The day counts as done with {needed} of {total} steps.",
   "@steps_needed_sub": {
-    "placeholders": { "needed": { "type": "int" }, "total": { "type": "int" } }
+    "placeholders": {
+      "needed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
   },
   "sched_start": "Starts on",
   "from_last_done": "Count from the last time",
   "month_weekday": "Same weekday every month",
   "month_weekday_sub": "Falls on the {when} of the month, not on a fixed date.",
-  "@month_weekday_sub": {"placeholders": {"when": {"type": "String"}}},
+  "@month_weekday_sub": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "nth_weekday": "{n, select, first{first} second{second} third{third} fourth{fourth} other{last}} {day}",
-  "@nth_weekday": {"placeholders": {"n": {"type": "String"}, "day": {"type": "String"}}},
+  "@nth_weekday": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      },
+      "day": {
+        "type": "String"
+      }
+    }
+  },
   "from_last_done_sub": "Each time you do it, the wait starts again. A missed day still breaks the streak.",
   "quotes": "Quotes",
   "quotes_which": "Which quotes",
@@ -567,7 +696,6 @@
   "consistency_trend": "Consistency trend",
   "by_habit": "By habit",
   "ranking": "Ranking",
-  "last_30_days": "Last 30 days",
   "active_days": "Active days",
   "perfect_days": "Perfect days",
   "per_week": "Per week",
@@ -623,7 +751,11 @@
   "tomorrow": "Tomorrow",
   "notes_count": "{count, plural, =1{1 note} other{{count} notes}}",
   "@notes_count": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "todos": "To-Do",
   "todo_view_list": "Simple",
@@ -645,19 +777,35 @@
   "todo_repeat_workdays": "Monday to Friday",
   "todo_repeat_days": "{count, plural, =1{Every day} other{Every {count} days}}",
   "@todo_repeat_days": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "todo_repeat_weeks": "{count, plural, =1{Every week} other{Every {count} weeks}}",
   "@todo_repeat_weeks": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "todo_repeat_months": "{count, plural, =1{Every month} other{Every {count} months}}",
   "@todo_repeat_months": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "todo_repeat_years": "{count, plural, =1{Every year} other{Every {count} years}}",
   "@todo_repeat_years": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "todo_repeat_custom": "Custom",
   "todo_repeat_starts": "Starts on",
@@ -667,11 +815,22 @@
   "todo_repeat_unit_years": "Years",
   "todo_repeat_on_day": "On day {day}",
   "@todo_repeat_on_day": {
-    "placeholders": { "day": { "type": "int" } }
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
   },
   "todo_repeat_on_weekday": "On the {nth, select, 1{first} 2{second} 3{third} 4{fourth} other{last}} {weekday}",
   "@todo_repeat_on_weekday": {
-    "placeholders": { "nth": { "type": "String" }, "weekday": { "type": "String" } }
+    "placeholders": {
+      "nth": {
+        "type": "String"
+      },
+      "weekday": {
+        "type": "String"
+      }
+    }
   },
   "todo_repeat_from_done": "Count from when I finish it",
   "todo_repeat_skip": "Skip this one",
@@ -680,8 +839,12 @@
   "todo_focus_only_body": "\"{name}\" is completed by finishing a {minutes} minute focus session.",
   "@todo_focus_only_body": {
     "placeholders": {
-      "name": { "type": "String" },
-      "minutes": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "String"
+      }
     }
   },
   "todo_estimate_none": "No duration",
@@ -705,11 +868,19 @@
   "todo_select": "Select",
   "todo_selected": "{count, plural, =1{1 selected} other{{count} selected}}",
   "@todo_selected": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "todo_deleted_many": "{count, plural, =1{To-do deleted} other{{count} to-dos deleted}}",
   "@todo_deleted_many": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "priority_none": "No priority",
   "priority_low": "Low",
@@ -721,18 +892,30 @@
   "pick_a_date": "Pick a date",
   "todo_left": "{count, plural, =0{All done} =1{1 to do} other{{count} to do}}",
   "@todo_left": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "todo_completed_count": "{count, plural, =1{Completed (1)} other{Completed ({count})}}",
   "@todo_completed_count": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "todo_search": "Search to-dos",
   "todo_search_empty": "Nothing matches that",
   "todo_clear_completed": "Clear completed",
   "todo_clear_completed_body": "{count, plural, =1{This deletes the completed to-do.} other{This deletes the {count} completed to-dos.}}",
   "@todo_clear_completed_body": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "prefs_general": "General",
   "prefs_cards": "Cards and calendar",
@@ -781,12 +964,16 @@
   "focus_pick_habit": "What are you focusing on?",
   "focus_change_habit": "Change habit",
   "today_week_strip": "Week strip",
-  "today_week_strip_sub": "The seven days of the week at the top of Today. Tap a day to see its habits.",
+  "today_week_strip_sub": "The seven days of the week at the top of Today. Tap a day to see its habits, swipe to see past weeks.",
   "shortcuts_title": "Keyboard shortcuts",
   "shortcuts_sub": "Every shortcut at a glance",
   "shortcuts_hint": "Open this list any time with {keys}",
   "@shortcuts_hint": {
-    "placeholders": { "keys": { "type": "String" } }
+    "placeholders": {
+      "keys": {
+        "type": "String"
+      }
+    }
   },
   "shortcuts_group_nav": "Navigate",
   "shortcuts_group_create": "Create and edit",
@@ -809,7 +996,11 @@
   "unit_seconds": "seconds",
   "focus_target_reached": "Target reached",
   "@focus_saved": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "focus_pause": "Pause",
   "focus_resume": "Resume",
@@ -831,13 +1022,28 @@
   "focus_end_add_time": "Add focused time",
   "focus_amount_added": "{amount} added to {habit}",
   "@focus_end_short": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "@focus_end_tasks": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "@focus_amount_added": {
-    "placeholders": { "amount": { "type": "String" }, "habit": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "habit": {
+        "type": "String"
+      }
+    }
   },
   "focus_personalize": "Custom",
   "focus_track_brown": "Brown noise",
@@ -877,13 +1083,17 @@
   "focus_break_in": "Break in {n}",
   "@focus_break_in": {
     "placeholders": {
-      "n": { "type": "String" }
+      "n": {
+        "type": "String"
+      }
     }
   },
   "focus_back_in": "Focus in {n}",
   "@focus_back_in": {
     "placeholders": {
-      "n": { "type": "String" }
+      "n": {
+        "type": "String"
+      }
     }
   },
   "focus_round": "Round {n}",
@@ -894,36 +1104,57 @@
   "select_all": "Select all",
   "selected_count": "{count, plural, =1{1 selected} other{{count} selected}}",
   "@selected_count": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "focus_delete_sessions": "Delete sessions?",
   "focus_delete_sessions_body": "{count, plural, =1{1 focus session will be removed. This cannot be undone.} other{{count} focus sessions will be removed. This cannot be undone.}}",
   "@focus_delete_sessions_body": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "focus_sessions_deleted": "{count, plural, =1{1 session deleted} other{{count} sessions deleted}}",
   "@focus_sessions_deleted": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "unscheduled_title": "Day not scheduled",
   "unscheduled_body": "This habit is not scheduled on {day}. Log it anyway as an extra?",
   "@unscheduled_body": {
-    "placeholders": { "day": { "type": "String" } }
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
   },
   "unscheduled_confirm": "Log anyway",
   "paused_day_title": "Day paused",
   "paused_day_body": "This habit is paused on {day}. Log it anyway?",
   "@paused_day_body": {
-    "placeholders": { "day": { "type": "String" } }
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
   },
   "rest_days_none": "None",
-  "consistency": "Consistency",
   "last_90_days": "Last 90 days",
   "last_12_months": "Last 12 months",
   "consistency_vs_previous": "{change} vs previous",
   "@consistency_vs_previous": {
     "placeholders": {
-      "change": {"type": "String"}
+      "change": {
+        "type": "String"
+      }
     }
   },
   "focus_clear_today": "Clear today's sessions",
@@ -947,7 +1178,11 @@
   "day_timeline": "Day",
   "day_timeline_free": "{span} free",
   "@day_timeline_free": {
-    "placeholders": { "span": { "type": "String" } }
+    "placeholders": {
+      "span": {
+        "type": "String"
+      }
+    }
   },
   "day_timeline_anytime": "Anytime",
   "day_timeline_empty": "Nothing planned for this day",
@@ -967,14 +1202,29 @@
   "focus_history_empty_sub": "Every focus session you finish shows up here.",
   "focus_history_day": "{count, plural, =1{1 session} other{{count} sessions}}",
   "@focus_history_day": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "yesterday": "Yesterday",
   "@focus_round": {
-    "placeholders": { "n": { "type": "int" } }
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
   },
   "@focus_goal_today": {
-    "placeholders": { "done": { "type": "String" }, "goal": { "type": "String" } }
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
+    }
   },
   "notes_hint": "Open a habit and long-press a day on its calendar to see or add notes",
   "app_style": "App style",
@@ -1052,25 +1302,48 @@
   "day_clean": "Clean",
   "day_relapses": "{count, plural, =1{1 relapse} other{{count} relapses}}",
   "@day_relapses": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "day_log_relapse": "Log relapse",
   "day_amount": "{value} of {goal}",
   "@day_amount": {
-    "placeholders": { "value": { "type": "String" }, "goal": { "type": "String" } }
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
+    }
   },
   "today_filter": "Show",
   "today_fold_done": "Done ({count})",
   "@today_fold_done": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "today_fold_other": "Other days ({count})",
   "@today_fold_other": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "today_fold_hidden": "Hidden ({count})",
   "@today_fold_hidden": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "card_activity": "Activity on cards",
   "card_activity_sub": "Shows the last days on the card, ready to tick",
@@ -1088,7 +1361,11 @@
   "color_theme_custom": "Your colors",
   "color_theme_custom_hint": "{mode, select, dark{These are the colors for dark mode. Switch to light mode to edit those.} other{These are the colors for light mode. Switch to dark mode to edit those.}}",
   "@color_theme_custom_hint": {
-    "placeholders": { "mode": { "type": "String" } }
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
   },
   "color_part_background": "Background",
   "color_part_card": "Cards",
@@ -1105,7 +1382,7 @@
   "week_start_sub": "The first column of every grid",
   "celebration_sub": "What you see when you tick a habit",
   "check_sound": "Sound when completing",
-  "check_sound_sub": "A soft chime when you finish a habit. Silent when your phone is on silent.",
+  "check_sound_sub": "A soft chime when you finish a habit or a to-do. Silent when your phone is on silent.",
   "start_view_sub": "The view Today opens in",
   "quotes_sub": "Which quotes show up on Today",
   "focus_daily_goal_sub": "Minutes of focus you aim for each day",
@@ -1118,16 +1395,28 @@
   "focus_only_title": "Needs a focus session",
   "focus_only_body": "\"{name}\" is completed by finishing a focus session.",
   "@focus_only_body": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "focus_only_past": "\"{name}\" is only completed by a focus session, so past days cannot be checked.",
   "@focus_only_past": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "focus_only_clear_title": "Clear this check?",
   "focus_only_clear_body": "Only a focus session can check \"{name}\" again.",
   "@focus_only_clear_body": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "focus_only_start": "Start session",
   "focus_flowtime": "Flowtime",
@@ -1157,7 +1446,11 @@
   },
   "focus_end_flow": "You focused for {time}.",
   "@focus_end_flow": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "on": "On",
   "off": "Off",
@@ -1197,20 +1490,30 @@
   "widget_today_done": "{done} of {total} done",
   "@widget_today_done": {
     "placeholders": {
-      "done": { "type": "String" },
-      "total": { "type": "String" }
+      "done": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
     }
   },
   "@widget_today_progress": {
     "placeholders": {
-      "done": { "type": "String" },
-      "total": { "type": "String" }
+      "done": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
     }
   },
   "widget_todos_open": "To-do  {count}",
   "@widget_todos_open": {
     "placeholders": {
-      "count": { "type": "String" }
+      "count": {
+        "type": "String"
+      }
     }
   },
   "widget_todos_empty": "Nothing left for today",
@@ -1219,20 +1522,30 @@
   "widget_this_week": "This week",
   "widget_last_days": "Last {count} days",
   "@widget_last_days": {
-    "placeholders": { "count": { "type": "String" } }
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
   },
   "widget_cfg_days": "Days shown",
   "widget_week_done": "{done} of {total}",
   "@widget_week_done": {
     "placeholders": {
-      "done": { "type": "String" },
-      "total": { "type": "String" }
+      "done": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
     }
   },
   "widget_best_streak": "🔥 {streak} best streak",
   "@widget_best_streak": {
     "placeholders": {
-      "streak": { "type": "String" }
+      "streak": {
+        "type": "String"
+      }
     }
   },
   "widget_cfg_title": "Customize widget",
@@ -1249,14 +1562,18 @@
   "widget_cfg_opacity": "Opacity  {value}%",
   "@widget_cfg_opacity": {
     "placeholders": {
-      "value": { "type": "String" }
+      "value": {
+        "type": "String"
+      }
     }
   },
   "widget_cfg_border": "Border",
   "widget_cfg_thickness": "Thickness  {value}dp",
   "@widget_cfg_thickness": {
     "placeholders": {
-      "value": { "type": "String" }
+      "value": {
+        "type": "String"
+      }
     }
   },
   "widget_cfg_todos_all": "Show every task",
@@ -1299,19 +1616,25 @@
   "notif_streak": "🔥 {streak} day streak",
   "@notif_streak": {
     "placeholders": {
-      "streak": { "type": "String" }
+      "streak": {
+        "type": "String"
+      }
     }
   },
   "notif_streak_week": "🔥 {streak} week streak",
   "@notif_streak_week": {
     "placeholders": {
-      "streak": { "type": "String" }
+      "streak": {
+        "type": "String"
+      }
     }
   },
   "notif_streak_month": "🔥 {streak} month streak",
   "@notif_streak_month": {
     "placeholders": {
-      "streak": { "type": "String" }
+      "streak": {
+        "type": "String"
+      }
     }
   },
   "notif_action_done": "Done",
@@ -1324,42 +1647,54 @@
   "minutes_short": "{value} min",
   "@minutes_short": {
     "placeholders": {
-      "value": { "type": "String" }
+      "value": {
+        "type": "String"
+      }
     }
   },
   "a11y_mark_done": "Mark {name} as done",
   "@a11y_mark_done": {
     "description": "Screen reader label for the button that logs a habit",
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "a11y_mark_not_done": "Mark {name} as not done",
   "@a11y_mark_not_done": {
     "description": "Screen reader label for the button that undoes a habit",
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "a11y_add_amount": "Add to {name}",
   "@a11y_add_amount": {
     "description": "Screen reader label for the button that adds progress to a quantitative habit",
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "a11y_log_relapse": "Log a relapse for {name}",
   "@a11y_log_relapse": {
     "description": "Screen reader label for the button that logs a relapse on a habit to avoid",
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "a11y_clear_relapse": "Clear today's relapse for {name}",
   "@a11y_clear_relapse": {
     "description": "Screen reader label for the button that removes today's relapse",
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "a11y_not_done": "not done",
@@ -1386,11 +1721,29 @@
   },
   "period_this_week": "This week",
   "tracked_week": "{n} this week",
-  "@tracked_week": {"placeholders": {"n": {"type": "int"}}},
+  "@tracked_week": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "tracked_month": "{n} this month",
-  "@tracked_month": {"placeholders": {"n": {"type": "int"}}},
+  "@tracked_month": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "tracked_year": "{n} this year",
-  "@tracked_year": {"placeholders": {"n": {"type": "int"}}},
+  "@tracked_year": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "period_last_week": "Last week",
   "period_this_month": "This month",
   "period_last_month": "Last month",
@@ -1400,11 +1753,19 @@
   "period_last_year": "Last year",
   "period_week_of": "Week of {date}",
   "@period_week_of": {
-    "placeholders": { "date": { "type": "String" } }
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
   },
   "focus_period_sessions": "{count, plural, =0{No sessions} =1{1 session} other{{count} sessions}}",
   "@focus_period_sessions": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "notes_all": "All notes",
   "notes_empty_all": "No notes yet",
@@ -1542,13 +1903,25 @@
   "last_check": "Last logged",
   "check_history": "Check history",
   "check_history_sub": "{count} days checked off",
-  "@check_history_sub": {"placeholders": {"count": {"type": "String"}}},
+  "@check_history_sub": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "check_never": "Never",
   "check_no_time": "no time saved",
   "heatmap_rolling": "Last 12 months",
   "heatmap_rolling_sub": "The yearly grid ends today instead of on 31 December",
   "check_marks": "{count} marks",
-  "@check_marks": {"placeholders": {"count": {"type": "String"}}},
+  "@check_marks": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "today_progress_option": "Progress on Today",
   "today_progress_option_sub": "The day's ring and the strength bar on each habit",
   "quiet_when_done": "Quiet once done",
@@ -1568,7 +1941,13 @@
   "pin_enter": "Enter your PIN",
   "pin_wrong": "Wrong PIN",
   "pin_wait": "Too many tries. Wait {seconds} s",
-  "@pin_wait": {"placeholders": {"seconds": {"type": "String"}}},
+  "@pin_wait": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "pin_recovery_title": "Your recovery code",
   "pin_recovery_body": "If you forget the PIN, this code opens Habit Tracker M3E and turns the lock off. Keep it somewhere safe: it won't be shown again.",
   "pin_copy": "Copy code",
@@ -1617,13 +1996,21 @@
   "clean_goal_sub": "Pick how many days in a row you want to hold out",
   "clean_goal_left": "{count, plural, =1{1 day to go} other{{count} days to go}}",
   "@clean_goal_left": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "clean_goal_reached": "Goal reached",
   "clean_goal_again": "Your streak keeps going. Keep it up",
   "clean_goal_of": "of {goal}",
   "@clean_goal_of": {
-    "placeholders": { "goal": { "type": "int" } }
+    "placeholders": {
+      "goal": {
+        "type": "int"
+      }
+    }
   },
   "relapse_spent": "Spent on this relapse",
   "money_spent": "Money spent",
@@ -1634,11 +2021,19 @@
   "total_goal_sub": "A target for the whole habit, like 1000 pages or 50 times",
   "total_goal_left": "{amount} to go",
   "@total_goal_left": {
-    "placeholders": { "amount": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
   "total_goal_of": "of {amount}",
   "@total_goal_of": {
-    "placeholders": { "amount": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
   "book": "Book",
   "book_pages": "Pages in the book",
@@ -1648,24 +2043,47 @@
   "book_read_before": "Times already read",
   "book_reads": "{count, plural, =0{First read} =1{Read once} other{Read {count} times}}",
   "@book_reads": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "book_read_number": "Read {number}",
   "@book_read_number": {
-    "placeholders": { "number": { "type": "int" } }
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
   },
   "book_since": "Since {day}",
   "@book_since": {
-    "placeholders": { "day": { "type": "String" } }
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
   },
   "book_reading_now": "Reading",
   "book_page": "Page {page} of {pages}",
   "@book_page": {
-    "placeholders": { "page": { "type": "String" }, "pages": { "type": "String" } }
+    "placeholders": {
+      "page": {
+        "type": "String"
+      },
+      "pages": {
+        "type": "String"
+      }
+    }
   },
   "count_times": "{count, plural, =1{1 time} other{{count} times}}",
   "@count_times": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "focus_change_timer": "Change timer",
   "focus_retime_hint": "The time you've already focused is kept.",
@@ -1678,35 +2096,63 @@
   "focus_plan_vs_real": "Planned vs real",
   "focus_avg_longer": "On average, {pct} longer than planned",
   "@focus_avg_longer": {
-    "placeholders": { "pct": { "type": "String" } }
+    "placeholders": {
+      "pct": {
+        "type": "String"
+      }
+    }
   },
   "focus_avg_shorter": "On average, {pct} shorter than planned",
   "@focus_avg_shorter": {
-    "placeholders": { "pct": { "type": "String" } }
+    "placeholders": {
+      "pct": {
+        "type": "String"
+      }
+    }
   },
   "focus_avg_on_plan": "On average, right on plan",
   "focus_session_longer": "{pct} longer than planned",
   "@focus_session_longer": {
-    "placeholders": { "pct": { "type": "String" } }
+    "placeholders": {
+      "pct": {
+        "type": "String"
+      }
+    }
   },
   "focus_session_shorter": "{pct} shorter than planned",
   "@focus_session_shorter": {
-    "placeholders": { "pct": { "type": "String" } }
+    "placeholders": {
+      "pct": {
+        "type": "String"
+      }
+    }
   },
   "focus_session_on_plan": "Right on plan",
   "focus_pauses_avg": "Pauses per session",
   "focus_pause_count": "{count, plural, =0{No pauses} =1{1 pause} other{{count} pauses}}",
   "@focus_pause_count": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "focus_vs_previous": "{change} vs the previous period",
   "@focus_vs_previous": {
-    "placeholders": { "change": { "type": "String" } }
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
   },
   "focus_plan_hint": "Counts from start to finish, pauses included. Only sessions started from now on.",
   "focus_busiest": "Most focused at {hour}",
   "@focus_busiest": {
-    "placeholders": { "hour": { "type": "String" } }
+    "placeholders": {
+      "hour": {
+        "type": "String"
+      }
+    }
   },
   "notif_quote_1": "Today's a great day to keep the streak alive! 🔥",
   "notif_quote_2": "One more day, one step closer to who you want to be.",
@@ -1726,7 +2172,104 @@
   "app_lock_biometric_sub": "The fingerprint, face or lock you already use on this phone",
   "todo_repeat_last_day": "On the last day",
   "todo_sort_time": "By date and time",
-  "todo_sort_name": "A to Z"
+  "todo_sort_name": "A to Z",
+  "day_marked": "Marked {date}",
+  "@day_marked": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "day_unmarked": "Unmarked {date}",
+  "@day_unmarked": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "todo_switch_view": "Change view",
+  "support_thanks_title": "Thanks for being here 🤍",
+  "support_thanks_body": "Habit Tracker M3E is free and always will be, with no ads and nothing hidden.\n\nIf it helps you build your habits, buying me a coffee makes my day ☕\nAnd if you can't, no worries: a star on GitHub does too ⭐",
+  "avoid_since": "Since",
+  "todo_remind_before": "Remind me before",
+  "todo_remind_at_time": "Only at the time",
+  "todo_remind_label": "{time} before",
+  "@todo_remind_label": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todo_due_in": "In {time}",
+  "@todo_due_in": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todo_completed": "Completed",
+  "habits_search": "Search habits",
+  "focus_goal_reached": "{habit}: goal reached",
+  "@focus_goal_reached": {
+    "placeholders": {
+      "habit": {
+        "type": "String"
+      }
+    }
+  },
+  "widget_cfg_arrows": "Scroll with buttons",
+  "widget_cfg_arrows_hint": "Arrows instead of swiping the list",
+  "notes_search": "Search notes",
+  "second_chances": "Second chances",
+  "second_chances_sub": "Every 30 days in a row earn a chance, up to 3. If you miss a day, it is spent and your habit tracker m3e goes on",
+  "chances_left": "{count, plural, =1{1 chance saved} other{{count} chances saved}}",
+  "@chances_left": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chances_next": "{days, plural, =1{1 more day to earn a chance} other{{days} more days to earn a chance}}",
+  "@chances_next": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "chance_used": "Habit Tracker M3E saved on {date}",
+  "@chance_used": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "chance_used_notice": "A second chance kept your {habit} habit tracker m3e going",
+  "@chance_used_notice": {
+    "placeholders": {
+      "habit": {
+        "type": "String"
+      }
+    }
+  },
+  "chances_info": "Life happens. For every 30 days in a row you earn a second chance, and you can keep up to 3. If you miss a day, one is spent and your habit tracker m3e goes on. Two missed days in a row still break it. Your stats stay honest: the missed day still counts as missed.",
+  "chances_ok": "Got it",
+  "keep_reminding": "Keep reminding",
+  "keep_reminding_sub": "Reminders keep coming today even after it's done",
+  "todo_link": "Count to-dos",
+  "todo_link_sub": "Checking a to-do from a project or tag counts for this habit.",
+  "reminder_after_miss": "Only after a missed day",
+  "reminder_after_miss_desc": "Rings once, on the next day the habit is due, only if the last one went wrong. Never if you've already done it today.",
+  "reminder_after_miss_hint": "Leave empty for a few kind words",
+  "reminder_after_miss_short": "After a missed day",
+  "notif_comeback": "Last time didn't happen, and that's okay. Doing it today puts you right back on track.",
+  "notif_comeback_chance": "A second chance kept your habit tracker m3e alive. Today counts.",
+  "notif_comeback_hard": "This one has been tough lately. A smaller goal still counts, and you can change it anytime.",
+  "notif_comeback_avoid": "One slip doesn't erase your progress. Today is a fresh start."
 }
-
-

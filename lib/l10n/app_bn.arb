@@ -54,7 +54,11 @@
   "shortcuts_sub": "এক নজরে সব শর্টকাট",
   "shortcuts_hint": "{keys} দিয়ে যেকোনো সময় এই তালিকাটি খুলুন",
   "@shortcuts_hint": {
-    "placeholders": { "keys": { "type": "String" } }
+    "placeholders": {
+      "keys": {
+        "type": "String"
+      }
+    }
   },
   "shortcuts_group_nav": "ন্যাভিগেশন",
   "shortcuts_group_create": "তৈরি ও সম্পাদনা",

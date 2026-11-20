@@ -3,7 +3,7 @@ description: "Habit Tracker M3E: a minimal habit tracker that helps you build la
 
 publish_to: 'none'
 
-version: 2.1.0+19
+version: 2.1.2+20
 
 environment:
   sdk: ^3.9.2

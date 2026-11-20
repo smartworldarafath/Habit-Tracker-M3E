@@ -8,6 +8,7 @@ import 'package:streak/core/extensions/date_extensions.dart';
 import 'package:streak/features/habits/data/completion_ops.dart';
 import 'package:streak/features/habits/data/habit.dart';
 import 'package:streak/features/habits/data/habit_links.dart';
+import 'package:streak/features/habits/data/todo_credit.dart';
 import 'package:streak/features/todos/data/todo.dart';
 import 'package:streak/services/home_widget_service.dart';
 import 'package:streak/services/notification_service.dart';
@@ -40,7 +41,18 @@ class WidgetActionService {
       try {
         final uri = Uri.parse(raw);
         if (uri.queryParameters.containsKey('todoId')) {
-          ticked.addAll(_applyTodo(todos, uri));
+          final id = uri.queryParameters['todoId'];
+          final before = todos.where((todo) => todo.id == id).firstOrNull;
+          final changed = _applyTodo(todos, uri);
+          ticked.addAll(changed);
+          if (changed.isNotEmpty) {
+            touched.addAll(TodoCredit.apply(
+              habits,
+              todos,
+              before: changed.length > 1 ? null : before,
+              after: changed.last,
+            ));
+          }
           continue;
         }
         if (HabitLinks.marksHabit(uri)) {
@@ -61,7 +73,9 @@ class WidgetActionService {
       await LocalStore.writeHabit(habit);
       final before = quiet[id];
       if (before == null ||
-          (!habit.fromLastDone && before == habit.silencesRemindersOn(today))) {
+          (!habit.fromLastDone &&
+              !habit.followsMisses &&
+              before == habit.silencesRemindersOn(today))) {
         continue;
       }
       try {
@@ -169,6 +183,8 @@ class WidgetActionService {
           ? CompletionOps.clearRelapse(habit, target)
           : CompletionOps.logRelapse(habit, target),
       'progress' => CompletionOps.addProgress(habit, target, delta),
+      'step' => CompletionOps.setStep(
+          habit, target, uri.queryParameters['step'] ?? '', true),
       _ => CompletionOps.toggle(habit, target),
     };
 

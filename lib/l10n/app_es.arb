@@ -344,14 +344,20 @@
   "every_n_minutes": "Cada {n} min",
   "@every_n_minutes": {
     "placeholders": {
-      "n": { "type": "String" }
+      "n": {
+        "type": "String"
+      }
     }
   },
   "every_hours_minutes": "Cada {h} h {m} min",
   "@every_hours_minutes": {
     "placeholders": {
-      "h": { "type": "String" },
-      "m": { "type": "String" }
+      "h": {
+        "type": "String"
+      },
+      "m": {
+        "type": "String"
+      }
     }
   },
   "repeat_weekly": "Días concretos",
@@ -632,8 +638,12 @@
   "todo_focus_only_body": "\"{name}\" se completa al terminar una sesión de foco de {minutes} minutos.",
   "@todo_focus_only_body": {
     "placeholders": {
-      "name": { "type": "String" },
-      "minutes": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "String"
+      }
     }
   },
   "todo_estimate_none": "Sin duración",
@@ -718,12 +728,16 @@
   "focus_pick_habit": "¿En qué te vas a concentrar?",
   "focus_change_habit": "Cambiar de hábito",
   "today_week_strip": "Tira de la semana",
-  "today_week_strip_sub": "Los siete días de la semana arriba en Hoy. Toca un día para ver sus hábitos.",
+  "today_week_strip_sub": "Los siete días de la semana arriba en Hoy. Toca un día para ver sus hábitos y desliza para ver semanas pasadas.",
   "shortcuts_title": "Atajos de teclado",
   "shortcuts_sub": "Todos los atajos de un vistazo",
   "shortcuts_hint": "Abre esta lista cuando quieras con {keys}",
   "@shortcuts_hint": {
-    "placeholders": { "keys": { "type": "String" } }
+    "placeholders": {
+      "keys": {
+        "type": "String"
+      }
+    }
   },
   "shortcuts_group_nav": "Navegar",
   "shortcuts_group_create": "Crear y editar",
@@ -997,7 +1011,7 @@
   "week_start_sub": "La primera columna de cada rejilla",
   "celebration_sub": "Lo que ves al marcar un hábito",
   "check_sound": "Sonido al completar",
-  "check_sound_sub": "Una campanita suave al terminar un hábito. No suena con el móvil en silencio.",
+  "check_sound_sub": "Una campanita suave al terminar un hábito o una tarea. No suena con el móvil en silencio.",
   "start_view_sub": "La vista con la que abre Hoy",
   "quotes_sub": "Qué frases salen en Hoy",
   "focus_daily_goal_sub": "Minutos de foco que buscas cada día",
@@ -1510,7 +1524,41 @@
   "app_lock_biometric_sub": "La huella, la cara o el bloqueo que ya usas en el móvil",
   "todo_repeat_last_day": "El último día",
   "todo_sort_time": "Por fecha y hora",
-  "todo_sort_name": "De la A a la Z"
+  "todo_sort_name": "De la A a la Z",
+  "day_marked": "Marcado el {date}",
+  "day_unmarked": "Desmarcado el {date}",
+  "todo_switch_view": "Cambiar vista",
+  "support_thanks_title": "Gracias por estar aquí 🤍",
+  "support_thanks_body": "Habit Tracker M3E es gratis y lo será siempre, sin anuncios ni nada escondido.\n\nSi te ayuda con tus hábitos, invitarme a un café me alegra el día ☕\nY si no puedes, no pasa nada: una estrella en GitHub también ⭐",
+  "avoid_since": "Desde el",
+  "todo_remind_before": "Avisar antes",
+  "todo_remind_at_time": "Solo a la hora",
+  "todo_remind_label": "{time} antes",
+  "todo_due_in": "Dentro de {time}",
+  "todo_completed": "Completadas",
+  "habits_search": "Buscar hábitos",
+  "focus_goal_reached": "{habit}: meta cumplida",
+  "widget_cfg_arrows": "Desplazar con botones",
+  "widget_cfg_arrows_hint": "Flechas en vez de deslizar la lista",
+  "notes_search": "Buscar notas",
+  "second_chances": "Segundas oportunidades",
+  "second_chances_sub": "Cada 30 días seguidos ganas una oportunidad, hasta 3. Si un día no puedes, se gasta y tu racha sigue",
+  "chances_left": "{count, plural, =1{1 oportunidad guardada} other{{count} oportunidades guardadas}}",
+  "chances_next": "{days, plural, =1{Falta 1 día para ganar una oportunidad} other{Faltan {days} días para ganar una oportunidad}}",
+  "chance_used": "Racha salvada el {date}",
+  "chance_used_notice": "Una segunda oportunidad ha salvado tu racha de {habit}",
+  "chances_info": "A todos nos pasa. Por cada 30 días seguidos ganas una segunda oportunidad, y puedes guardar hasta 3. Si un día fallas, se gasta una y tu racha sigue. Dos días seguidos sin hacerlo sí la cortan. Tus estadísticas siguen siendo reales: ese día cuenta como no hecho.",
+  "chances_ok": "Entendido",
+  "keep_reminding": "Seguir avisando",
+  "keep_reminding_sub": "Los avisos siguen hoy aunque ya lo hayas hecho",
+  "todo_link": "Contar tareas",
+  "todo_link_sub": "Marcar una tarea de un proyecto o etiqueta cuenta para este hábito.",
+  "reminder_after_miss": "Solo tras un fallo",
+  "reminder_after_miss_desc": "Suena una vez, el siguiente día que toca, solo si el anterior salió mal. Si hoy ya lo hiciste, no suena.",
+  "reminder_after_miss_hint": "Déjalo vacío para recibir unas palabras amables",
+  "reminder_after_miss_short": "Tras un fallo",
+  "notif_comeback": "La última vez no salió, y no pasa nada. Si lo haces hoy, vuelves a estar en marcha.",
+  "notif_comeback_chance": "Una segunda oportunidad salvó tu racha. Hoy cuenta.",
+  "notif_comeback_hard": "Últimamente cuesta. Una meta más pequeña también cuenta, y puedes cambiarla cuando quieras.",
+  "notif_comeback_avoid": "Un tropiezo no borra lo que llevas. Hoy empiezas de nuevo."
 }
-
-

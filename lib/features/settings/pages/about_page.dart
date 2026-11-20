@@ -30,7 +30,7 @@ class AboutPage extends StatefulWidget {
 }
 
 class _AboutPageState extends State<AboutPage> {
-  String _version = 'v2.1.0';
+  String _version = 'v2.1.2';
 
   @override
   void initState() {

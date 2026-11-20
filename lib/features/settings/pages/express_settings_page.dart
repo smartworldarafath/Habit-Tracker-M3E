@@ -6,6 +6,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:streak/app/theme/app_tokens.dart';
 import 'package:streak/core/express/express_motion.dart';
+import 'package:streak/core/widgets/setting_info.dart';
 import 'package:streak/core/express/express_page.dart';
 import 'package:streak/core/express/express_shapes.dart';
 import 'package:streak/core/express/express_surface.dart';
@@ -28,6 +29,7 @@ import 'package:streak/features/settings/pages/archived_habits_page.dart';
 import 'package:streak/features/settings/pages/quotes_page.dart';
 import 'package:streak/features/settings/widgets/profile_avatar_view.dart';
 import 'package:streak/features/settings/settings_actions.dart';
+import 'package:streak/features/settings/widgets/support_thanks.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
 import 'package:streak/features/settings/widgets/import_apps_card.dart';
 import 'package:streak/features/settings/widgets/minimal_settings_widgets.dart';
@@ -169,7 +171,7 @@ class ExpressSettingsPage extends StatelessWidget {
       const _Footer(),
     ];
 
-    return Scaffold(
+    return BriefRows(child: Scaffold(
       appBar: AppBar(toolbarHeight: 52),
       body: Center(
         child: ConstrainedBox(
@@ -183,7 +185,7 @@ class ExpressSettingsPage extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -255,44 +257,44 @@ class _AppearancePage extends StatelessWidget {
   const _AppearancePage();
 
   @override
-  Widget build(BuildContext context) => ExpressScaffold(
+  Widget build(BuildContext context) => BriefRows(child: ExpressScaffold(
     title: context.l10n.appearance,
     subtitle: context.l10n.appearance_sub,
     children: _appearanceTiles(context),
-  );
+  ));
 }
 
 class _PreferencesPage extends StatelessWidget {
   const _PreferencesPage();
 
   @override
-  Widget build(BuildContext context) => ExpressScaffold(
+  Widget build(BuildContext context) => BriefRows(child: ExpressScaffold(
     title: context.l10n.preferences,
     subtitle: context.l10n.preferences_sub,
     children: _preferenceTiles(context),
-  );
+  ));
 }
 
 class _DataPage extends StatelessWidget {
   const _DataPage();
 
   @override
-  Widget build(BuildContext context) => ExpressScaffold(
+  Widget build(BuildContext context) => BriefRows(child: ExpressScaffold(
     title: context.l10n.data,
     subtitle: context.l10n.data_sub,
     children: _dataTiles(context),
-  );
+  ));
 }
 
 class _SupportPage extends StatelessWidget {
   const _SupportPage();
 
   @override
-  Widget build(BuildContext context) => ExpressScaffold(
+  Widget build(BuildContext context) => BriefRows(child: ExpressScaffold(
     title: context.l10n.support,
     subtitle: context.l10n.support_sub,
     children: _supportTiles(context),
-  );
+  ));
 }
 
 class _ProfileHero extends StatelessWidget {
@@ -432,6 +434,20 @@ class _Toggle extends StatelessWidget {
       onTap: () => onChanged(!value),
       trailing: ExpressSwitch(value: value, onChanged: onChanged),
     );
+    if (enabled && subtitle != null) {
+      return SettingInfo(
+        icon: icon,
+        title: title,
+        text: subtitle!,
+        control: ExpressSwitch(value: value, onChanged: onChanged),
+        builder: (context, open) => ExpressTile(
+          icon: icon,
+          title: title,
+          onTap: open,
+          trailing: ExpressSwitch(value: value, onChanged: onChanged),
+        ),
+      );
+    }
     if (enabled) return tile;
     return IgnorePointer(child: Opacity(opacity: 0.45, child: tile));
   }
@@ -548,7 +564,7 @@ class _PerformancePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsController>();
 
-    return ExpressScaffold(
+    return BriefRows(child: ExpressScaffold(
       title: context.l10n.performance,
       subtitle: context.l10n.performance_sub,
       children: [
@@ -564,7 +580,7 @@ class _PerformancePage extends StatelessWidget {
           ],
         ),
       ],
-    );
+    ));
   }
 }
 
@@ -572,11 +588,11 @@ class _WidgetsPage extends StatelessWidget {
   const _WidgetsPage();
 
   @override
-  Widget build(BuildContext context) => ExpressScaffold(
+  Widget build(BuildContext context) => BriefRows(child: ExpressScaffold(
     title: context.l10n.widgets,
     subtitle: context.l10n.widgets_hint,
     children: const [WidgetStyleList()],
-  );
+  ));
 }
 
 List<Widget> _preferenceTiles(BuildContext context) {
@@ -837,6 +853,13 @@ List<Widget> _preferenceTiles(BuildContext context) {
           onChanged: settings.setDifficultyOption,
         ),
         _Toggle(
+          icon: LucideIcons.heartHandshake,
+          title: context.l10n.second_chances,
+          subtitle: context.l10n.second_chances_sub,
+          value: settings.secondChances,
+          onChanged: (value) => SettingsActions.setSecondChances(context, value),
+        ),
+        _Toggle(
           icon: LucideIcons.chartPie,
           title: context.l10n.today_progress_option,
           subtitle: context.l10n.today_progress_option_sub,
@@ -1016,6 +1039,7 @@ List<Widget> _supportTiles(BuildContext context) {
         ),
       ],
     ),
+    const SupportThanks(),
   ];
 }
 

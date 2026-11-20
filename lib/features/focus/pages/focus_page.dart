@@ -91,7 +91,7 @@ class _FocusPageState extends State<FocusPage> with ShortcutHost {
     if (context.read<SettingsController>().focusKeepAwake) {
       WakelockPlus.enable();
     }
-    if ((Platform.isWindows || Platform.isLinux) &&
+    if (!isMobile &&
         context.read<SettingsController>().focusFullscreen) {
       _immersive = true;
       DesktopWindow.setFullscreen(true);
@@ -321,7 +321,7 @@ class _FocusPageState extends State<FocusPage> with ShortcutHost {
   Future<void> _switchHabit(HabitsController habits) async {
     final id = await showFocusHabitPicker(
       context,
-      habits: habits.habits,
+      habits: focusOrder(habits.habits),
       selectedId: _focus.habitId,
     );
     if (id == null || !mounted) return;
@@ -470,7 +470,7 @@ class _FocusPageState extends State<FocusPage> with ShortcutHost {
                     onReset: _restart,
                     awaiting: focus.isAwaiting || focus.switchIn > 0,
                     finished: focus.isFinished,
-                    onSkip: focus.isBreak ? focus.skipBreak : null,
+                    onSkip: focus.isBreak && !focus.isAwaiting && focus.switchIn == 0 ? focus.skipBreak : null,
                     onAddMinute: focus.isFlow ? null : focus.addMinute,
                     onToggle: _toggleRunning,
                     onStop: _confirmStop,
@@ -510,7 +510,7 @@ class _FocusPageState extends State<FocusPage> with ShortcutHost {
                       awaiting: focus.isAwaiting || focus.switchIn > 0,
                       finished: focus.isFinished,
                       onToggle: _toggleRunning,
-                      onSkip: focus.isBreak ? focus.skipBreak : null,
+                      onSkip: focus.isBreak && !focus.isAwaiting && focus.switchIn == 0 ? focus.skipBreak : null,
                       onAddMinute: focus.isFlow ? null : focus.addMinute,
                       onStop: _confirmStop,
                     ),

@@ -23,7 +23,7 @@ class AppUpdatesPage extends StatefulWidget {
 class _AppUpdatesPageState extends State<AppUpdatesPage> {
   bool _isLoading = false;
   UpdateCheckResult? _result;
-  String _currentVersion = '2.1.0';
+  String _currentVersion = '2.1.2';
 
   @override
   void initState() {

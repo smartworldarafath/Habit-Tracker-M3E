@@ -67,6 +67,7 @@ class TodosWidget : GlanceAppWidget() {
             currentState(GlanceWidgets.REVISION)
             Content(
                 context,
+                appWidgetId,
                 WidgetStyle.loadFor(context, appWidgetId),
                 WidgetConfig.todosAll(context, appWidgetId),
                 WidgetConfig.art(context, appWidgetId),
@@ -76,7 +77,7 @@ class TodosWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun Content(context: Context, style: WidgetStyle, all: Boolean, art: Boolean, look: WidgetLook) {
+    private fun Content(context: Context, appWidgetId: Int, style: WidgetStyle, all: Boolean, art: Boolean, look: WidgetLook) {
         val todos = TodosPayload.due(context, all)
         val done = todos.count { it.optBoolean("done", false) }
         val shown = todos.filterNot { look.hideDone && it.optBoolean("done", false) }
@@ -118,6 +119,7 @@ class TodosWidget : GlanceAppWidget() {
                         Card(
                             context, card, density, shown, size.width.value - left - PAD_DP,
                             GlanceModifier.defaultWeight().fillMaxHeight(), look.compact,
+                            size.height.value - PAD_DP * 2, appWidgetId, look.arrows,
                         )
                     }
                 }
@@ -142,6 +144,7 @@ class TodosWidget : GlanceAppWidget() {
                     Card(
                         context, card, density, shown, size.width.value - PAD_DP * 2,
                         GlanceModifier.fillMaxWidth().defaultWeight(), look.compact,
+                        size.height.value - PAD_DP * 2 - 52f, appWidgetId, look.arrows,
                     )
                 }
             }
@@ -182,6 +185,9 @@ class TodosWidget : GlanceAppWidget() {
         width: Float,
         modifier: GlanceModifier,
         compact: Boolean,
+        height: Float,
+        appWidgetId: Int,
+        arrows: Boolean,
     ) {
         Column(
             modifier = modifier
@@ -200,12 +206,38 @@ class TodosWidget : GlanceAppWidget() {
                     "Nothing left for today",
                 )
                 Drawn(WidgetDraw.text(context, empty, 13f, card.muted, 600, width - 24f), density, empty)
-            } else {
+            } else if (!arrows) {
                 LazyColumn(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
                     items(todos.size) { i -> Box(edge) { TodoRow(context, card, density, todos[i], width - 24f, compact) } }
                 }
+            } else {
+                val tall = height + WidgetScroll.extra(context, appWidgetId, LocalSize.current.height.value)
+                fun page(from: Int, space: Float): List<JSONObject> {
+                    var room = space
+                    return todos.drop(from).takeWhile { todo ->
+                        val row = rowHeight(context, todo, compact)
+                        (room >= row).also { room -= row }
+                    }.ifEmpty { todos.drop(from).take(1) }
+                }
+                val from = WidgetScroll.offset(context, appWidgetId, todos.size, 1)
+                val whole = page(from, tall - 39f)
+                val more = from > 0 || whole.size < todos.size - from
+                val fit = (if (more) page(from, tall - 39f - WidgetScroll.FOOTER) else whole).take(10)
+                Column(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
+                    for (todo in fit) Box(edge) { TodoRow(context, card, density, todo, width - 24f, compact) }
+                }
+                if (more) WidgetScroll.Arrows(context, card.ink, appWidgetId, density, from, fit.size, todos.size, 12f)
             }
         }
+    }
+
+    private fun rowHeight(context: Context, todo: JSONObject, compact: Boolean): Float {
+        if (compact) return 26f
+        val done = todo.optBoolean("done", false)
+        if (done) return 34f
+        val day = todo.optLong("day", -1L)
+        val overdue = day >= 0L && day < TodosPayload.todayEpochDay()
+        return if (trailing(context, todo, overdue).isEmpty()) 34f else 42f
     }
 
     @Composable

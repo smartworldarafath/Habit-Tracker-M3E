@@ -12,6 +12,7 @@ import 'package:streak/core/express/express_shapes.dart';
 import 'package:streak/core/express/express_surface.dart';
 import 'package:streak/core/express/express_type.dart';
 import 'package:streak/core/i18n/l10n.dart';
+import 'package:streak/core/utils/app_snackbar.dart';
 import 'package:streak/core/minimal/minimal_kit.dart';
 import 'package:streak/core/minimal/minimal_nav.dart';
 import 'package:streak/core/minimal/minimal_type.dart';
@@ -25,7 +26,9 @@ import 'package:streak/core/widgets/page_motion.dart';
 import 'package:streak/core/widgets/glass.dart';
 import 'package:streak/features/focus/state/focus_actions.dart';
 import 'package:streak/features/focus/state/focus_controller.dart';
+import 'package:streak/features/habits/data/habit.dart';
 import 'package:streak/features/habits/pages/day_timeline_page.dart';
+import 'package:streak/features/habits/pages/habit_details_page.dart';
 import 'package:streak/features/habits/pages/home_page.dart';
 import 'package:streak/features/habits/state/habits_controller.dart';
 import 'package:streak/features/habits/widgets/today_intro.dart';
@@ -110,11 +113,22 @@ class _HomeShellState extends State<HomeShell>
     final focus = context.read<FocusController>();
     final habits = context.read<HabitsController>();
     final todos = context.read<TodosController>();
-    focus.onRoundSaved = (session) {
+    focus.onRoundSaved = (session) async {
       unawaited(creditFocusTodo(todos, focus.todoId, session));
-      unawaited(creditFocusRound(habits, focus, session));
+      final day = session.countedOn;
+      final before = habits.byId(session.habitId)?.isCompletedOn(day) ?? true;
+      await creditFocusRound(habits, focus, session);
+      final habit = habits.byId(session.habitId);
+      if (before || habit == null || !habit.isCompletedOn(day)) return;
+      if (!mounted) return;
+      AppSnackbar.success(
+        context,
+        context.l10n.focus_goal_reached(habit.name),
+        sticky: true,
+      );
     };
     _waitForNextDay();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _announceChances());
     unawaited(HealthSteps.sync(habits));
     final settings = context.read<SettingsController>();
     AutoSync.start(
@@ -123,6 +137,29 @@ class _HomeShellState extends State<HomeShell>
         if (mounted) await SettingsActions.reloadAll(context);
       },
       save: () => settings.runAutoBackup(force: true, archive: false),
+    );
+  }
+
+  void _announceChances() {
+    if (!mounted || ModalRoute.of(context)?.isCurrent == false) return;
+    final recent = AppClock.today().epochDay - 7;
+    var latest = LocalStore.setting('chanceNoticeDay', 0);
+    if (latest < recent) latest = recent - 1;
+    Habit? saved;
+    for (final habit in context.read<HabitsController>().habits) {
+      final days = habit.savedDays;
+      if (days.isEmpty || days.last.epochDay <= latest) continue;
+      latest = days.last.epochDay;
+      saved = habit;
+    }
+    if (saved == null) return;
+    unawaited(LocalStore.writeSetting('chanceNoticeDay', latest));
+    final id = saved.id;
+    AppSnackbar.info(
+      context,
+      context.l10n.chance_used_notice(saved.name),
+      onTap: () => AppNavigator.push(HabitDetailsPage(habitId: id), fade: true),
+      sticky: true,
     );
   }
 
@@ -262,6 +299,7 @@ class _HomeShellState extends State<HomeShell>
       final habits = context.read<HabitsController>();
       if (AppPlatform.isIOS) _applyWidgetActions(habits);
       habits.refresh().then((_) {
+        _announceChances();
         HomeWidgetService.sync(habits.asMap);
         return HealthSteps.sync(habits);
       });
@@ -388,6 +426,7 @@ class _HomeShellState extends State<HomeShell>
                           ExpressNavItem(
                             icon: _iconOf(tab),
                             label: _labelOf(context, tab),
+                            iconOnly: tab == _Tab.settings,
                           ),
                       ],
                       index: tabs.indexOf(current),

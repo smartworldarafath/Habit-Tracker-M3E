@@ -11,6 +11,7 @@ import 'package:streak/core/icons/habit_icons.dart';
 import 'package:streak/core/utils/app_dirs.dart';
 import 'package:streak/features/focus/data/focus_session.dart';
 import 'package:streak/features/habits/data/habit.dart';
+import 'package:streak/features/statistics/data/habit_stats.dart';
 import 'package:streak/l10n/app_localizations.dart';
 import 'package:streak/services/widget_icon_service.dart';
 
@@ -113,6 +114,8 @@ class HomeWidgetService {
           'cfg_compact': l10n.widget_cfg_compact,
           'cfg_compact_hint': l10n.widget_cfg_compact_hint,
           'cfg_compact_todos_hint': l10n.widget_cfg_compact_todos_hint,
+          'cfg_arrows': l10n.widget_cfg_arrows,
+          'cfg_arrows_hint': l10n.widget_cfg_arrows_hint,
           'cfg_today_band': l10n.widget_cfg_today_band,
           'cfg_habit_colors': l10n.widget_cfg_habit_colors,
           'cfg_habit_colors_hint': l10n.widget_cfg_habit_colors_hint,
@@ -225,6 +228,13 @@ class HomeWidgetService {
       habits.values.where((habit) => !habit.isArchived).toList()
         ..sort((a, b) => a.order.compareTo(b.order));
 
+  @visibleForTesting
+  static bool scheduledOn(Habit habit, DateTime day) {
+    if (habit.isPausedOn(day) || !habit.isScheduledOn(day)) return false;
+    return !day.atMidnight.isBefore(habit.createdAt.atMidnight) ||
+        habit.isCompletedOn(day);
+  }
+
   static Map<String, List<int>> _focusTotals(DateTime now, int weekStart) {
     final today = now.subtract(Duration(hours: AppClock.cutoffHour)).atMidnight;
     final todayIndex = today.epochDay;
@@ -301,11 +311,20 @@ class HomeWidgetService {
         'anyAmount': habit.acceptsAnyAmount,
         'atMost': habit.capsAmount,
         'incrementAmount': habit.incrementAmount,
+        if (habit.hasSubsteps) ...{
+          'steps': [
+            for (final step in habit.substeps) [step.id, step.title],
+          ],
+          'stepsDone': [...?habit.completions[today.dayKey]?.steps],
+          'stepsNeeded': habit.anySteps
+              ? habit.stepsNeeded.clamp(1, habit.substeps.length)
+              : habit.substeps.length,
+        },
         'counts': window
             .map((d) => habit.completions[d.dayKey]?.count ?? 0.0)
             .toList(),
         'scheduled': window
-            .map((d) => !habit.isPausedOn(d) && habit.isScheduledOn(d))
+            .map((d) => scheduledOn(habit, d))
             .toList(),
         'heatmap': _levelsOf(habit, today),
         'earlier': {
@@ -314,7 +333,7 @@ class HomeWidgetService {
               .map((d) => habit.completions[d.dayKey]?.count ?? 0.0)
               .toList(),
           'scheduled': earlier
-              .map((d) => !habit.isPausedOn(d) && habit.isScheduledOn(d))
+              .map((d) => scheduledOn(habit, d))
               .toList(),
         },
       };
@@ -373,6 +392,8 @@ class HomeWidgetService {
                 weight,
         'total': due.length,
         'bestStreak': bestStreak,
+        'perfectStreak':
+            HabitStats.perfectStreakOf(counted, AppClock.today()).current,
         'weekDone': weekDone,
       },
       'timestamp': DateTime.now().millisecondsSinceEpoch,

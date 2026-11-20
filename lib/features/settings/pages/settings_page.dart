@@ -30,6 +30,7 @@ import 'package:streak/core/widgets/verified_badge.dart';
 import 'package:streak/features/settings/widgets/color_theme_sheet.dart';
 import 'package:streak/features/settings/widgets/settings_sheets.dart';
 import 'package:streak/features/settings/widgets/profile_avatar_view.dart';
+import 'package:streak/features/settings/widgets/support_thanks.dart';
 import 'package:streak/features/settings/widgets/widget_style_list.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -148,7 +149,7 @@ class ClassicSettingsPage extends StatelessWidget {
           const SizedBox(height: 28),
           Center(
             child: Text(
-              'M3E v1.3.1',
+              'M3E v2.1.2',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -170,12 +171,14 @@ class _ClassicSection extends StatelessWidget {
     required this.label,
     required this.children,
     this.lead,
+    this.after,
   });
 
   final String title;
   final String label;
   final List<Widget> children;
   final Widget? lead;
+  final Widget? after;
 
   @override
   Widget build(BuildContext context) {
@@ -188,6 +191,7 @@ class _ClassicSection extends StatelessWidget {
           if (lead != null) Entrance(index: 1, child: lead!),
           if (lead != null) const SizedBox(height: 12),
           Entrance(index: 1, child: Card(child: Column(children: children))),
+          if (after != null) Entrance(index: 2, child: after!),
         ],
       ),
     );
@@ -692,6 +696,18 @@ class _ClassicPreferencesPage extends StatelessWidget {
                   ),
                   settingsDivider(context),
                   SettingRow(
+                    icon: LucideIcons.heartHandshake,
+                    title: context.l10n.second_chances,
+                    subtitle: context.l10n.second_chances_sub,
+                    trailing: Segmented(
+                      options: [context.l10n.off, context.l10n.on],
+                      index: settings.secondChances ? 1 : 0,
+                      onChanged: (i) =>
+                          SettingsActions.setSecondChances(context, i == 1),
+                    ),
+                  ),
+                  settingsDivider(context),
+                  SettingRow(
                     icon: LucideIcons.bellOff,
                     title: context.l10n.quiet_when_done,
                     subtitle: context.l10n.quiet_when_done_sub,
@@ -959,6 +975,7 @@ class _ClassicSupportPage extends StatelessWidget {
     return _ClassicSection(
       title: context.l10n.support,
       label: context.l10n.support_sub,
+      after: const SupportThanks(),
       children: [
         NavRow(
           icon: LucideIcons.userPlus,

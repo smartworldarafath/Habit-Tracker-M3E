@@ -36,6 +36,8 @@ extension HabitIntervalLabel on HabitInterval {
 
 enum ScheduleUnit { days, weeks, months }
 
+enum ComebackTone { gentle, chance, hard, avoid }
+
 enum HabitKind { positive, negative, quantitative }
 
 enum QuantKind { generic, water, reading, time }
@@ -81,6 +83,8 @@ class Habit {
     this.focusOnly = false,
     this.tracking = false,
     this.healthSteps = false,
+    this.todoLink = '',
+    this.keepReminding = false,
     this.anyAmount = false,
     this.atMost = false,
     this.anySteps = false,
@@ -293,6 +297,10 @@ class Habit {
 
   bool get readsSteps => healthSteps && kind == HabitKind.quantitative;
 
+  final String todoLink;
+
+  final bool keepReminding;
+
   final bool anyAmount;
 
   final bool atMost;
@@ -305,6 +313,9 @@ class Habit {
 
   static bool weighDifficulty = false;
   static int weekStart = DateTime.monday;
+  static bool secondChances = false;
+  static const chanceEvery = 30;
+  static const chanceCap = 3;
 
   int get difficultyWeight => !weighDifficulty
       ? 2
@@ -315,7 +326,7 @@ class Habit {
         };
 
   bool silencesRemindersOn(DateTime date) =>
-      kind != HabitKind.negative && isCompletedOn(date);
+      !keepReminding && kind != HabitKind.negative && isCompletedOn(date);
 
   final int startMinute;
   final int durationMinutes;
@@ -407,6 +418,9 @@ class Habit {
   bool isOffDay(DateTime date) => !isScheduledOn(date) || isPausedOn(date);
 
   bool get isOnVacation => vacations.any((v) => v.isOngoing);
+
+  bool isVacationOn(DateTime date) =>
+      isNeutralOn(date) && vacations.any((v) => v.contains(date));
 
   bool isNeutralOn(DateTime date) =>
       !date.atMidnight.isBefore(startedAt) &&
@@ -694,9 +708,154 @@ class Habit {
     return count;
   }
 
+  bool get usesChances =>
+      secondChances &&
+      kind != HabitKind.negative &&
+      !tracking &&
+      (interval == HabitInterval.daily ||
+          interval == HabitInterval.weekdays ||
+          interval == HabitInterval.everyXDays);
+
+  late final ({
+    int current,
+    int best,
+    int left,
+    List<DateTime> saved,
+    Set<int> used,
+  })? _chances = _chanceRun();
+
+  int get chancesLeft => _chances?.left ?? 0;
+
+  List<DateTime> get savedDays => _chances?.saved ?? const [];
+
+  bool isChanceDay(DateTime date) =>
+      _chances?.used.contains(date.epochDay) ?? false;
+
+  static bool missFollowable(
+    HabitKind kind,
+    HabitInterval interval, {
+    bool tracking = false,
+  }) =>
+      !tracking &&
+      (kind == HabitKind.negative ||
+          interval == HabitInterval.daily ||
+          interval == HabitInterval.weekdays ||
+          interval == HabitInterval.everyXDays);
+
+  bool get canFollowMisses =>
+      missFollowable(kind, interval, tracking: tracking);
+
+  bool get followsMisses =>
+      canFollowMisses && reminders.any((reminder) => reminder.afterMiss);
+
+  static const hardSlips = 4;
+  static const hardSpanDays = 14;
+
+  bool countsOn(DateTime date) =>
+      kind == HabitKind.negative ? !isPausedOn(date) : !isOffDay(date);
+
+  DateTime? dueBefore(DateTime date) {
+    var cursor = date.atMidnight;
+    for (var step = 0; step < 400; step++) {
+      cursor = cursor.addDays(-1);
+      if (cursor.isBefore(startedAt)) return null;
+      if (countsOn(cursor)) return cursor;
+    }
+    return null;
+  }
+
+  bool slipsOn(DateTime date) {
+    final day = date.atMidnight;
+    if (day.isBefore(startedAt) ||
+        day.isAfter(AppClock.today()) ||
+        !countsOn(day)) {
+      return false;
+    }
+    return kind == HabitKind.negative
+        ? isRelapseOn(day)
+        : !isSatisfiedOn(day) && !isCoveredOn(day);
+  }
+
+  ComebackTone? comebackOn(DateTime date) {
+    if (!canFollowMisses) return null;
+    final day = date.atMidnight;
+    final today = AppClock.today();
+    if (day.isBefore(today) || !countsOn(day)) return null;
+    if (day.isAtSameMomentAs(today) &&
+        (kind == HabitKind.negative ? isRelapseOn(day) : isCompletedOn(day))) {
+      return null;
+    }
+    final missed = dueBefore(day);
+    if (missed == null || !slipsOn(missed)) return null;
+    final earlier = dueBefore(missed);
+    if (earlier != null && slipsOn(earlier)) return null;
+    if (kind == HabitKind.negative) return ComebackTone.avoid;
+    if (_savedByChance(missed, earlier)) return ComebackTone.chance;
+    var slips = 0;
+    for (var back = 0; back < hardSpanDays; back++) {
+      if (slipsOn(missed.addDays(-back))) slips++;
+    }
+    return slips >= hardSlips ? ComebackTone.hard : ComebackTone.gentle;
+  }
+
+  bool _savedByChance(DateTime missed, DateTime? earlier) {
+    if (!usesChances) return false;
+    if (missed.isBefore(AppClock.today())) return isChanceDay(missed);
+    return chancesLeft > 0 && (earlier == null || !isChanceDay(earlier));
+  }
+
+  ({
+    int current,
+    int best,
+    int left,
+    List<DateTime> saved,
+    Set<int> used,
+  })? _chanceRun() {
+    if (!usesChances) return null;
+    final today = AppClock.today();
+    final daily = interval == HabitInterval.daily;
+    var run = 0;
+    var best = 0;
+    var bank = 0;
+    var missed = false;
+    var saved = <DateTime>[];
+    final used = <int>{};
+    for (var day = startedAt; !day.isAfter(today); day = day.addDays(1)) {
+      if (isNeutralOn(day) || (!daily && !isScheduledOn(day))) continue;
+      if (daily ? isCompletedOn(day) : isSatisfiedOn(day)) {
+        run++;
+        if (run > best) best = run;
+        if (run % chanceEvery == 0 && bank < chanceCap) bank++;
+        missed = false;
+        continue;
+      }
+      if (day.isAtSameMomentAs(today)) continue;
+      if (!missed && bank > 0) {
+        bank--;
+        missed = true;
+        saved.add(day);
+        used.add(day.epochDay);
+        continue;
+      }
+      if (missed && saved.isNotEmpty) used.remove(saved.last.epochDay);
+      run = 0;
+      bank = 0;
+      missed = false;
+      saved = [];
+    }
+    return (
+      current: run,
+      best: best,
+      left: bank,
+      saved: saved,
+      used: used,
+    );
+  }
+
   late final int currentStreak = _currentStreak();
 
   int _currentStreak() {
+    if (_chances case final chances?) return chances.current;
     final floor = startedAt;
 
     if (kind == HabitKind.negative) {
@@ -850,6 +1009,7 @@ class Habit {
   }
 
   int _longestStreak() {
+    if (_chances case final chances?) return chances.best;
     if (kind == HabitKind.negative) return _dailyBest();
 
     if (completions.isEmpty) return 0;
@@ -948,6 +1108,8 @@ class Habit {
     bool? focusOnly,
     bool? tracking,
     bool? healthSteps,
+    String? todoLink,
+    bool? keepReminding,
     bool? anyAmount,
     bool? atMost,
     bool? anySteps,
@@ -1008,6 +1170,8 @@ class Habit {
       focusOnly: focusOnly ?? this.focusOnly,
       tracking: tracking ?? this.tracking,
       healthSteps: healthSteps ?? this.healthSteps,
+      todoLink: todoLink ?? this.todoLink,
+      keepReminding: keepReminding ?? this.keepReminding,
       anyAmount: anyAmount ?? this.anyAmount,
       atMost: atMost ?? this.atMost,
       anySteps: anySteps ?? this.anySteps,
@@ -1084,6 +1248,8 @@ class Habit {
         'focusOnly': focusOnly,
         'tracking': tracking,
         if (healthSteps) 'healthSteps': true,
+        if (todoLink.isNotEmpty) 'todoLink': todoLink,
+        if (keepReminding) 'keepReminding': true,
         'anyAmount': anyAmount,
         if (atMost) 'atMost': true,
         'anySteps': anySteps,
@@ -1172,6 +1338,8 @@ class Habit {
         focusOnly: (map['focusOnly'] ?? false) as bool,
         tracking: (map['tracking'] ?? false) as bool,
         healthSteps: map['healthSteps'] == true,
+        todoLink: (map['todoLink'] ?? '') as String,
+        keepReminding: map['keepReminding'] == true,
         anyAmount: (map['anyAmount'] ?? false) as bool,
         atMost: map['atMost'] == true,
         anySteps: (map['anySteps'] ?? false) as bool,

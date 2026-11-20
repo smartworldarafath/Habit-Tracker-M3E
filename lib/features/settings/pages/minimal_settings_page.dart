@@ -18,6 +18,7 @@ import 'package:streak/features/settings/pages/app_updates_page.dart';
 import 'package:streak/features/settings/pages/app_style_page.dart';
 import 'package:streak/features/settings/pages/archived_habits_page.dart';
 import 'package:streak/features/settings/settings_actions.dart';
+import 'package:streak/features/settings/widgets/support_thanks.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
 import 'package:streak/features/settings/widgets/import_apps_card.dart';
 import 'package:streak/features/settings/widgets/minimal_settings_widgets.dart';
@@ -695,6 +696,16 @@ class _PreferencesPage extends StatelessWidget {
               ),
             ),
             SoftRow(
+              icon: LucideIcons.heartHandshake,
+              title: context.l10n.second_chances,
+              subtitle: context.l10n.second_chances_sub,
+              trailing: _SoftSwitch(
+                value: settings.secondChances,
+                onChanged: (value) =>
+                    SettingsActions.setSecondChances(context, value),
+              ),
+            ),
+            SoftRow(
               icon: LucideIcons.chartPie,
               title: context.l10n.today_progress_option,
               subtitle: context.l10n.today_progress_option_sub,
@@ -911,6 +922,7 @@ class _SupportPage extends StatelessWidget {
             ),
           ],
         ),
+        const SupportThanks(),
       ],
     );
   }

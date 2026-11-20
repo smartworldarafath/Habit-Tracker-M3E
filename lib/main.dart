@@ -17,6 +17,7 @@ import 'package:streak/features/focus/pages/focus_page.dart';
 import 'package:streak/features/focus/state/focus_actions.dart';
 import 'package:streak/features/focus/state/focus_controller.dart';
 import 'package:streak/features/focus/widgets/focus_pill.dart';
+import 'package:streak/features/habits/data/habit.dart';
 import 'package:streak/features/habits/pages/habit_details_page.dart';
 import 'package:streak/features/habits/pages/health_info_page.dart';
 import 'package:streak/features/habits/state/categories_controller.dart';
@@ -93,6 +94,7 @@ Future<void> _startup() async {
   await initializeDateFormatting();
   await LocalStore.init();
   AppClock.cutoffHour = LocalStore.setting('dayCutoff', 0);
+  Habit.secondChances = LocalStore.setting('secondChances', true);
   await WidgetActionService.drain(
     LocalStore.readHabits(),
     todos: LocalStore.readTodos(),
@@ -173,8 +175,9 @@ void _run() {
         ChangeNotifierProvider(create: (_) => FocusController()),
         ChangeNotifierProvider(create: (_) => IslandController()),
         ChangeNotifierProvider(
-          create: (_) {
+          create: (context) {
             final controller = HabitsController();
+            context.read<TodosController>().onDone = controller.creditTodo;
             HomeWidgetService.sync(controller.asMap);
             WidgetsBinding.instance.addPostFrameCallback(
               (_) => controller.rescheduleReminders(),
@@ -289,6 +292,7 @@ Future<void> widgetActionEntrypoint() async {
     await initializeDateFormatting();
     await LocalStore.init();
     AppClock.cutoffHour = LocalStore.setting('dayCutoff', 0);
+    Habit.secondChances = LocalStore.setting('secondChances', true);
     await LocalStore.reloadHabits();
     final habits = LocalStore.readHabits();
     final todos = LocalStore.readTodos();

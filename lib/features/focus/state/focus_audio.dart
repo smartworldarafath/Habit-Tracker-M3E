@@ -103,7 +103,7 @@ class FocusAudio {
     'm4a',
     'aac',
     'wav',
-    if (!AppPlatform.isWindows) ...['ogg', 'opus'],
+    if (!AppPlatform.isWindows && !AppPlatform.isMacOS) ...['ogg', 'opus'],
     'flac',
     'mp4',
   ];

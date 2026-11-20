@@ -52,7 +52,7 @@ Future<Directory> _resolveDataDir() async {
   final support = await getApplicationSupportDirectory().timeout(wait);
   final chosen = await DataLocation.resolve(support);
   if (chosen != null) return chosen;
-  if (AppPlatform.isLinux) return support;
+  if (AppPlatform.isLinux || AppPlatform.isMacOS) return support;
 
   final fallback = File('${support.path}/.documents-unavailable');
   final used = File('${support.path}/.documents-used');

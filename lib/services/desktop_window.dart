@@ -7,7 +7,7 @@ class DesktopWindow {
   static const _channel = MethodChannel('streak/window');
 
   static Future<void> setFullscreen(bool on) async {
-    if (!AppPlatform.isWindows && !AppPlatform.isLinux) return;
+    if (!AppPlatform.isWindows && !AppPlatform.isLinux && !AppPlatform.isMacOS) return;
     try {
       await _channel.invokeMethod<void>('fullscreen', on);
     } on PlatformException {

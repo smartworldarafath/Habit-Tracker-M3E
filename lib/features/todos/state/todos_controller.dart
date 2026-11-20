@@ -7,6 +7,7 @@ import 'package:streak/core/utils/cover_storage.dart';
 import 'package:streak/features/todos/data/todo.dart';
 import 'package:streak/features/todos/data/todo_groups.dart';
 import 'package:streak/features/todos/data/todo_repeat.dart';
+import 'package:streak/services/check_sound.dart';
 import 'package:streak/services/notification_service.dart';
 import 'package:streak/services/todos_widget_service.dart';
 import 'package:uuid/uuid.dart';
@@ -20,6 +21,8 @@ class TodosController extends ChangeNotifier {
   }
 
   final _notifications = NotificationService();
+
+  Future<void> Function(Todo? before, Todo? after, List<Todo> todos)? onDone;
 
   late List<Todo> _todos;
   bool _lowFirst = LocalStore.setting('todoLowFirst', false);
@@ -120,6 +123,7 @@ class TodosController extends ChangeNotifier {
     bool pinned = false,
     TodoRepeat? repeat,
     bool focusOnly = false,
+    int? remindBefore,
   }) async {
     final todo = Todo(
       id: const Uuid().v4(),
@@ -137,6 +141,7 @@ class TodosController extends ChangeNotifier {
       pinned: pinned,
       repeat: repeat,
       focusOnly: focusOnly,
+      remindBefore: remindBefore,
       createdAt: DateTime.now(),
     );
     _todos.add(todo);
@@ -151,6 +156,7 @@ class TodosController extends ChangeNotifier {
     final index = _counts.at[todo.id];
     if (index == null) return;
     final before = _todos[index];
+    if (before.done != todo.done) unawaited(onDone?.call(before, todo, all));
     final dropped = [
       ...before.photos.where((p) => !todo.photos.contains(p)),
       if (before.cover.isNotEmpty && before.cover != todo.cover) before.cover,
@@ -166,6 +172,7 @@ class TodosController extends ChangeNotifier {
   static bool _remindsDifferently(Todo a, Todo b) =>
       a.date != b.date ||
       a.minutes != b.minutes ||
+      a.remindBefore != b.remindBefore ||
       a.done != b.done ||
       a.text != b.text;
 
@@ -182,7 +189,10 @@ class TodosController extends ChangeNotifier {
       doneAt: done ? DateTime.now() : null,
       clearDoneAt: !done,
     );
+    if (done) CheckSound.play();
+    final before = _todos[index];
     _todos[index] = updated;
+    unawaited(onDone?.call(before, updated, all));
     notifyListeners();
     TodosWidgetService.syncSoon(_todos);
     await LocalStore.writeTodo(updated);
@@ -193,9 +203,11 @@ class TodosController extends ChangeNotifier {
     final todo = _todos[index];
     final next = todo.nextTime(AppClock.today());
     final record = todo.doneRecord(const Uuid().v4(), DateTime.now());
+    CheckSound.play();
     _todos[index] = next;
     _todos.add(record);
     notifyListeners();
+    unawaited(onDone?.call(null, record, all));
     TodosWidgetService.syncSoon(_todos);
     await LocalStore.writeTodo(next);
     await LocalStore.writeTodo(record);

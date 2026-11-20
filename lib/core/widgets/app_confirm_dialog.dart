@@ -16,6 +16,7 @@ Future<bool?> showAppConfirmDialog(
   Widget? body,
   IconData icon = LucideIcons.trash2,
   bool danger = true,
+  bool single = false,
 }) {
   return showDialog<bool>(
     context: context,
@@ -59,21 +60,9 @@ Future<bool?> showAppConfirmDialog(
                 body,
               ],
               const SizedBox(height: 22),
-              LayoutBuilder(
-                builder: (context, box) {
+              Builder(
+                builder: (context) {
                   final cancelText = cancelLabel ?? dialogContext.l10n.cancel;
-                  double wide(String text) => (TextPainter(
-                        text: TextSpan(
-                          text: text,
-                          style: sheetActionStyle(dialogContext),
-                        ),
-                        maxLines: 1,
-                        textDirection: Directionality.of(dialogContext),
-                        textScaler: MediaQuery.textScalerOf(dialogContext),
-                      )..layout())
-                          .width;
-                  final stacked = wide(cancelText) > (box.maxWidth - 12) / 2 - 24 ||
-                      wide(confirmLabel) > (box.maxWidth - 12) / 2 - 24;
                   final cancel = TextButton(
                     onPressed: () => Navigator.of(dialogContext).pop(false),
                     style: TextButton.styleFrom(
@@ -96,7 +85,7 @@ Future<bool?> showAppConfirmDialog(
                     onPressed: () => Navigator.of(dialogContext).pop(true),
                     style: FilledButton.styleFrom(
                       backgroundColor: accent,
-                      foregroundColor: accent.ink,
+                      foregroundColor: danger ? Colors.white : accent.ink,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -108,18 +97,12 @@ Future<bool?> showAppConfirmDialog(
                       style: sheetActionStyle(dialogContext),
                     ),
                   );
-                  if (stacked) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [confirm, const SizedBox(height: 10), cancel],
-                    );
+                  if (single) {
+                    return SizedBox(width: double.infinity, child: confirm);
                   }
-                  return Row(
-                    children: [
-                      Expanded(child: cancel),
-                      const SizedBox(width: 12),
-                      Expanded(child: confirm),
-                    ],
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [confirm, const SizedBox(height: 10), cancel],
                   );
                 },
               ),

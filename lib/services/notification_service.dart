@@ -16,6 +16,7 @@ import 'package:streak/features/habits/data/completion.dart';
 import 'package:streak/features/habits/data/completion_ops.dart';
 import 'package:streak/features/habits/data/habit.dart';
 import 'package:streak/features/habits/data/reminder.dart';
+import 'package:streak/features/habits/data/todo_credit.dart';
 import 'package:streak/features/todos/data/todo.dart';
 import 'package:streak/services/reminder_schedule.dart';
 import 'package:streak/l10n/app_localizations.dart';
@@ -130,8 +131,10 @@ class NotificationService {
     if (id == null || id.isEmpty) return;
     if (id.startsWith(_todoPayload)) {
       if (actionId == actionTodoDone) {
-        NotificationActions.apply(actionId!, id)
-            .then((_) => onTodosChanged?.call());
+        NotificationActions.apply(actionId!, id).then((_) {
+          onTodosChanged?.call();
+          onHabitsChanged?.call();
+        });
       } else {
         openFromPayload(id);
       }
@@ -212,6 +215,7 @@ class NotificationService {
       InitializationSettings(
         android: android,
         iOS: darwin,
+        macOS: darwin,
         windows: windows,
         linux: linux,
       ),
@@ -263,6 +267,18 @@ class NotificationService {
 
   Future<bool> requestNotifications() async {
     if (Platform.isLinux || Platform.isWindows) return true;
+    if (Platform.isMacOS) {
+      try {
+        return await _plugin
+                .resolvePlatformSpecificImplementation<
+                    MacOSFlutterLocalNotificationsPlugin>()
+                ?.requestPermissions(alert: true, badge: true, sound: true) ??
+            false;
+      } catch (e) {
+        debugPrint('Notification permission request failed: $e');
+        return false;
+      }
+    }
     try {
       if (await Permission.notification.isGranted) return true;
       return (await Permission.notification.request()).isGranted;
@@ -301,10 +317,13 @@ class NotificationService {
     await _cancelExcept(habit.id, live);
   }
 
-  static int get _intervalWindow => Platform.isIOS ? 8 : 24;
+  static int get _intervalWindow => _darwin ? 8 : 24;
+
+  static bool get _darwin => Platform.isIOS || Platform.isMacOS;
 
   Future<Set<int>> _schedule(Habit habit, Reminder reminder) async {
     final strings = await localizations();
+    if (reminder.afterMiss) return _scheduleAfterMiss(habit, reminder, strings);
     final body = _bodyFor(habit, reminder, strings);
     if (habit.interval == HabitInterval.everyXDays) {
       return _scheduleOnHabitDays(habit, reminder, body, strings);
@@ -354,6 +373,66 @@ class NotificationService {
       body = '$body\n$line';
     }
     return body;
+  }
+
+  String _comebackBody(
+      Habit habit, Reminder reminder, ComebackTone tone, AppLocalizations strings) {
+    final message = reminder.message.trim();
+    var body = message.isNotEmpty
+        ? message
+        : switch (tone) {
+            ComebackTone.gentle => strings.notif_comeback,
+            ComebackTone.chance => strings.notif_comeback_chance,
+            ComebackTone.hard => strings.notif_comeback_hard,
+            ComebackTone.avoid => strings.notif_comeback_avoid,
+          };
+    final name = LocalStore.setting('profileName', '').trim();
+    if (name.isNotEmpty) body = strings.notif_greeting(name) + body;
+    return body;
+  }
+
+  Future<Set<int>> _scheduleAfterMiss(
+      Habit habit, Reminder reminder, AppLocalizations strings) async {
+    final ids = <int>{};
+    if (!habit.canFollowMisses) return ids;
+    final followsHabit = habit.kind != HabitKind.negative &&
+        habit.interval == HabitInterval.everyXDays;
+    final now = tz.TZDateTime.now(tz.local);
+    final today = AppClock.today();
+    final days = <DateTime>[today];
+    for (var step = 1; step <= ReminderSchedule.habitDaysHorizon; step++) {
+      final day = today.addDays(step);
+      if (habit.countsOn(day)) {
+        days.add(day);
+        break;
+      }
+    }
+    for (final (slot, day) in days.indexed) {
+      if (!followsHabit && !reminder.days.contains(day.weekday)) continue;
+      final tone = habit.comebackOn(day);
+      if (tone == null) continue;
+      final at = tz.TZDateTime(
+        tz.local,
+        day.year,
+        day.month,
+        day.day,
+        reminder.hour,
+        reminder.minute,
+      );
+      if (!at.isAfter(now)) continue;
+      final id = _notificationId(habit.id, reminder.id, slot);
+      final body = _comebackBody(habit, reminder, tone, strings);
+      ids.add(id);
+      await _zonedSchedule(
+        id,
+        habit.name,
+        body,
+        at,
+        await _details(habit, body, strings, reminder: reminder),
+        payload: habit.id,
+      );
+    }
+    return ids;
   }
 
   static final _random = Random();
@@ -511,7 +590,7 @@ class NotificationService {
   }
 
   bool _repeatsDaily(Habit habit, Reminder reminder) =>
-      Platform.isIOS &&
+      _darwin &&
       reminder.days.length == 7 &&
       Iterable<int>.generate(7, (i) => i + 1).every(habit.ringsOnWeekday);
 
@@ -605,7 +684,7 @@ class NotificationService {
       from: _firstMoment(habit),
       due: (day) => !habit.isOffDay(day),
       slots: slots,
-      limit: Platform.isIOS ? 8 : ReminderSchedule.slotsPerReminder,
+      limit: _darwin ? 8 : ReminderSchedule.slotsPerReminder,
     );
     final ids = <int>{};
     for (final (index, at) in moments.indexed) {
@@ -803,6 +882,10 @@ class NotificationService {
           categoryIdentifier: _categoryFor(habit),
           threadIdentifier: habit.id,
         ),
+        macOS: DarwinNotificationDetails(
+          categoryIdentifier: _categoryFor(habit),
+          threadIdentifier: habit.id,
+        ),
       );
   }
 
@@ -914,10 +997,13 @@ class NotificationService {
   Future<void> _scheduleTodo(Todo todo) async {
     if (!_ready) await initialize();
     final id = ReminderSchedule.todoNotificationId(todo.id);
+    final early = ReminderSchedule.todoEarlyId(todo.id);
     await _cancel(id);
+    await _cancel(early);
 
+    final now = DateTime.now();
     final at = ReminderSchedule.todoFireAt(
-      now: DateTime.now(),
+      now: now,
       done: todo.done,
       due: todo.due,
       minutes: todo.minutes,
@@ -925,12 +1011,7 @@ class NotificationService {
     if (at == null) return;
 
     final strings = await localizations();
-    await _zonedSchedule(
-      id,
-      todo.title,
-      todo.body.isEmpty ? strings.todos : todo.body,
-      tz.TZDateTime.from(at, tz.local),
-      NotificationDetails(
+    final details = NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,
           _channelName,
@@ -948,6 +1029,7 @@ class NotificationService {
           ],
         ),
         iOS: const DarwinNotificationDetails(categoryIdentifier: _categoryTodo),
+        macOS: const DarwinNotificationDetails(categoryIdentifier: _categoryTodo),
         windows: Platform.isWindows
             ? WindowsNotificationDetails(
                 audio: _windowsSound,
@@ -959,8 +1041,29 @@ class NotificationService {
                 ],
               )
             : null,
-      ),
-      payload: '$_todoPayload${todo.id}',
+      );
+    final payload = '$_todoPayload${todo.id}';
+    final before = todo.remindBefore;
+    if (before != null && before > 0) {
+      final soon = at.subtract(Duration(minutes: before));
+      if (soon.isAfter(now)) {
+        await _zonedSchedule(
+          early,
+          todo.title,
+          strings.todo_due_in(formatMinutes(before.toDouble())),
+          tz.TZDateTime.from(soon, tz.local),
+          details,
+          payload: payload,
+        );
+      }
+    }
+    await _zonedSchedule(
+      id,
+      todo.title,
+      todo.body.isEmpty ? strings.todos : todo.body,
+      tz.TZDateTime.from(at, tz.local),
+      details,
+      payload: payload,
     );
   }
 
@@ -968,6 +1071,7 @@ class NotificationService {
     try {
       if (!_ready) await initialize();
       await _cancel(ReminderSchedule.todoNotificationId(todoId));
+      await _cancel(ReminderSchedule.todoEarlyId(todoId));
     } catch (e) {
       debugPrint('Cancelling to-do $todoId failed: $e');
     }
@@ -1142,6 +1246,7 @@ class NotificationActions {
     try {
       await LocalStore.init();
       AppClock.cutoffHour = LocalStore.setting('dayCutoff', 0);
+      Habit.secondChances = LocalStore.setting('secondChances', true);
       if (actionId == NotificationService.actionTodoDone) {
         await _finishTodo(habitId);
         return;
@@ -1195,6 +1300,7 @@ class NotificationActions {
       await LocalStore.writeHabit(updated);
       habits[habitId] = updated;
       if (habit.fromLastDone ||
+          habit.followsMisses ||
           habit.silencesRemindersOn(today) !=
               updated.silencesRemindersOn(today)) {
         await NotificationService().scheduleFor(updated);
@@ -1221,12 +1327,26 @@ class NotificationActions {
       await LocalStore.writeTodo(record);
       await NotificationService().scheduleTodo(next);
       await TodosWidgetService.sync(todos);
+      await _creditTodo(todos, null, record);
       return;
     }
-    final done = todos[index].copyWith(done: true, doneAt: DateTime.now());
+    final before = todos[index];
+    final done = before.copyWith(done: true, doneAt: DateTime.now());
     todos[index] = done;
     await LocalStore.writeTodo(done);
     await TodosWidgetService.sync(todos);
+    await _creditTodo(todos, before, done);
+  }
+
+  static Future<void> _creditTodo(List<Todo> todos, Todo? before, Todo after) async {
+    await LocalStore.reloadHabits();
+    final habits = LocalStore.readHabits();
+    final touched = TodoCredit.apply(habits, todos, before: before, after: after);
+    if (touched.isEmpty) return;
+    for (final id in touched) {
+      await LocalStore.writeHabit(habits[id]!);
+    }
+    await HomeWidgetService.sync(habits, renderIcons: false);
   }
 }
 

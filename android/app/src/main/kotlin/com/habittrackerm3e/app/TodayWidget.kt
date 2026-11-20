@@ -121,13 +121,28 @@ class TodayWidget : GlanceAppWidget() {
                     style,
                 )
             } else {
-                if (look.header && size.height.value >= WEEK_MIN_HEIGHT && base == ROOMY) {
+                val week = look.header && size.height.value >= WEEK_MIN_HEIGHT && base == ROOMY
+                if (week) {
                     Box(edge) { Week(context, style, data, inner) }
                     Spacer(GlanceModifier.height(12.dp))
                 }
-                LazyColumn(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
-                    items(due.size) { i -> Box(edge) { HabitRow(context, style, scale, inner, density, due[i], look) } }
+                if (!look.arrows) {
+                    LazyColumn(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
+                        items(due.size) { i -> Box(edge) { HabitRow(context, style, scale, inner, density, due[i], look) } }
+                    }
+                    return@Column
                 }
+                val top = if (look.header) maxOf(scale.ring, scale.title * 1.3f + scale.subtitle * 1.4f) * WidgetDraw.textScale(context) + 10f else 0f
+                val room = size.height.value + WidgetScroll.extra(context, appWidgetId, size.height.value) - scale.pad * 2 - top - (if (week) CHIP_DP + 18f else 0f)
+                val step = scale.row + scale.gap
+                val more = due.size > WidgetScroll.rows(room, step, scale.gap)
+                val per = WidgetScroll.rows(if (more) room - WidgetScroll.FOOTER else room, step, scale.gap)
+                val from = WidgetScroll.offset(context, appWidgetId, due.size, per)
+                val fit = due.drop(from).take(per)
+                Column(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
+                    for (habit in fit) Box(edge) { HabitRow(context, style, scale, inner, density, habit, look) }
+                }
+                if (more) WidgetScroll.Arrows(context, style.content, appWidgetId, density, from, per, due.size, scale.pad)
             }
         }
     }

@@ -129,7 +129,6 @@ class HabitWidget : GlanceAppWidget() {
         val keys = List(span) {
             dayAt(data, first + it)?.optString("key") ?: WidgetPayload.todayKey(context)
         }
-        val last = shown.size - 1
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
@@ -144,10 +143,24 @@ class HabitWidget : GlanceAppWidget() {
             }
             if (shown.isEmpty()) {
                 EmptyNote(WidgetText.get(context, "todos_empty", "Nothing left for today"), style)
-            } else LazyColumn(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
-                items(shown.size) { index ->
-                    Box(edge) { HabitRow(context, style, grid, density, shown[index], keys, index == last, pastFirst, look) }
+            } else if (!look.arrows) {
+                LazyColumn(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
+                    items(shown.size) { index ->
+                        Box(edge) { HabitRow(context, style, grid, density, shown[index], keys, index == shown.size - 1, pastFirst, look) }
+                    }
                 }
+            } else {
+                val space = room + WidgetScroll.extra(context, appWidgetId, size.height.value)
+                val more = shown.size > WidgetScroll.rows(space, grid.row + grid.gap, grid.gap)
+                val per = WidgetScroll.rows(if (more) space - WidgetScroll.FOOTER else space, grid.row + grid.gap, grid.gap)
+                val from = WidgetScroll.offset(context, appWidgetId, shown.size, per)
+                val fit = shown.drop(from).take(per)
+                Column(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
+                    fit.forEachIndexed { index, habit ->
+                        Box(edge) { HabitRow(context, style, grid, density, habit, keys, index == fit.size - 1, pastFirst, look) }
+                    }
+                }
+                if (more) WidgetScroll.Arrows(context, style.content, appWidgetId, density, from, per, shown.size, PAD)
             }
         }
     }

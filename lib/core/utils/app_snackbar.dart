@@ -8,22 +8,46 @@ enum _Kind { success, error, info, warning }
 class AppSnackbar {
   const AppSnackbar._();
 
-  static void success(BuildContext context, String message) =>
-      _show(context, message, _Kind.success);
+  static void success(
+    BuildContext context,
+    String message, {
+    Duration? duration,
+    bool sticky = false,
+  }) =>
+      _show(
+        context,
+        message,
+        _Kind.success,
+        duration: duration,
+        sticky: sticky,
+      );
 
   static void action(
     BuildContext context,
     String message, {
     required String label,
     required VoidCallback onPressed,
+    Duration? duration,
   }) =>
-      _show(context, message, _Kind.info, label: label, onPressed: onPressed);
+      _show(
+        context,
+        message,
+        _Kind.info,
+        label: label,
+        onPressed: onPressed,
+        duration: duration,
+      );
 
   static void error(BuildContext context, String message) =>
       _show(context, message, _Kind.error);
 
-  static void info(BuildContext context, String message) =>
-      _show(context, message, _Kind.info);
+  static void info(
+    BuildContext context,
+    String message, {
+    VoidCallback? onTap,
+    bool sticky = false,
+  }) =>
+      _show(context, message, _Kind.info, onTap: onTap, sticky: sticky);
 
   static void warning(BuildContext context, String message) =>
       _show(context, message, _Kind.warning);
@@ -34,6 +58,9 @@ class AppSnackbar {
     _Kind kind, {
     String? label,
     VoidCallback? onPressed,
+    VoidCallback? onTap,
+    Duration? duration,
+    bool sticky = false,
   }) {
     final tokens = context.tokens;
     final wide = hasSideRail(context);
@@ -51,6 +78,12 @@ class AppSnackbar {
           dismissDirection: DismissDirection.horizontal,
           content: GestureDetector(
             behavior: HitTestBehavior.opaque,
+            onTap: onTap == null
+                ? null
+                : () {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    onTap();
+                  },
             onVerticalDragEnd: (details) {
               if ((details.primaryVelocity ?? 0) > 120) {
                 ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -69,6 +102,16 @@ class AppSnackbar {
                   ),
                 ),
               ),
+              if (sticky)
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () =>
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                  child: const Padding(
+                    padding: EdgeInsets.only(left: 12),
+                    child: Icon(LucideIcons.x, color: Colors.white, size: 20),
+                  ),
+                ),
             ],
           ),
           ),
@@ -79,7 +122,9 @@ class AppSnackbar {
           ),
           width: wide ? paneWidth : null,
           margin: wide ? null : const EdgeInsets.all(16),
-          duration: Duration(milliseconds: label == null ? 3000 : 2500),
+          duration: sticky
+              ? const Duration(days: 1)
+              : duration ?? Duration(milliseconds: label == null ? 3000 : 2500),
           persist: false,
           action: label == null
               ? null

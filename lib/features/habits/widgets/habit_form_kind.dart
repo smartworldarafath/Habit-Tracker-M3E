@@ -3,12 +3,15 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:streak/app/theme/app_tokens.dart';
 import 'package:streak/core/express/express_tabs.dart';
+import 'package:streak/core/extensions/color_extensions.dart';
 import 'package:streak/core/i18n/l10n.dart';
 import 'package:streak/core/minimal/minimal_kit.dart';
 import 'package:streak/core/utils/amount_format.dart';
 import 'package:streak/core/widgets/app_text_field.dart';
 import 'package:streak/core/widgets/hold_repeat_button.dart';
 import 'package:streak/core/widgets/number_keypad_dialog.dart';
+import 'package:streak/core/widgets/sheet_type.dart';
+import 'package:streak/features/habits/data/category.dart';
 import 'package:streak/features/habits/data/habit.dart';
 import 'package:streak/features/habits/data/substep.dart';
 import 'package:streak/features/habits/widgets/flag_group.dart';
@@ -18,6 +21,8 @@ import 'package:streak/features/habits/widgets/quant_preset_grid.dart';
 import 'package:streak/features/habits/widgets/saved_money.dart';
 import 'package:streak/features/habits/widgets/substep_draft.dart';
 import 'package:streak/features/settings/state/settings_controller.dart';
+import 'package:streak/features/settings/widgets/minimal_settings_widgets.dart';
+import 'package:streak/features/todos/state/todo_tags_controller.dart';
 
 class KindSelector extends StatelessWidget {
   const KindSelector({
@@ -141,26 +146,63 @@ class NegativeHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
+    return FlagGroup(children: [
+      FormInfoRow(
+        icon: LucideIcons.shieldCheck,
+        color: color,
+        text: context.l10n.kind_negative_hint,
       ),
+    ]);
+  }
+}
+
+class FormInfoRow extends StatelessWidget {
+  const FormInfoRow({
+    super.key,
+    required this.icon,
+    required this.color,
+    required this.text,
+    this.title,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String text;
+  final String? title;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = color.shownIn(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: title == null
+            ? CrossAxisAlignment.center
+            : CrossAxisAlignment.start,
         children: [
-          Icon(LucideIcons.shieldCheck, size: 18, color: color),
-          const SizedBox(width: 10),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: tone.withValues(alpha: 0.16),
+            ),
+            child: Icon(icon, size: 17, color: tone),
+          ),
+          const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              context.l10n.kind_negative_hint,
-              style: TextStyle(
-                fontSize: 13,
-                height: 1.4,
-                color: context.tokens.muted,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (title != null) ...[
+                  Text(title!, style: sheetHeadingStyle(context, size: 14.5)),
+                  const SizedBox(height: 2),
+                ],
+                Text(
+                  text,
+                  style: sheetBodyStyle(context, size: 12.5).copyWith(height: 1.4),
+                ),
+              ],
             ),
           ),
         ],
@@ -177,22 +219,18 @@ class CostField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CompactCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return FlagGroup(children: [
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 8),
-            child: Text(
-              context.l10n.cost_per_day,
-              style: TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w700,
-                color: context.colors.onSurface,
-              ),
-            ),
+          FormInfoRow(
+            icon: LucideIcons.wallet,
+            color: color,
+            title: context.l10n.cost_per_day,
+            text: context.l10n.cost_note,
           ),
-          Row(
+          FlagDetail(
+            child: Row(
             children: [
               Expanded(
                 child: AppTextField(
@@ -211,11 +249,10 @@ class CostField extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          CompactNote(text: context.l10n.cost_note, color: color),
+          ),
         ],
       ),
-    );
+    ]);
   }
 }
 
@@ -449,6 +486,71 @@ Future<double?> pickBookPages(
       min: 1,
       accent: color,
     );
+
+class TodoLinkField extends StatelessWidget {
+  const TodoLinkField({
+    super.key,
+    required this.link,
+    required this.color,
+    required this.onChanged,
+    this.compact = false,
+  });
+
+  final String link;
+  final Color color;
+  final ValueChanged<String> onChanged;
+  final bool compact;
+
+  Future<void> _pick(BuildContext context) {
+    final tags = context.read<TodoTagsController>().tags;
+    return showOptionSheet(
+      context,
+      title: context.l10n.todo_link,
+      options: [for (final tag in tags) tag.name],
+      icons: [for (final tag in tags) CategoryIcons.resolve(tag.icon)],
+      index: tags.indexWhere((tag) => tag.id == link),
+      onSelected: (index) => onChanged(tags[index].id),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tag = context.watch<TodoTagsController>().byId(link);
+    return FlagGroup(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            HabitFlagToggle(
+              icon: LucideIcons.listChecks,
+              title: context.l10n.todo_link,
+              hint: context.l10n.todo_link_sub,
+              value: tag != null,
+              color: color,
+              onChanged: (on) => on ? _pick(context) : onChanged(''),
+              compact: compact,
+            ),
+            if (tag != null)
+              FlagDetail(
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: ActionChip(
+                    avatar: Icon(
+                      CategoryIcons.resolve(tag.icon),
+                      size: 15,
+                      color: tag.color,
+                    ),
+                    label: Text(tag.name),
+                    onPressed: () => _pick(context),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
 
 class FocusOnlyToggle extends StatelessWidget {
   const FocusOnlyToggle({
@@ -806,6 +908,7 @@ class _SubstepsEditorState extends State<SubstepsEditor> {
     for (final step in _steps) {
       step.controller.dispose();
     }
+    _focus.dispose();
     super.dispose();
   }
 
@@ -815,15 +918,15 @@ class _SubstepsEditorState extends State<SubstepsEditor> {
             .toList(),
       );
 
+  String? _fresh;
+  final _focus = FocusNode();
+
   void _add() {
     setState(() {
-      _steps.add(
-        SubstepDraft(
-          DateTime.now().microsecondsSinceEpoch.toString(),
-          TextEditingController(),
-        ),
-      );
+      _fresh = DateTime.now().microsecondsSinceEpoch.toString();
+      _steps.add(SubstepDraft(_fresh!, TextEditingController()));
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _focus.requestFocus());
     _emit();
   }
 
@@ -894,6 +997,7 @@ class _SubstepsEditorState extends State<SubstepsEditor> {
                       child: AppTextField(
                         hint: context.l10n.step_hint,
                         controller: _steps[i].controller,
+                        focusNode: _steps[i].id == _fresh ? _focus : null,
                         onChanged: (_) => _emit(),
                       ),
                     ),
